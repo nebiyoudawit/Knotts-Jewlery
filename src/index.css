@@ -1,0 +1,60 @@
+@import "tailwindcss";
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+body{
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+  background-color: #f9fafb;
+  color: rgba(0, 0, 0, 0.9);
+}
+.container{width: 90%; margin:auto}
+header .top-strip{
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom:1px solid rgba(0, 0, 0, 0.1) ;
+  background-color:#05B171;
+  color: aliceblue;
+}
+.header .col1 img{
+  width: 150px;
+}
+.link:hover{
+  color: #05B171 !important;
+}
+.MuiBadge-badge{
+  background-color: #b10505 !important;
+}
+nav ul button{ text-transform: capitalize !important;
+background-color: #05B171;}
+
+.MuiTabs-indicator{
+  background-color: #05B171 !important;
+}
+.MuiTab-textColorPrimary.Mui-selected {
+  color: #05B171 !important;
+}
+.swiper-button-next, 
+.swiper-button-prev {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border-radius: 100%;
+  width: 45px;
+  height: 45px;
+  min-width: 45px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* Positioning adjustments */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+.swiper-button-next:after, 
+.swiper-button-prev:after {
+  font-size: 20px !important;
+  color: #000 !important;
+}
+

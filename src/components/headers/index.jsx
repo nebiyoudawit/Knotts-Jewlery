@@ -1,0 +1,171 @@
+// src/components/Header/index.jsx
+import React, { useState } from 'react';
+import { Badge, IconButton, Tooltip } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { IoCartOutline, IoMenu, IoHomeOutline, IoSearchOutline } from "react-icons/io5";
+import { FaRegHeart, FaHeart } from "react-icons/fa";
+import { FiUser, FiLogIn } from "react-icons/fi";
+import { Link } from 'react-router-dom';
+import Navigation from './Navigation';
+import Search from '../Search';
+import { useShop } from '../../context/ShopContext';
+
+const StyledBadge = styled(Badge)(({ theme }) => ({
+  '& .MuiBadge-badge': {
+    right: -3,
+    top: 5,
+    border: `2px solid ${(theme.vars || theme).palette.background.paper}`,
+    padding: '0 4px',
+  },
+}));
+
+const Header = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { cartCount = 0, wishlistCount = 0, wishlist = [] } = useShop();
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  return (
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
+      {/* Top strip - hidden on mobile */}
+      <div className="top-strip py-2 border-t-[1px] border-gray-250 border-b-[1px] hidden md:block bg-gray-50">
+        <div className="container">
+          <div className="flex items-center justify-between">
+            <div className="col1 w-[50%]">
+              <p className="text-[14px]">Free delivery at summit, 4 kilo, megenagna, figa,gerji (Unity University)🚛📦</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Header */}
+      <div className="header border-b border-opacity-20 border-gray-300 bg-white">
+        <div className="container">
+          {/* Mobile Top Row */}
+          <div className="flex items-center justify-between py-3 md:hidden">
+            <div className="w-1/4 flex justify-start">
+              <IconButton onClick={handleDrawerToggle}>
+                <IoMenu size={25} />
+              </IconButton>
+            </div>
+            
+            <div className="w-2/4 flex justify-center">
+              <Link to={"/"}>
+                <img src="/logo.png" alt="Logo" className="h-10" />
+              </Link>
+            </div>
+            
+            <div className="w-1/4 flex justify-end">
+              <Link to="/cart">
+                <Tooltip title="Cart" arrow placement="top">
+                  <IconButton aria-label="cart">
+                    <StyledBadge badgeContent={cartCount} color="secondary">
+                      <IoCartOutline size={25} />
+                    </StyledBadge>
+                  </IconButton>
+                </Tooltip>
+              </Link>
+            </div>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden md:flex items-center justify-between py-3">
+            <div className="col1 w-[25%]">
+              <Link to={"/"}><img src="/logo.png" alt="Logo" className="h-10" /></Link>
+            </div>
+            <div className="col2 w-[45%] px-4">
+              <Search />
+            </div>
+            <div className="col3 w-[30%] flex items-center pl-7">
+              <ul className='flex items-center justify-end gap-3 w-full'>
+                <li className='flex items-center gap-2'>
+                  <FiUser size={25} className="text-gray-600" />
+                  <div className='flex gap-1'>
+                    <Link to="/login" className="link transition flex items-center gap-1">
+                      <FiLogIn size={19} /> Login
+                    </Link>
+                    <span>|</span>
+                    <Link to="/register" className="link transition">
+                      Register
+                    </Link>
+                  </div>
+                </li>
+                <li>
+                  <Link to="/wishlist">
+                    <Tooltip title="Wishlist" arrow placement="top">
+                      <IconButton aria-label="heart">
+                        <StyledBadge badgeContent={wishlistCount} color="secondary">
+                          {wishlist.length > 0 ? (
+                            <FaHeart className="text-pink-500" size={22} />
+                          ) : (
+                            <FaRegHeart size={22} />
+                          )}
+                        </StyledBadge>
+                      </IconButton>
+                    </Tooltip>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/cart">
+                    <Tooltip title="Cart" arrow placement="top">
+                      <IconButton aria-label="cart">
+                        <StyledBadge badgeContent={cartCount} color="secondary">
+                          <IoCartOutline size={30} />
+                        </StyledBadge>
+                      </IconButton>
+                    </Tooltip>
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Mobile Bottom Navigation Bar */}
+          <div className="fixed bottom-0 left-0 right-0 flex items-center justify-around py-2 border-t bg-white border-gray-200 z-50 md:hidden shadow-lg">
+            <Link to="/" className="flex flex-col items-center">
+              <IconButton aria-label="home">
+                <IoHomeOutline size={22} />
+              </IconButton>
+              <span className="text-xs">Home</span>
+            </Link>
+            
+            <Link to="/search" className="flex flex-col items-center">
+              <IconButton aria-label="search">
+                <IoSearchOutline size={22} />
+              </IconButton>
+              <span className="text-xs">Search</span>
+            </Link>
+            
+            <Link to="/wishlist" className="flex flex-col items-center">
+              <Tooltip title="Wishlist" arrow placement="top">
+                <IconButton aria-label="wishlist">
+                  <StyledBadge badgeContent={wishlistCount} color="secondary">
+                    {wishlist.length > 0 ? (
+                      <FaHeart className="text-pink-500" size={20} />
+                    ) : (
+                      <FaRegHeart size={20} />
+                    )}
+                  </StyledBadge>
+                </IconButton>
+              </Tooltip>
+              <span className="text-xs">Wishlist</span>
+            </Link>
+            
+            <Link to="/account" className="flex flex-col items-center">
+              <IconButton aria-label="account">
+                <FiUser size={20} />
+              </IconButton>
+              <span className="text-xs">Account</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <Navigation mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+    </header>
+  );
+};
+
+export default Header;
