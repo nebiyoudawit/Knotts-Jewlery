@@ -1,10 +1,22 @@
 // src/components/Header/index.jsx
 import React, { useState } from 'react';
-import { Badge, IconButton, Tooltip } from '@mui/material';
+import { 
+  Badge, 
+  IconButton, 
+  Tooltip, 
+  Menu, 
+  MenuItem, 
+  Divider,
+  Typography,
+  Avatar,
+  Box,
+  ListItemIcon, 
+  ListItemText
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { IoCartOutline, IoMenu, IoHomeOutline, IoSearchOutline } from "react-icons/io5";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
-import { FiUser, FiLogIn } from "react-icons/fi";
+import { FiUser, FiLogIn, FiUserPlus, FiLogOut, FiShoppingBag } from "react-icons/fi";
 import { Link } from 'react-router-dom';
 import Navigation from './Navigation';
 import Search from '../Search';
@@ -21,11 +33,97 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { cartCount = 0, wishlistCount = 0, wishlist = [] } = useShop();
+  const [desktopAnchorEl, setDesktopAnchorEl] = useState(null);
+  const [mobileAnchorEl, setMobileAnchorEl] = useState(null);
+  
+  const { 
+    cartCount = 0, 
+    wishlistCount = 0, 
+    wishlist = [],
+    currentUser,
+    logout
+  } = useShop();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  const handleDesktopMenuOpen = (event) => {
+    setDesktopAnchorEl(event.currentTarget);
+  };
+
+  const handleDesktopMenuClose = () => {
+    setDesktopAnchorEl(null);
+  };
+
+  const handleMobileMenuOpen = (event) => {
+    setMobileAnchorEl(event.currentTarget);
+  };
+
+  const handleMobileMenuClose = () => {
+    setMobileAnchorEl(null);
+  };
+
+  // Account menu component to avoid duplication
+  const AccountMenu = ({ anchorEl, onClose, isMobile = false }) => (
+    <Menu
+      anchorEl={anchorEl}
+      open={Boolean(anchorEl)}
+      onClose={onClose}
+      anchorOrigin={{
+        vertical: isMobile ? 'top' : 'bottom',
+        horizontal: isMobile ? 'center' : 'right',
+      }}
+      transformOrigin={{
+        vertical: isMobile ? 'bottom' : 'top',
+        horizontal: isMobile ? 'center' : 'right',
+      }}
+      PaperProps={{
+        style: {
+          width: '200px',
+        },
+      }}
+    >
+      {currentUser ? (
+        <>
+          <Box sx={{ p: 1 }}>
+            <Typography variant="subtitle2" fontWeight="bold">
+              {currentUser.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {currentUser.email}
+            </Typography>
+          </Box>
+          <Divider />
+          <MenuItem component={Link} to="/account" onClick={onClose}>
+            <ListItemIcon><FiUser size={18} /></ListItemIcon>
+            <ListItemText>Profile</ListItemText>
+          </MenuItem>
+          <MenuItem component={Link} to="/orders" onClick={onClose}>
+            <ListItemIcon><FiShoppingBag size={18} /></ListItemIcon>
+            <ListItemText>My Orders</ListItemText>
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={() => { logout(); onClose(); }}>
+            <ListItemIcon><FiLogOut size={18} /></ListItemIcon>
+            <ListItemText>Logout</ListItemText>
+          </MenuItem>
+        </>
+      ) : (
+        <>
+          <MenuItem component={Link} to="/login" onClick={onClose}>
+            <ListItemIcon><FiLogIn size={18} /></ListItemIcon>
+            <ListItemText>Login</ListItemText>
+          </MenuItem>
+          <Divider />
+          <MenuItem component={Link} to="/register" onClick={onClose}>
+            <ListItemIcon><FiUserPlus size={18} /></ListItemIcon>
+            <ListItemText>Register</ListItemText>
+          </MenuItem>
+        </>
+      )}
+    </Menu>
+  );
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
@@ -80,18 +178,31 @@ const Header = () => {
             </div>
             <div className="col3 w-[30%] flex items-center pl-7">
               <ul className='flex items-center justify-end gap-3 w-full'>
-                <li className='flex items-center gap-2'>
-                  <FiUser size={25} className="text-gray-600" />
-                  <div className='flex gap-1'>
-                    <Link to="/login" className="link transition flex items-center gap-1">
-                      <FiLogIn size={19} /> Login
-                    </Link>
-                    <span>|</span>
-                    <Link to="/register" className="link transition">
-                      Register
-                    </Link>
-                  </div>
-                </li>
+                {currentUser ? (
+                  <li className='flex items-center gap-2'>
+                    <IconButton onClick={handleDesktopMenuOpen}>
+                      <Avatar sx={{ width: 30, height: 30 }} src={currentUser.avatar}>
+                        {currentUser.name.charAt(0)}
+                      </Avatar>
+                    </IconButton>
+                    <Typography variant="body2" className="hidden sm:block">
+                      {currentUser.name.split(' ')[0]}
+                    </Typography>
+                  </li>
+                ) : (
+                  <li className='flex items-center gap-2'>
+                    <FiUser size={25} className="text-gray-600" />
+                    <div className='flex gap-1'>
+                      <Link to="/login" className="link transition flex items-center gap-1">
+                        <FiLogIn size={19} /> Login
+                      </Link>
+                      <span>|</span>
+                      <Link to="/register" className="link transition">
+                        Register
+                      </Link>
+                    </div>
+                  </li>
+                )}
                 <li>
                   <Link to="/wishlist">
                     <Tooltip title="Wishlist" arrow placement="top">
@@ -119,6 +230,10 @@ const Header = () => {
                   </Link>
                 </li>
               </ul>
+              <AccountMenu 
+                anchorEl={desktopAnchorEl} 
+                onClose={handleDesktopMenuClose}
+              />
             </div>
           </div>
 
@@ -153,12 +268,26 @@ const Header = () => {
               <span className="text-xs">Wishlist</span>
             </Link>
             
-            <Link to="/account" className="flex flex-col items-center">
-              <IconButton aria-label="account">
-                <FiUser size={20} />
+            <div className="flex flex-col items-center">
+              <IconButton 
+                aria-label="account"
+                onClick={handleMobileMenuOpen}
+              >
+                {currentUser ? (
+                  <Avatar sx={{ width: 24, height: 24 }} src={currentUser.avatar}>
+                    {currentUser.name.charAt(0)}
+                  </Avatar>
+                ) : (
+                  <FiUser size={20} />
+                )}
               </IconButton>
               <span className="text-xs">Account</span>
-            </Link>
+              <AccountMenu 
+                anchorEl={mobileAnchorEl} 
+                onClose={handleMobileMenuClose}
+                isMobile={true}
+              />
+            </div>
           </div>
         </div>
       </div>

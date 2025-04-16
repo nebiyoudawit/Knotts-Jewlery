@@ -9,6 +9,10 @@ const defaultContextValue = {
   wishlist: [],
   cartCount: 0,
   wishlistCount: 0,
+  currentUser: null,
+  login: () => {},
+  logout: () => {},
+  register: () => {},
   addToCart: () => {},
   removeFromCart: () => {},
   updateQuantity: () => {},
@@ -44,6 +48,19 @@ export const ShopProvider = ({ children }) => {
     }
   });
 
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const savedUser = localStorage.getItem('currentUser');
+        return savedUser ? JSON.parse(savedUser) : null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      return null;
+    }
+  });
+
   // Persist to localStorage
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -53,6 +70,47 @@ export const ShopProvider = ({ children }) => {
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
+  useEffect(() => {
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+  }, [currentUser]);
+
+  // Authentication methods
+  const login = (email, password) => {
+    // In a real app, you would make an API call here
+    // For demo purposes, we'll just create a mock user
+    const mockUser = {
+      id: '1',
+      name: 'Test User',
+      email: email,
+      avatar: null
+    };
+    
+    setCurrentUser(mockUser);
+    toast.success('Logged in successfully!');
+    return true;
+  };
+
+  const register = (name, email, password) => {
+    // In a real app, you would make an API call here
+    // For demo purposes, we'll just create a mock user
+    const mockUser = {
+      id: '1',
+      name: name,
+      email: email,
+      avatar: null
+    };
+    
+    setCurrentUser(mockUser);
+    toast.success('Account created successfully!');
+    return true;
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    toast.success('Logged out successfully!');
+  };
+
+  // Cart methods
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
@@ -99,6 +157,10 @@ export const ShopProvider = ({ children }) => {
         wishlist,
         cartCount,
         wishlistCount,
+        currentUser,
+        login,
+        logout,
+        register,
         addToCart,
         removeFromCart,
         updateQuantity,

@@ -11,6 +11,7 @@ import CartPage from './pages/CartPage/index.jsx'
 import WishlistPage from './pages/WishlistPage/index.jsx'
 import { ShopProvider } from './context/ShopContext.jsx'
 import ScrollToTop from './components/ScrollTop/index.jsx'
+import Register from './pages/Register/index.jsx'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
      <Route path={"/products/:category"} exact={true} element={<ProductListing/>} />
      <Route path={"/product/:id"} exact={true} element={<ProductPage/>} />
      <Route path={"/login"} exact={true} element={<Login/>} />
+     <Route path={"/register"} exact={true} element={<Register/>} />
       <Route path={"/seller"} exact={true} element={<SellerDashboard/>} />
       <Route path={"/cart"} exact={true} element={<CartPage/>} />
       <Route path={"/wishlist"} exact={true} element={<WishlistPage/>} />
