@@ -1,12 +1,26 @@
-import react from 'react';
+import React from 'react';
 import Button from '@mui/material/Button';
 import { CiSearch } from "react-icons/ci";
-const Search = ()=>{
-    return(
-        <div className="searchBox w-[100%] h-[50px] bg-[#e5e5e5] rounded-[5px] relative p-2">
-        <input type="text" placeholder="Search for products..." className="w-full h-[35px] focus:outline-none bg-inherit p-2 text-[15px]"></input>
-        <Button  className="!absolute top-[5px] right-[5px] z-50 !w-[37px] !min-w-[37px] h-[37px] !rounded-full !text-black"><CiSearch className='text-black text-[22px]'/></Button>
+
+const Search = () => {
+  return (
+    <div className="w-full sm:w-[500px] md:w-[600px] bg-[#e5e5e5] rounded-md relative px-3 py-2 mx-auto">
+      <input
+        type="text"
+        placeholder="Search for products..."
+        className="w-full h-10 focus:outline-none bg-inherit text-[15px] pr-12 rounded-md"
+      />
+
+      {/* Hidden on mobile, visible on sm+ */}
+      <div className="hidden sm:block absolute top-1/2 -translate-y-1/2 right-2">
+        <Button
+          className="!w-[36px] !min-w-[36px] h-[36px] !rounded-full !text-black !p-0"
+        >
+          <CiSearch className="text-[22px]" />
+        </Button>
+      </div>
     </div>
-    )
-}
+  );
+};
+
 export default Search;

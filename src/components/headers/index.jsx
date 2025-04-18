@@ -150,9 +150,9 @@ const Header = () => {
                           </IconButton>
                         </div>
 
-                      <div className="w-2/4 flex justify-center">
+                      <div className="flex justify-center">
                         {showMobileSearch ? (
-                          <div className="w-full">
+                          <div className="w-full max-w-[700px]">
                             <Search />
                           </div>
                         ) : (
