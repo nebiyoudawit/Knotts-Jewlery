@@ -33,6 +33,7 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [desktopAnchorEl, setDesktopAnchorEl] = useState(null);
   const [mobileAnchorEl, setMobileAnchorEl] = useState(null);
   
@@ -139,35 +140,37 @@ const Header = () => {
       </div>
 
       {/* Main Header */}
-      <div className="header border-b border-opacity-20 border-gray-300 bg-white">
-        <div className="container">
-          {/* Mobile Top Row */}
-          <div className="flex items-center justify-between py-3 md:hidden">
-            <div className="w-1/4 flex justify-start">
-              <IconButton onClick={handleDrawerToggle}>
-                <IoMenu size={25} />
-              </IconButton>
-            </div>
-            
-            <div className="w-2/4 flex justify-center">
-              <Link to={"/"}>
-                <img src="/logo.png" alt="Logo" className="h-10" />
-              </Link>
-            </div>
-            
-            <div className="w-1/4 flex justify-end">
-              <Link to="/cart">
-                <Tooltip title="Cart" arrow placement="top">
-                  <IconButton aria-label="cart">
-                    <StyledBadge badgeContent={cartCount} color="secondary">
-                      <IoCartOutline size={25} />
-                    </StyledBadge>
-                  </IconButton>
-                </Tooltip>
-              </Link>
-            </div>
-          </div>
+                <div className="header border-b border-opacity-20 border-gray-300 bg-white">
+                  <div className="container">
+                    {/* Mobile Top Row */}
+                    <div className="flex items-center justify-between py-3 md:hidden">
+                        <div className="w-1/4 flex justify-start">
+                          <IconButton onClick={handleDrawerToggle}>
+                            <IoMenu size={25} />
+                          </IconButton>
+                        </div>
 
+                      <div className="w-2/4 flex justify-center">
+                        {showMobileSearch ? (
+                          <div className="w-full">
+                            <Search />
+                          </div>
+                        ) : (
+                          <Link to={"/"}>
+                            <img src="/logo.png" alt="Logo" className="h-10" />
+                          </Link>
+                        )}
+                      </div>
+
+                      <div className="w-1/4 flex justify-end">
+                        <IconButton 
+                          aria-label="search"
+                          onClick={() => setShowMobileSearch(prev => !prev)}
+                        >
+                          <IoSearchOutline size={22} />
+                        </IconButton>
+                      </div>
+          </div>
           {/* Desktop Header */}
           <div className="hidden md:flex items-center justify-between py-3">
             <div className="col1 w-[25%]">
@@ -246,12 +249,18 @@ const Header = () => {
               <span className="text-xs">Home</span>
             </Link>
             
-            <Link to="/search" className="flex flex-col items-center">
-              <IconButton aria-label="search">
-                <IoSearchOutline size={22} />
-              </IconButton>
-              <span className="text-xs">Search</span>
-            </Link>
+           
+              <Link to="/cart" className='flex flex-col items-center'>
+                <Tooltip title="Cart" arrow placement="top">
+                  <IconButton aria-label="cart">
+                    <StyledBadge badgeContent={cartCount} color="secondary">
+                      <IoCartOutline size={25} />
+                    </StyledBadge>
+                  </IconButton>
+                </Tooltip>
+                <span className="text-xs">Cart</span>
+              </Link>
+            
             
             <Link to="/wishlist" className="flex flex-col items-center">
               <Tooltip title="Wishlist" arrow placement="top">
