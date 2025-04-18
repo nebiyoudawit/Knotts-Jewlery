@@ -113,8 +113,8 @@ const ProductListing = () => {
             <div className="mb-6">
               <h3 className="font-medium mb-2">Price Range</h3>
               <div className="flex justify-between mb-2">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
+                <span>{priceRange[0]} birr</span>
+                <span>{priceRange[1]} birr</span>
               </div>
               <input
                 type="range"
@@ -209,8 +209,8 @@ const ProductListing = () => {
             <div className="mb-6">
               <h3 className="font-medium mb-2">Price Range</h3>
               <div className="flex justify-between mb-2">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
+                <span>{priceRange[0]} birr</span>
+                <span>{priceRange[1]} birr</span>
               </div>
               <input
                 type="range"
