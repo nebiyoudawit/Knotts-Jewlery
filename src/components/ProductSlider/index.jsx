@@ -18,8 +18,8 @@ const ProductSlider = ({ items = 3, category = 'All' }) => {
       navigation={true}
       modules={[Navigation]}
       breakpoints={{
-        320: { slidesPerView: 1 }, // 1 item on mobile
-        640: { slidesPerView: 2 }, // 2 items on tablet
+        320: { slidesPerView: 2 }, // 2 item on mobile
+        640: { slidesPerView: 3 }, // 3 items on tablet
         1024: { slidesPerView: items } // specified items on desktop
       }}
       className="mySwiper"

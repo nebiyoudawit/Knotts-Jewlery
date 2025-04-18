@@ -241,7 +241,7 @@ const Header = () => {
           </div>
 
           {/* Mobile Bottom Navigation Bar */}
-          <div className="fixed bottom-0 left-0 right-0 flex items-center justify-around py-2 border-t bg-white border-gray-200 z-50 md:hidden shadow-lg">
+          <div className="fixed bottom-0 left-0 right-0 flex items-center justify-around py-2 border-t bg-white border-gray-200 z-1050 md:hidden shadow-lg">
             <Link to="/" className="flex flex-col items-center">
               <IconButton aria-label="home">
                 <IoHomeOutline size={22} />

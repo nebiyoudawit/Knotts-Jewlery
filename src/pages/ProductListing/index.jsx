@@ -1,30 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingBag, FaFilter } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
+import { FaFilter, FaStar, FaRegStar } from 'react-icons/fa';
 import { useShop } from '../../context/ShopContext';
 import jewelryProducts from '../../data/jewelryProducts';
+import ProductItem from '../../components/ProductItem';
 
 const ProductListing = () => {
   const { category: urlCategory } = useParams();
-  const {
-    addToCart,
-    toggleWishlist,
-    wishlist,
-    cart
-  } = useShop();
+  const { addToCart, toggleWishlist, wishlist } = useShop();
 
   const categoryMap = {
     bracelets: "Bracelets",
     charms: "Charms",
     earrings: "Earrings",
     rings: "Rings",
-    necklaces: "Necklaces"
+    necklaces: "Necklaces",
   };
 
   const [priceRange, setPriceRange] = useState([0, 200]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [ratingsFilter, setRatingsFilter] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [sortOption, setSortOption] = useState('featured');
 
   useEffect(() => {
     if (urlCategory && categoryMap[urlCategory]) {
@@ -34,34 +31,52 @@ const ProductListing = () => {
     }
   }, [urlCategory]);
 
-  const filteredProducts = jewelryProducts.filter(product => {
-    if (selectedCategory && product.category !== selectedCategory) return false;
-    if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
-    if (ratingsFilter && Math.floor(product.rating) < ratingsFilter) return false;
-    return true;
-  });
+  const filteredProducts = jewelryProducts
+    .filter(product => {
+      if (selectedCategory && product.category !== selectedCategory) return false;
+      if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
+      if (ratingsFilter && Math.floor(product.rating) < ratingsFilter) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOption === 'lowToHigh') return a.price - b.price;
+      if (sortOption === 'highToLow') return b.price - a.price;
+      if (sortOption === 'newest') return b.id - a.id;
+      return 0;
+    });
 
   const categories = [...new Set(jewelryProducts.map(product => product.category))];
-
-  const handleAddToCart = (product) => {
-    addToCart({ ...product, quantity: 1 });
-  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <button 
-          className="md:hidden flex items-center gap-2 mb-4 bg-white px-4 py-2 rounded-lg shadow-sm"
-          onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-        >
-          <FaFilter /> Filters
-        </button>
+        
+        {/* Mobile: Filter + Sort */}
+        <div className="flex md:hidden justify-between items-center gap-4 mb-6">
+          <button 
+            className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm w-full sm:w-auto"
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+          >
+            <FaFilter /> Filters
+          </button>
+          <select 
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="border rounded-md px-3 py-2"
+          >
+            <option value="featured">Sort by: Featured</option>
+            <option value="lowToHigh">Price: Low to High</option>
+            <option value="highToLow">Price: High to Low</option>
+            <option value="newest">Newest Arrivals</option>
+          </select>
+        </div>
 
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Filters sidebar */}
+          
+          {/* Filters Sidebar */}
           <div className={`${mobileFiltersOpen ? 'block' : 'hidden'} md:block w-full md:w-64 bg-white p-6 rounded-lg shadow-sm h-fit sticky top-20`}>
             <h2 className="text-lg font-bold mb-4">Filters</h2>
-            
+
             {selectedCategory && (
               <div className="mb-4 p-2 bg-gray-100 rounded-md">
                 <p className="font-medium">Current Category:</p>
@@ -90,7 +105,7 @@ const ProductListing = () => {
                 className="w-full"
               />
             </div>
-            
+
             <div className="mb-6">
               <h3 className="font-medium mb-2">Categories</h3>
               <div className="space-y-2">
@@ -109,7 +124,7 @@ const ProductListing = () => {
                 ))}
               </div>
             </div>
-            
+
             <div className="mb-6">
               <h3 className="font-medium mb-2">Customer Ratings</h3>
               <div className="space-y-2">
@@ -122,8 +137,8 @@ const ProductListing = () => {
                     <div className="flex mr-2">
                       {[...Array(5)].map((_, i) => (
                         i < rating ? 
-                        <FaStar key={i} className="h-4 w-4 text-yellow-400" /> : 
-                        <FaRegStar key={i} className="h-4 w-4 text-yellow-400" />
+                          <FaStar key={i} className="h-4 w-4 text-yellow-400" /> : 
+                          <FaRegStar key={i} className="h-4 w-4 text-yellow-400" />
                       ))}
                     </div>
                     <span>& Up</span>
@@ -131,7 +146,7 @@ const ProductListing = () => {
                 ))}
               </div>
             </div>
-            
+
             <button 
               className="w-full bg-[#05B171] text-white py-2 rounded-md hover:bg-[#048a5b] transition-colors"
               onClick={() => {
@@ -144,92 +159,39 @@ const ProductListing = () => {
             </button>
           </div>
 
-          {/* Products grid */}
+          {/* Products Grid + Header */}
           <div className="flex-1">
-            <div className="flex justify-between items-center mb-10">
+            {/* Desktop: Product Count & Sort */}
+            <div className="hidden md:flex justify-between items-center mb-10">
               <h1 className="text-2xl font-bold">
                 {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'}
                 {selectedCategory && ` in ${selectedCategory}`}
               </h1>
-              <div>
-                <select className="border rounded-md px-3 py-2">
-                  <option>Sort by: Featured</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                  <option>Newest Arrivals</option>
-                </select>
-              </div>
+              <select 
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="border rounded-md px-3 py-2"
+              >
+                <option value="featured">Sort by: Featured</option>
+                <option value="lowToHigh">Price: Low to High</option>
+                <option value="highToLow">Price: High to Low</option>
+                <option value="newest">Newest Arrivals</option>
+              </select>
+            </div>
+
+            {/* Mobile: Product Count */}
+            <div className="md:hidden mb-4">
+              <h1 className="text-xl font-bold">
+                {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'}
+                {selectedCategory && ` in ${selectedCategory}`}
+              </h1>
             </div>
 
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-                {filteredProducts.map(product => {
-                  const isWishlisted = wishlist.some(item => item.id === product.id);
-                  return (
-                    <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200">
-                      {/* Product Image */}
-                      <div className="relative pt-[100%] bg-gray-100">
-                        <Link to={`/product/${product.id}`}>
-                          <img 
-                            src={product.imageUrl} 
-                            alt={product.name}
-                            className="absolute top-0 left-0 w-full h-full object-cover"
-                          />
-                        </Link>
-                        {product.onSale && (
-                          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                            SALE
-                          </div>
-                        )}
-                        <button 
-                          className="absolute top-2 right-2 p-2 bg-white/80 rounded-full"
-                          onClick={() => toggleWishlist(product)}
-                          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                        >
-                          {isWishlisted ? (
-                            <FaHeart className="text-red-500" />
-                          ) : (
-                            <FaRegHeart className="text-gray-600 hover:text-red-500" />
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="p-4">
-                        <div className="mb-1">
-                          <span className="text-xs uppercase text-gray-500">{product.category}</span>
-                        </div>
-                        <Link to={`/product/${product.id}`}>
-                          <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 hover:text-[#05B171] transition-colors">
-                            {product.name}
-                          </h3>
-                        </Link>
-                        <div className="flex items-center mb-2">
-                          <div className="flex mr-1">
-                            {[...Array(5)].map((_, i) => (
-                              i < product.rating ? 
-                              <FaStar key={i} className="h-3 w-3 text-yellow-400" /> : 
-                              <FaRegStar key={i} className="h-3 w-3 text-yellow-400" />
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-500">({product.reviewCount})</span>
-                        </div>
-                        <div className="mb-3">
-                          <span className="text-lg font-bold">${product.price.toFixed(2)}</span>
-                          {product.originalPrice && (
-                            <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
-                          )}
-                        </div>
-                        <button 
-                          onClick={() => handleAddToCart(product)}
-                          className="w-full bg-[#05B171] text-white py-2 rounded-md hover:bg-[#048a5b] flex items-center justify-center gap-2"
-                        >
-                          <FaShoppingBag /> Add to Cart
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+                {filteredProducts.map(product => (
+                  <ProductItem key={product.id} product={product} />
+                ))}
               </div>
             ) : (
               <div className="bg-white p-8 rounded-lg text-center">
