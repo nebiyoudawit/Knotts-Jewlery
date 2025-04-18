@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFilter, FaStar, FaRegStar } from 'react-icons/fa';
+import { IoClose } from 'react-icons/io5';
+import { Drawer } from '@mui/material';
 import { useShop } from '../../context/ShopContext';
 import jewelryProducts from '../../data/jewelryProducts';
 import ProductItem from '../../components/ProductItem';
@@ -50,12 +52,11 @@ const ProductListing = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        
         {/* Mobile: Filter + Sort */}
         <div className="flex md:hidden justify-between items-center gap-4 mb-6">
           <button 
             className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm w-full sm:w-auto"
-            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            onClick={() => setMobileFiltersOpen(true)}
           >
             <FaFilter /> Filters
           </button>
@@ -71,10 +72,125 @@ const ProductListing = () => {
           </select>
         </div>
 
+        {/* Mobile Filter Drawer */}
+        <Drawer
+          anchor="bottom"
+          open={mobileFiltersOpen}
+          onClose={() => setMobileFiltersOpen(false)}
+          sx={{
+            '& .MuiDrawer-paper': {
+              borderTopLeftRadius: '16px',
+              borderTopRightRadius: '16px',
+              padding: '20px',
+              maxHeight: '80vh'
+            },
+          }}
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Filters</h2>
+            <button 
+              onClick={() => setMobileFiltersOpen(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <IoClose size={24} />
+            </button>
+          </div>
+
+          <div className="overflow-y-auto pb-4">
+            {selectedCategory && (
+              <div className="mb-4 p-2 bg-gray-100 rounded-md">
+                <p className="font-medium">Current Category:</p>
+                <p className="text-[#05B171]">{selectedCategory}</p>
+                <button 
+                  className="text-sm text-gray-500 hover:underline mt-1"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  Clear category
+                </button>
+              </div>
+            )}
+
+            <div className="mb-6">
+              <h3 className="font-medium mb-2">Price Range</h3>
+              <div className="flex justify-between mb-2">
+                <span>${priceRange[0]}</span>
+                <span>${priceRange[1]}</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                value={priceRange[1]}
+                onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                className="w-full"
+              />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="font-medium mb-2">Categories</h3>
+              <div className="space-y-2">
+                {categories.map(category => (
+                  <div key={category} className="flex items-center">
+                    <input
+                      type="radio"
+                      id={`category-${category}`}
+                      name="category"
+                      checked={selectedCategory === category}
+                      onChange={() => setSelectedCategory(category)}
+                      className="mr-2"
+                    />
+                    <label htmlFor={`category-${category}`}>{category}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="font-medium mb-2">Customer Ratings</h3>
+              <div className="space-y-2">
+                {[4, 3, 2, 1].map(rating => (
+                  <div 
+                    key={rating} 
+                    className={`flex items-center cursor-pointer ${ratingsFilter === rating ? 'font-medium' : ''}`}
+                    onClick={() => setRatingsFilter(rating === ratingsFilter ? null : rating)}
+                  >
+                    <div className="flex mr-2">
+                      {[...Array(5)].map((_, i) => (
+                        i < rating ? 
+                          <FaStar key={i} className="h-4 w-4 text-yellow-400" /> : 
+                          <FaRegStar key={i} className="h-4 w-4 text-yellow-400" />
+                      ))}
+                    </div>
+                    <span>& Up</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition-colors"
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setPriceRange([0, 200]);
+                  setRatingsFilter(null);
+                }}
+              >
+                Clear All
+              </button>
+              <button 
+                className="flex-1 bg-[#05B171] text-white py-2 rounded-md hover:bg-[#048a5b] transition-colors"
+                onClick={() => setMobileFiltersOpen(false)}
+              >
+                Show Results
+              </button>
+            </div>
+          </div>
+        </Drawer>
+
         <div className="flex flex-col md:flex-row gap-6">
-          
-          {/* Filters Sidebar */}
-          <div className={`${mobileFiltersOpen ? 'block' : 'hidden'} md:block w-full md:w-64 bg-white p-6 rounded-lg shadow-sm h-fit sticky top-20`}>
+          {/* Desktop Filters Sidebar */}
+          <div className="hidden md:block w-full md:w-64 bg-white p-6 rounded-lg shadow-sm h-fit sticky top-20">
             <h2 className="text-lg font-bold mb-4">Filters</h2>
 
             {selectedCategory && (
@@ -190,7 +306,13 @@ const ProductListing = () => {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
                 {filteredProducts.map(product => (
-                  <ProductItem key={product.id} product={product} />
+                  <ProductItem 
+                    key={product.id} 
+                    product={product}
+                    onAddToCart={addToCart}
+                    onToggleWishlist={toggleWishlist}
+                    isInWishlist={wishlist.some(item => item.id === product.id)}
+                  />
                 ))}
               </div>
             ) : (
