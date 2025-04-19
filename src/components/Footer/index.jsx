@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaInstagram, FaTwitter, FaTiktok, FaPhone, FaQuestionCircle, FaEnvelope } from 'react-icons/fa';
+import { FaInstagram, FaTelegram, FaTiktok, FaPhone, FaQuestionCircle, FaEnvelope } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 const Footer = () => {
   return (
@@ -50,13 +50,13 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Follow us on social media:</h3>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-600 hover:text-[#05B171]">
+              <a href="https://www.instagram.com/knotts_jewelry?igsh=Mzc5MHJ1N3d4d3hw" target="_blank" className="text-gray-600 hover:text-[#05B171]">
                 <FaInstagram size={20} />
               </a>
-              <a href="#" className="text-gray-600 hover:text-[#05B171]">
-                <FaTwitter size={20} />
+              <a href="https://t.me/knotts_jewelry" className="text-gray-600 hover:text-[#05B171]" target='_blank'>
+                <FaTelegram size={20} />
               </a>
-              <a href="#" className="text-gray-600 hover:text-[#05B171]">
+              <a href="https://www.tiktok.com/@knotts_jewelry?_t=ZM-8vesDYue3Rl&_r=1" className="text-gray-600 hover:text-[#05B171]" target='_blank'>
                 <FaTiktok size={20} />
               </a>
             </div>
