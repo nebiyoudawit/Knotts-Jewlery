@@ -1,9 +1,6 @@
-// src/context/ShopContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
-// Initialize with default values
 const defaultContextValue = {
   cart: [],
   wishlist: [],
@@ -76,8 +73,6 @@ export const ShopProvider = ({ children }) => {
 
   // Authentication methods
   const login = (email, password) => {
-    // In a real app, you would make an API call here
-    // For demo purposes, we'll just create a mock user
     const mockUser = {
       id: '1',
       name: 'Test User',
@@ -91,8 +86,6 @@ export const ShopProvider = ({ children }) => {
   };
 
   const register = (name, email, password) => {
-    // In a real app, you would make an API call here
-    // For demo purposes, we'll just create a mock user
     const mockUser = {
       id: '1',
       name: name,
@@ -110,12 +103,12 @@ export const ShopProvider = ({ children }) => {
     toast.success('Logged out successfully!');
   };
 
-  // Cart methods
+  // Cart methods with notifications
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
-        return prevCart.map(item =>
+        const newCart = prevCart.map(item =>
           item.id === product.id 
             ? { ...item, quantity: item.quantity + 1 } 
             : item
@@ -123,26 +116,49 @@ export const ShopProvider = ({ children }) => {
       }
       return [...prevCart, { ...product, quantity: 1 }];
     });
+    toast.success(`${product.name} added to cart!`);
   };
 
   const removeFromCart = (productId) => {
+    const product = cart.find(item => item.id === productId);
     setCart(prevCart => prevCart.filter(item => item.id !== productId));
+    if (product) {
+      toast.info(`${product.name} removed from cart`);
+    }
   };
 
   const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) return;
+    if (newQuantity < 1) {
+      removeFromCart(productId);
+      return;
+    }
+    
+    const product = cart.find(item => item.id === productId);
     setCart(prevCart =>
       prevCart.map(item =>
         item.id === productId ? { ...item, quantity: newQuantity } : item
       )
     );
+    
+    if (product) {
+      toast.success(`${product.name} quantity updated to ${newQuantity}`);
+    }
   };
 
+  // Wishlist methods with notifications
   const toggleWishlist = (product) => {
-    setWishlist(prev => 
-      prev.some(item => item.id === product.id)
+    const isInWishlist = wishlist.some(item => item.id === product.id);
+  
+    setWishlist(prev =>
+      isInWishlist
         ? prev.filter(item => item.id !== product.id)
         : [...prev, product]
+    );
+  
+    toast[isInWishlist ? 'info' : 'success'](
+      isInWishlist 
+        ? `${product.name} removed from wishlist`
+        : `${product.name} added to wishlist!`
     );
   };
 

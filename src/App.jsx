@@ -12,6 +12,8 @@ import WishlistPage from './pages/WishlistPage/index.jsx'
 import { ShopProvider } from './context/ShopContext.jsx'
 import ScrollToTop from './components/ScrollTop/index.jsx'
 import Register from './pages/Register/index.jsx'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -21,8 +23,15 @@ function App() {
       <ShopProvider>
      <Header/>
      <ScrollToTop/>
+     <ToastContainer
+        position = "bottom-right"
+        autoClose = {2000}
+        hideProgressBar = {false}
+        closeOnClick = {true}
+        pauseOnHover = {true}
+        draggable = {true}
+        />
      <Routes>
-     
      <Route path={"/"} exact={true} element={<Home/>} />
      <Route path={"/product"} exact={true} element={<ProductListing/>} />
      <Route path={"/products/:category"} exact={true} element={<ProductListing/>} />

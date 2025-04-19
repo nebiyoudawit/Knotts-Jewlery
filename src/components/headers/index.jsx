@@ -14,7 +14,7 @@ import {
   ListItemText
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { IoCartOutline, IoMenu, IoHomeOutline, IoSearchOutline } from "react-icons/io5";
+import { IoCartOutline, IoMenu, IoBagOutline, IoSearchOutline } from "react-icons/io5";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { FiUser, FiLogIn, FiUserPlus, FiLogOut, FiShoppingBag } from "react-icons/fi";
 import { Link } from 'react-router-dom';
@@ -242,11 +242,11 @@ const Header = () => {
 
           {/* Mobile Bottom Navigation Bar */}
           <div className="fixed bottom-0 left-0 right-0 flex items-center justify-around py-2 border-t bg-white border-gray-200 z-1050 md:hidden shadow-lg">
-            <Link to="/" className="flex flex-col items-center">
-              <IconButton aria-label="home">
-                <IoHomeOutline size={22} />
+            <Link to="/product" className="flex flex-col items-center">
+              <IconButton aria-label="Shop">
+                <IoBagOutline size={22} />
               </IconButton>
-              <span className="text-xs">Home</span>
+              <span className="text-xs">Shop</span>
             </Link>
             
            

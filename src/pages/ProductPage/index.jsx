@@ -4,6 +4,7 @@ import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingBag, FaChevronLeft } 
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useShop } from '../../context/ShopContext';
 import jewelryProducts from '../../data/jewelryProducts';
+import ProductItem from '../../components/ProductItem';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -216,49 +217,15 @@ const ProductPage = () => {
           <div className="mt-16">
             <h2 className="text-2xl font-bold mb-6">You may also like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {relatedProducts.map(relatedProduct => (
-                <div key={relatedProduct.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200">
-                  <Link to={`/product/${relatedProduct.id}`} className="block">
-                    <div className="relative pt-[100%] bg-gray-100">
-                      <img 
-                        src={relatedProduct.imageUrl} 
-                        alt={relatedProduct.name}
-                        className="absolute top-0 left-0 w-full h-full object-cover"
-                      />
-                      {relatedProduct.onSale && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                          SALE
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                  <div className="p-4">
-                    <Link to={`/product/${relatedProduct.id}`}>
-                      <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 hover:text-[#05B171] transition-colors">
-                        {relatedProduct.name}
-                      </h3>
-                    </Link>
-                    <div className="flex items-center mb-2">
-                      <div className="flex mr-1">
-                        {[...Array(5)].map((_, i) => (
-                          i < relatedProduct.rating ? 
-                          <FaStar key={i} className="h-3 w-3 text-yellow-400" /> : 
-                          <FaRegStar key={i} className="h-3 w-3 text-yellow-400" />
-                        ))}
-                      </div>
-                      <span className="text-xs text-gray-500">({relatedProduct.reviewCount})</span>
-                    </div>
-                    <div className="mb-3">
-                      <span className="text-lg font-bold">${relatedProduct.price.toFixed(2)}</span>
-                      {relatedProduct.originalPrice && (
-                        <span className="text-sm text-gray-500 line-through ml-2">
-                          ${relatedProduct.originalPrice.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+            {relatedProducts.map(product => (
+                  <ProductItem 
+                    key={product.id} 
+                    product={product}
+                    onAddToCart={cart}
+                    onToggleWishlist={toggleWishlist}
+                    isInWishlist={wishlist.some(item => item.id === product.id)}
+                  />
+                ))}
             </div>
           </div>
         )}
