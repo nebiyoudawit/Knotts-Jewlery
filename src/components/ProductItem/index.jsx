@@ -45,7 +45,7 @@ const ProductItem = ({ product }) => {
             {product.category}
           </span>
           <Link to={`/product/${product.id}`} className="link">
-          <h3 className="font-medium mb-1 text-gray-900 line-clamp-2 overflow-hidden text-ellipsis hover:text-[#05B171] transition-colors">
+          <h3 className="font-medium mb-1 text-gray-900 lg:line-clamp-1 line-clamp-2 overflow-hidden text-ellipsis hover:text-[#05B171] transition-colors">
             {product.name}
           </h3>
         </Link>

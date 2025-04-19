@@ -98,8 +98,8 @@ const CartPage = () => {
                     {/* Quantity */}
                     <div className="md:col-span-3 flex items-center">
                       <div className="flex items-center border border-gray-300 rounded-md w-fit">
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1, item.name)}
+                      <button 
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           className="px-3 py-1 text-gray-600 hover:bg-gray-100"
                           disabled={item.quantity <= 1}
                         >
@@ -109,7 +109,7 @@ const CartPage = () => {
                           {item.quantity}
                         </span>
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1, item.name)}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           className="px-3 py-1 text-gray-600 hover:bg-gray-100"
                         >
                           +
