@@ -15,8 +15,6 @@ const CartPage = () => {
   } = useShop();
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shippingFee = subtotal > 0 ? 50 : 0; // Example shipping fee
-  const total = subtotal + shippingFee;
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
@@ -98,7 +96,7 @@ const CartPage = () => {
                     {/* Quantity */}
                     <div className="md:col-span-3 flex items-center">
                       <div className="flex items-center border border-gray-300 rounded-md w-fit">
-                      <button 
+                        <button 
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           className="px-3 py-1 text-gray-600 hover:bg-gray-100"
                           disabled={item.quantity <= 1}
@@ -140,25 +138,25 @@ const CartPage = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-4">
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">{subtotal.toFixed(2)} birr</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">{shippingFee.toFixed(2)} birr</span>
-                </div>
-                <div className="border-t border-gray-200 pt-3 flex justify-between">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-bold text-lg">{total.toFixed(2)} birr</span>
-                </div>
+              <div className="space-y-2 mb-4">
+                {cart.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span>{item.name} x {item.quantity}</span>
+                    <span>{(item.price * item.quantity).toFixed(2)} birr</span>
+                  </div>
+                ))}
               </div>
-              
-              <button className="w-full bg-emerald-600 text-white py-3 rounded-md hover:bg-emerald-700 transition-colors font-medium">
-                Proceed to Checkout
-              </button>
-              
+
+              <div className="border-t border-gray-200 pt-3 flex justify-between">
+                <span className="font-semibold">Subtotal</span>
+                <span className="font-bold text-lg">{subtotal.toFixed(2)} birr</span>
+              </div>
+
+              <Link to="/checkout">
+                <button className="w-full mt-6 bg-emerald-600 text-white py-3 rounded-md hover:bg-emerald-700 transition-colors font-medium">
+                  Proceed to Checkout
+                </button>
+              </Link>
               <div className="mt-4 text-center">
                 <Link to="/product" className="text-emerald-600 hover:underline text-sm">
                   Continue Shopping

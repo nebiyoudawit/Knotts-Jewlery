@@ -14,6 +14,7 @@ import ScrollToTop from './components/ScrollTop/index.jsx'
 import Register from './pages/Register/index.jsx'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CheckoutPage from './pages/CheckoutPage/index.jsx'
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
      <Route path={"/products/:category"} exact={true} element={<ProductListing/>} />
      <Route path={"/product/:id"} exact={true} element={<ProductPage/>} />
      <Route path={"/login"} exact={true} element={<Login/>} />
+     <Route path={"/checkout"} exact={true} element={<CheckoutPage/>} />
      <Route path={"/register"} exact={true} element={<Register/>} />
       <Route path={"/seller"} exact={true} element={<SellerDashboard/>} />
       <Route path={"/cart"} exact={true} element={<CartPage/>} />
