@@ -15,6 +15,8 @@ import Register from './pages/Register/index.jsx'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CheckoutPage from './pages/CheckoutPage/index.jsx'
+import Profile from './pages/Profile/index.jsx'
+import UserOrders from './pages/UserOrders/index.jsx'
 
 function App() {
   return (
@@ -39,6 +41,8 @@ function App() {
      <Route path={"/product/:id"} exact={true} element={<ProductPage/>} />
      <Route path={"/login"} exact={true} element={<Login/>} />
      <Route path={"/checkout"} exact={true} element={<CheckoutPage/>} />
+      <Route path={"/profile"} exact={true} element={<Profile/>} />
+      <Route path={"/orders"} exact={true} element={<UserOrders/>} />
      <Route path={"/register"} exact={true} element={<Register/>} />
       <Route path={"/seller"} exact={true} element={<SellerDashboard/>} />
       <Route path={"/cart"} exact={true} element={<CartPage/>} />

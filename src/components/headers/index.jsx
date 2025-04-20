@@ -96,7 +96,7 @@ const Header = () => {
             </Typography>
           </Box>
           <Divider />
-          <MenuItem component={Link} to="/account" onClick={onClose}>
+          <MenuItem component={Link} to="/profile" onClick={onClose}>
             <ListItemIcon><FiUser size={18} /></ListItemIcon>
             <ListItemText>Profile</ListItemText>
           </MenuItem>
