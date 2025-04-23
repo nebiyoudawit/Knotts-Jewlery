@@ -1,29 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authenticateUser } from '../../data/auth.js';
+import { useShop } from '../../context/ShopContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const navigate = useNavigate();
+  const { login, adminLogin } = useShop();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const user = authenticateUser(email, password);
-    
-    if (user) {
-      // Store user data in localStorage (simplified auth)
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      
-      // Redirect based on role
-      if (user.role === 'seller') {
-        navigate('/seller');
+    setError('');
+
+    try {
+      let success;
+      if (isAdminLogin) {
+        success = adminLogin(email, password);
       } else {
-        navigate('/');
+        success = login(email, password);
       }
-    } else {
-      setError('Invalid email or password');
+
+      if (success) {
+        // Redirect based on login type
+        if (isAdminLogin) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      } else {
+        setError(isAdminLogin ? 'Invalid admin credentials' : 'Invalid email or password');
+      }
+    } catch (err) {
+      setError('An error occurred during login');
+      console.error('Login error:', err);
     }
   };
 
@@ -61,6 +72,19 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+
+          <div className="mb-4 flex items-center">
+            <input
+              type="checkbox"
+              id="admin-login"
+              checked={isAdminLogin}
+              onChange={() => setIsAdminLogin(!isAdminLogin)}
+              className="h-4 w-4 text-[#05B171] focus:ring-[#05B171] border-gray-300 rounded"
+            />
+            <label htmlFor="admin-login" className="ml-2 block text-sm text-gray-700">
+              Admin Login
+            </label>
           </div>
           
           <button

@@ -7,8 +7,11 @@ const defaultContextValue = {
   cartCount: 0,
   wishlistCount: 0,
   currentUser: null,
+  isAdmin: false,
   login: () => {},
   logout: () => {},
+  adminLogin: () => {},
+  adminLogout: () => {},
   register: () => {},
   addToCart: () => {},
   removeFromCart: () => {},
@@ -58,6 +61,18 @@ export const ShopProvider = ({ children }) => {
     }
   });
 
+  const [isAdmin, setIsAdmin] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem('isAdmin') === 'true';
+      }
+      return false;
+    } catch (error) {
+      console.error('Error parsing admin status:', error);
+      return false;
+    }
+  });
+
   // Persist to localStorage
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -71,8 +86,13 @@ export const ShopProvider = ({ children }) => {
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
   }, [currentUser]);
 
+  useEffect(() => {
+    localStorage.setItem('isAdmin', isAdmin);
+  }, [isAdmin]);
+
   // Authentication methods
   const login = (email, password) => {
+    // In a real app, this would verify credentials with your backend
     const mockUser = {
       id: '1',
       name: 'Test User',
@@ -85,9 +105,27 @@ export const ShopProvider = ({ children }) => {
     return true;
   };
 
+  const adminLogin = (email, password) => {
+    // In a real app, verify credentials with your backend
+    if (email === 'admin@example.com' && password === 'admin123') {
+      setIsAdmin(true);
+      setCurrentUser({
+        id: 'admin-1',
+        name: 'Admin User',
+        email: email,
+        avatar: null,
+        isAdmin: true
+      });
+      toast.success('Admin login successful!');
+      return true;
+    }
+    toast.error('Invalid admin credentials');
+    return false;
+  };
+
   const register = (name, email, password) => {
     const mockUser = {
-      id: '1',
+      id: Date.now().toString(),
       name: name,
       email: email,
       avatar: null
@@ -100,7 +138,17 @@ export const ShopProvider = ({ children }) => {
 
   const logout = () => {
     setCurrentUser(null);
+    setIsAdmin(false);
     toast.success('Logged out successfully!');
+  };
+
+  const adminLogout = () => {
+    setIsAdmin(false);
+    // Keep regular user logged in if they were both admin and regular user
+    if (currentUser?.email === 'admin@example.com') {
+      setCurrentUser(null);
+    }
+    toast.success('Admin logged out');
   };
 
   // Cart methods with notifications
@@ -128,7 +176,6 @@ export const ShopProvider = ({ children }) => {
       toast.success(`${product.name} added to cart!`);
     }
   };
-  
 
   const removeFromCart = (productId) => {
     const product = cart.find(item => item.id === productId);
@@ -185,8 +232,11 @@ export const ShopProvider = ({ children }) => {
         cartCount,
         wishlistCount,
         currentUser,
+        isAdmin,
         login,
         logout,
+        adminLogin,
+        adminLogout,
         register,
         addToCart,
         removeFromCart,
