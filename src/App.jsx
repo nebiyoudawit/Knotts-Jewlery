@@ -6,7 +6,6 @@ import Home from './pages/Home/index.jsx'
 import ProductListing from './pages/ProductListing/index.jsx'
 import ProductPage from './pages/ProductPage/index.jsx'
 import Login from './pages/login/index.jsx'
-import SellerDashboard from './pages/Seller/index.jsx'
 import CartPage from './pages/CartPage/index.jsx'
 import WishlistPage from './pages/WishlistPage/index.jsx'
 import { ShopProvider } from './context/ShopContext.jsx'
@@ -57,7 +56,6 @@ const AppRoutes = () => {
         <Route path="/profile" exact element={<Profile />} />
         <Route path="/orders" exact element={<UserOrders />} />
         <Route path="/register" exact element={<Register />} />
-        <Route path="/seller" exact element={<SellerDashboard />} />
         <Route path="/cart" exact element={<CartPage />} />
         <Route path="/wishlist" exact element={<WishlistPage />} />
 
