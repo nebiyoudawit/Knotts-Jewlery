@@ -22,6 +22,18 @@ Desktop View
 *checkoutPage
 ![alt text](/screenshots/checkout.jpeg)
 
+*Profile
+![alt text](/screenshots/Profile.jpeg)
+
+*Orders
+![alt text](/screenshots/Orders.jpeg)
+
+*Login
+![alt text](/screenshots/login.png)
+
+*Register
+![alt text](/screenshots/Register.jpeg)
+
 *AdminPages
 -Dashboard
 ![alt text](/screenshots/AdminDashboard.jpeg)
