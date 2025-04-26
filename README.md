@@ -72,7 +72,7 @@ Desktop View
 
 *Login/Register
 ----------------------------------------------
-![alt text](/screenshots/Moblie/Login.jpeg)
+![alt text](/screenshots/Moblie/log_reg.jpg)
 -----------------------------------------------
 
 
