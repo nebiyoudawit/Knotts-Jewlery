@@ -46,23 +46,13 @@ Desktop View
 
 *Moblie View
 
--Home page
+*Home page
 ![alt text](/screenshots/Moblie/home.jpg)
 -----------------------------------------------
 
-*Shop Page
+*Shop,Cart,Wishlist pages
 -----------------------------------------------
-![ScreenShot](/screenshots/Moblie/Shop.jpg)
------------------------------------------------
-
-*CartPage
------------------------------------------------
-![alt text](/screenshots/Moblie/cart.jpg) 
------------------------------------------------
-
-*WishlistPage
------------------------------------------------
-![alt text](/screenshots/Moblie/Wishlist.jpg)
+![ScreenShot](/screenshots/Moblie/scw.jpg)
 -----------------------------------------------
 
 *checkoutPage
@@ -80,25 +70,18 @@ Desktop View
 ![alt text](/screenshots/Moblie/orders.jpg)
 -----------------------------------------------
 
-*Login
+*Login/Register
 ----------------------------------------------
 ![alt text](/screenshots/Moblie/Login.jpeg)
 -----------------------------------------------
 
-*Register
------------------------------------------------
-![alt text](/screenshots/Moblie/Register.jpeg)
------------------------------------------------
 
 *AdminPages
 -Dashboard
 ![alt text](/screenshots/Moblie/Dashboard.jpg)
 -----------------------------------------------
 
-![alt text](/screenshots/Moblie/ProductMan.jpg) 
--------------------------------------------------------------
-
-![alt text](/screenshots/Moblie/orderman.jpg)
-----------------------------------------------------
-
-![alt text](/screenshots/Moblie/Usermangment.jpg)
+-Pages
+--------------------------------------------------
+![alt text](/screenshots/Moblie/admpages.jpg) 
+-------------------------------------------------
