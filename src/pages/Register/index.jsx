@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiUser, FiMail, FiLock, FiPhone } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiPhone, FiMapPin } from 'react-icons/fi';
 
 const Register = () => {
 
@@ -60,6 +60,25 @@ const Register = () => {
                       </div>
                     </div>
         
+                    <div>
+                      <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                        Address
+                      </label>
+                      <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <FiMapPin className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="address"
+                          name="address"
+                          type="text"
+                          autoComplete="address"
+                          required
+                          className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
+                        />
+                      </div>
+                    </div>
+                    
                     <div>
                       <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                         Password
