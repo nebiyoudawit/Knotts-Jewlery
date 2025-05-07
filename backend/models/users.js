@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt'; // Static import of bcrypt
 
 const { Schema, model } = mongoose;
 
@@ -52,42 +53,42 @@ const userSchema = new Schema(
       default: Date.now,
     },
     cart: {
-        items: [
-          {
-            product: {
-              type: mongoose.Schema.Types.ObjectId,
-              ref: 'Product',
-              required: true,
-            },
-            quantity: {
-              type: Number,
-              required: true,
-              min: 1,
-            },
-          },
-        ],
-        total: {
-          type: Number,
-          default: 0,
-        },
-      },
-      // Wishlist integrated into user
-      wishlist: [
+      items: [
         {
           product: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
+            required: true,
+          },
+          quantity: {
+            type: Number,
+            required: true,
+            min: 1,
           },
         },
       ],
-      // Reviews written by the user
-      reviews: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Review',
-        },
-      ],
+      total: {
+        type: Number,
+        default: 0,
+      },
     },
+    // Wishlist integrated into user
+    wishlist: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product',
+        },
+      },
+    ],
+    // Reviews written by the user
+    reviews: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review',
+      },
+    ],
+  },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
   }
@@ -99,16 +100,14 @@ userSchema.pre('save', async function (next) {
     return next();
   }
 
-  const bcrypt = await import('bcrypt');
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  const salt = await bcrypt.genSalt(10); // Hashing the password
+  this.password = await bcrypt.hash(this.password, salt); // Hash the password
   next();
 });
 
 // Instance method to compare passwords
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  const bcrypt = await import('bcrypt');
-  return await bcrypt.compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, this.password); // Compare password hashes
 };
 
 // Create and export the User model
