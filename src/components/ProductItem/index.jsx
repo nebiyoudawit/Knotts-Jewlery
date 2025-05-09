@@ -5,26 +5,41 @@ import { useShop } from '../../context/ShopContext';
 
 const ProductItem = ({ product }) => {
   const { addToCart, toggleWishlist, wishlist } = useShop();
-  const isWishlisted = wishlist.some(item => item.id === product.id);
+  const isWishlisted = wishlist.some(item => item._id === product._id);
+
+  // Handle image URL - check if it's already a full URL or needs the server prefix
+  const getImageUrl = () => {
+    if (!product.images?.[0]) return 'https://via.placeholder.com/300x300';
+    
+    // If image already includes http (full URL), use as-is
+    if (product.images[0].includes('http')) return product.images[0];
+    
+    // Otherwise prepend server URL
+    return `http://localhost:5000${product.images[0]}`;
+  };
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full ">
+    <div className="group relative flex flex-col bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full">
       {/* Product Image with Wishlist Button */}
       <div className="relative pt-[100%]">
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${product._id}`}>
           <img 
-            src={product.imageUrl || 'https://via.placeholder.com/300x300'} 
+            src={getImageUrl()} 
             alt={product.name}
             className="absolute top-0 left-0 w-full h-full object-cover"
+            onError={(e) => {
+              e.target.src = 'https://via.placeholder.com/300x300';
+            }}
           />
         </Link>
-        {/*Sale section*/}
-
+        
+        {/* Sale section */}
         {product.onSale && (
-                          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                            SALE
-                          </div>
-             )}
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+            SALE
+          </div>
+        )}
+        
         {/* Wishlist Button */}
         <button 
           className="absolute top-3 right-3 p-2 bg-white/90 rounded-full hover:bg-white transition-all shadow-sm"
@@ -41,10 +56,10 @@ const ProductItem = ({ product }) => {
 
       {/* Product Details */}
       <div className="flex flex-col flex-grow p-4">
-          <span className="text-xs uppercase text-gray-500 mb-1">
-            {product.category}
-          </span>
-          <Link to={`/product/${product.id}`} className="link">
+        <span className="text-xs uppercase text-gray-500 mb-1">
+          {product.category}
+        </span>
+        <Link to={`/product/${product._id}`} className="link">
           <h3 className="font-medium mb-1 text-gray-900 lg:line-clamp-1 line-clamp-2 overflow-hidden text-ellipsis hover:text-[#05B171] transition-colors">
             {product.name}
           </h3>
@@ -62,7 +77,7 @@ const ProductItem = ({ product }) => {
             )}
           </div>
           <span className="text-xs text-gray-500">
-            ({product.reviewCount})
+            ({product.reviewCount || 0})
           </span>
         </div>
         

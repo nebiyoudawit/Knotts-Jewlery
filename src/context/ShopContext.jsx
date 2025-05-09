@@ -8,6 +8,8 @@ const defaultContextValue = {
   wishlistCount: 0,
   currentUser: null,
   isAdmin: false,
+  isLoading: false,
+  error: null,
   login: () => {},
   logout: () => {},
   adminLogin: () => {},
@@ -17,222 +19,318 @@ const defaultContextValue = {
   removeFromCart: () => {},
   updateQuantity: () => {},
   toggleWishlist: () => {},
+  checkWishlistStatus: () => {},
+  clearError: () => {},
+  updateUserProfile: () => {},
+  changePassword: () => {},
+  fetchCart: () => {},
+  fetchWishlist: () => {},
 };
 
 const ShopContext = createContext(defaultContextValue);
 
 export const ShopProvider = ({ children }) => {
-  const [cart, setCart] = useState(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const savedCart = localStorage.getItem('cart');
-        return savedCart ? JSON.parse(savedCart) : [];
-      }
-      return [];
-    } catch (error) {
-      console.error('Error parsing cart from localStorage:', error);
-      return [];
-    }
-  });
+  const [cart, setCart] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const [wishlist, setWishlist] = useState(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const savedWishlist = localStorage.getItem('wishlist');
-        return savedWishlist ? JSON.parse(savedWishlist) : [];
-      }
-      return [];
-    } catch (error) {
-      console.error('Error parsing wishlist from localStorage:', error);
-      return [];
-    }
-  });
-
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const savedUser = localStorage.getItem('currentUser');
-        return savedUser ? JSON.parse(savedUser) : null;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error parsing user from localStorage:', error);
-      return null;
-    }
-  });
-
-  const [isAdmin, setIsAdmin] = useState(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        return localStorage.getItem('isAdmin') === 'true';
-      }
-      return false;
-    } catch (error) {
-      console.error('Error parsing admin status:', error);
-      return false;
-    }
-  });
-
-  // Persist to localStorage
+  // Check auth state on mount and fetch user data
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+    const token = localStorage.getItem('token');
+    if (token) {
+      verifyToken(token);
+    }
+  }, []);
 
+  // Fetch cart and wishlist when user changes
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
-
-  useEffect(() => {
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    if (currentUser) {
+      fetchCart();
+      fetchWishlist();
+    } else {
+      setCart([]);
+      setWishlist([]);
+    }
   }, [currentUser]);
 
-  useEffect(() => {
-    localStorage.setItem('isAdmin', isAdmin);
-  }, [isAdmin]);
-
-  // Authentication methods
-  const login = (email, password) => {
-    // In a real app, this would verify credentials with your backend
-    const mockUser = {
-      id: '1',
-      name: 'Test User',
-      email: email,
-      avatar: null
+  // Helper function for API requests
+  const makeRequest = async (url, method, body = null) => {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
     };
-    
-    setCurrentUser(mockUser);
-    toast.success('Logged in successfully!');
-    return true;
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const config = {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : null,
+    };
+
+    const response = await fetch(url, config);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Request failed');
+    }
+
+    return data;
   };
 
-  const adminLogin = (email, password) => {
-    // In a real app, verify credentials with your backend
-    if (email === 'admin@example.com' && password === 'admin123') {
+  // Verify token validity
+  const verifyToken = async (token) => {
+    setIsLoading(true);
+    try {
+      const data = await makeRequest('http://localhost:5000/api/auth/verify', 'GET');
+      setCurrentUser(data.user);
+      setIsAdmin(data.user?.role === 'admin');
+    } catch (err) {
+      logout();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 🔐 AUTH FUNCTIONS
+  const register = async (userData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await makeRequest('http://localhost:5000/api/auth/register', 'POST', userData);
+      
+      localStorage.setItem('token', data.token);
+      setCurrentUser(data.user);
+      setIsAdmin(data.user?.role === 'admin');
+      toast.success('Registration successful!');
+      return true;
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email, password) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await makeRequest('http://localhost:5000/api/auth/login', 'POST', { email, password });
+      
+      localStorage.setItem('token', data.token);
+      setCurrentUser(data.user);
+      setIsAdmin(data.user?.role === 'admin');
+      toast.success('Login successful!');
+      return true;
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const adminLogin = async (email, password) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await makeRequest('http://localhost:5000/api/auth/login', 'POST', { email, password });
+      
+      if (data.user?.role !== 'admin') {
+        throw new Error('Access denied: Not an admin');
+      }
+
+      localStorage.setItem('token', data.token);
+      setCurrentUser(data.user);
       setIsAdmin(true);
-      setCurrentUser({
-        id: 'admin-1',
-        name: 'Admin User',
-        email: email,
-        avatar: null,
-        isAdmin: true
-      });
       toast.success('Admin login successful!');
       return true;
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
-    toast.error('Invalid admin credentials');
-    return false;
-  };
-
-  const register = (name, email, password) => {
-    const mockUser = {
-      id: Date.now().toString(),
-      name: name,
-      email: email,
-      avatar: null
-    };
-    
-    setCurrentUser(mockUser);
-    toast.success('Account created successfully!');
-    return true;
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setCurrentUser(null);
     setIsAdmin(false);
-    toast.success('Logged out successfully!');
+    setCart([]);
+    setWishlist([]);
+    toast.success('Logged out successfully');
   };
 
   const adminLogout = () => {
-    setIsAdmin(false);
-    // Keep regular user logged in if they were both admin and regular user
-    if (currentUser?.email === 'admin@example.com') {
-      setCurrentUser(null);
+    if (currentUser?.role === 'admin') {
+      logout();
+      toast.success('Admin logged out successfully');
     }
-    toast.success('Admin logged out');
   };
 
-  // Cart methods with notifications
-  const addToCart = (product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-  
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+  // 🛒 CART FUNCTIONS
+  const fetchCart = async () => {
+    try {
+      const data = await makeRequest('http://localhost:5000/api/user/cart', 'GET');
+      setCart(data);
+    } catch (err) {
+      console.error('Error fetching cart:', err);
+    }
+  };
+
+  const addToCart = async (product, quantity = 1) => {
+    try {
+      // Ensure product has an _id (MongoDB uses _id by default)
+      if (!product._id) {
+        throw new Error('Invalid product ID');
       }
   
-      return [...prevCart, { ...product, quantity: 1 }];
-    });
+      const data = await makeRequest('http://localhost:5000/api/user/cart', 'POST', {
+        productId: product._id,  // Use _id instead of id
+        quantity
+      });
+      setCart(data);
+      toast.success(`${product.name} added to cart`);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const removeFromCart = async (productId) => {
+    try {
+      const data = await makeRequest(`http://localhost:5000/api/user/cart/${productId}`, 'DELETE');
+      setCart(data);
+      toast.info('Item removed from cart');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const updateQuantity = async (productId, quantity) => {
+    try {
+      if (quantity < 1) {
+        return removeFromCart(productId);
+      }
+      const data = await makeRequest(`http://localhost:5000/api/user/cart/${productId}`, 'PUT', { quantity });
+      setCart(data);
+      toast.success('Quantity updated');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  // 💖 WISHLIST FUNCTIONS
+  const fetchWishlist = async () => {
+    try {
+      const data = await makeRequest('http://localhost:5000/api/user/wishlist', 'GET');
+      setWishlist(data);
+    } catch (err) {
+      console.error('Error fetching wishlist:', err);
+    }
+  };
+
+  const toggleWishlist = async (product) => {
+    try {
+      if (!product._id) {
+        throw new Error('Invalid product ID');
+      }
   
-    // Show toast after state update logic
-    const existingItem = cart.find(item => item.id === product.id);
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + 1;
-      toast.success(`${product.name} quantity updated to ${newQuantity}`);
-    } else {
-      toast.success(`${product.name} added to cart!`);
+      const { wishlist: updatedWishlist, isInWishlist } = await makeRequest(
+        `http://localhost:5000/api/user/wishlist/${product._id}`,
+        'POST'
+      );
+      setWishlist(updatedWishlist);
+      toast[isInWishlist ? 'success' : 'info'](
+        isInWishlist 
+          ? `${product.name} added to wishlist`
+          : `${product.name} removed from wishlist`
+      );
+    } catch (err) {
+      toast.error(err.message);
     }
   };
 
-  const removeFromCart = (productId) => {
-    const product = cart.find(item => item.id === productId);
-    setCart(prevCart => prevCart.filter(item => item.id !== productId));
-    if (product) {
-      toast.info(`${product.name} removed from cart`);
+  const checkWishlistStatus = async (productId) => {
+    try {
+      const { isInWishlist } = await makeRequest(
+        `http://localhost:5000/api/user/wishlist/check/${productId}`,
+        'GET'
+      );
+      return isInWishlist;
+    } catch (err) {
+      console.error('Error checking wishlist:', err);
+      return false;
     }
   };
 
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) {
-      removeFromCart(productId);
-      return;
-    }
-    
-    const product = cart.find(item => item.id === productId);
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-    
-    if (product) {
-      toast.success(`${product.name} quantity updated to ${newQuantity}`);
+  // 👤 PROFILE FUNCTIONS
+  const updateUserProfile = async (updatedUserData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await makeRequest(
+        'http://localhost:5000/api/user/update',
+        'PUT',
+        updatedUserData
+      );
+      setCurrentUser(data.user);
+      toast.success('Profile updated successfully');
+      return true;
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Wishlist methods with notifications
-  const toggleWishlist = (product) => {
-    const isInWishlist = wishlist.some(item => item.id === product.id);
-  
-    setWishlist(prev =>
-      isInWishlist
-        ? prev.filter(item => item.id !== product.id)
-        : [...prev, product]
-    );
-  
-    toast[isInWishlist ? 'info' : 'success'](
-      isInWishlist 
-        ? `${product.name} removed from wishlist`
-        : `${product.name} added to wishlist!`
-    );
+  const changePassword = async (currentPassword, newPassword) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await makeRequest(
+        'http://localhost:5000/api/user/change-password',
+        'PUT',
+        { currentPassword, newPassword }
+      );
+      toast.success('Password changed successfully');
+      return true;
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Calculate derived values
+  const clearError = () => setError(null);
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlist.length;
 
   return (
-    <ShopContext.Provider 
-      value={{ 
+    <ShopContext.Provider
+      value={{
         cart,
         wishlist,
         cartCount,
         wishlistCount,
         currentUser,
         isAdmin,
+        isLoading,
+        error,
         login,
         logout,
         adminLogin,
@@ -241,7 +339,13 @@ export const ShopProvider = ({ children }) => {
         addToCart,
         removeFromCart,
         updateQuantity,
-        toggleWishlist
+        toggleWishlist,
+        checkWishlistStatus,
+        clearError,
+        updateUserProfile,
+        changePassword,
+        fetchCart,
+        fetchWishlist,
       }}
     >
       {children}

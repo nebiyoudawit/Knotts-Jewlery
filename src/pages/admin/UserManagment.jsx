@@ -1,33 +1,109 @@
-// src/components/admin/UsersManager.jsx
-import { useState } from 'react';
-import { FiUser, FiEdit2, FiTrash2, FiPlus, FiSearch, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiUser, FiEdit2, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
+
+const API_BASE_URL = 'http://localhost:5000/api/admin'; // Update base URL
 
 const UserManagment = () => {
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Sarah Johnson', email: 'sarah@example.com', role: 'admin', joined: '2023-01-15' },
-    { id: 2, name: 'Michael Bekele', email: 'michael@example.com', role: 'customer', joined: '2023-02-20' },
-    { id: 3, name: 'Alemnesh Teka', email: 'alemnesh@example.com', role: 'customer', joined: '2023-03-10' },
-  ]);
+  const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/users`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`, // Replace with how you store the token
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data);
+        } else {
+          console.error("Error fetching users:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const handleEdit = (user) => {
     setCurrentUser(user);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
-    setUsers(users.filter(u => u.id !== id));
-  };
+const handleDelete = async (id) => {
+  try {
+    // Ensure id is being passed correctly
+    console.log("Deleting user with id:", id);
 
-  const handleSave = (user) => {
-    if (user.id) {
-      setUsers(users.map(u => u.id === user.id ? user : u));
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+
+    if (response.ok) {
+      setUsers(users.filter(u => u.id !== id)); // Remove user from the list
     } else {
-      setUsers([...users, { ...user, id: Date.now(), joined: new Date().toISOString().split('T')[0] }]);
+      console.error("Error deleting user:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Error deleting user:", error);
+  }
+};
+
+  const handleSave = async (userData) => {
+    // If editing an existing user
+    if (currentUser) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/users/${currentUser.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(userData),
+        });
+  
+        if (response.ok) {
+          const updatedUser = await response.json();
+          setUsers(users.map(u => u.id === currentUser.id ? updatedUser : u));
+        } else {
+          console.error("Error updating user:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error updating user:", error);
+      }
+    } else {
+      // If adding a new user
+      try {
+        const response = await fetch(`${API_BASE_URL}/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(userData), // Ensure the userData is correct
+        });
+  
+        if (response.ok) {
+          const newUser = await response.json();
+          setUsers([...users, newUser]); // Add new user to the list
+        } else {
+          console.error("Error adding user:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error adding user:", error);
+      }
     }
     setIsModalOpen(false);
+    setCurrentUser(null); // Clear current user after save
   };
 
   const filteredUsers = users.filter(user =>
@@ -105,7 +181,7 @@ const UserManagment = () => {
                 <td className="px-6 py-4 whitespace-nowrap">{user.joined}</td>
                 <td className="px-6 py-4 whitespace-nowrap flex gap-2">
                   <button 
-                    onClick={() => handleEdit(user)} 
+                    onClick={() => handleEdit(user.id)} 
                     className="text-blue-600 hover:text-blue-900 p-1"
                   >
                     <FiEdit2 />
@@ -172,31 +248,19 @@ const UserCard = ({ user, onEdit, onDelete }) => {
             onClick={() => setIsExpanded(!isExpanded)} 
             className="text-gray-600 hover:text-gray-900 p-1"
           >
-            {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
+            {isExpanded ? 'Collapse' : 'Expand'}
           </button>
         </div>
       </div>
-      
       {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-500">Role:</span>
-            <span className={`px-2 py-1 rounded-full text-xs ${
-              user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-            }`}>
-              {user.role}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-500">Joined:</span>
-            <span className="text-sm">{user.joined}</span>
-          </div>
+        <div className="mt-4 text-sm text-gray-600">
+          <p>Role: {user.role}</p>
+          <p>Joined: {user.joined}</p>
         </div>
       )}
     </div>
   );
 };
-
 const UserForm = ({ user, onSave, onCancel }) => {
   const [formData, setFormData] = useState(user || {
     name: '',
@@ -291,5 +355,4 @@ const UserForm = ({ user, onSave, onCancel }) => {
     </form>
   );
 };
-
 export default UserManagment;

@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingBag, FaChevronLeft } from 'react-icons/fa';
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useShop } from '../../context/ShopContext';
-import jewelryProducts from '../../data/jewelryProducts';
 import ProductItem from '../../components/ProductItem';
 
 const ProductPage = () => {
@@ -11,22 +10,10 @@ const ProductPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      user: 'Alex Johnson',
-      rating: 5,
-      date: '2023-10-15',
-      comment: 'Absolutely love this piece! The quality is outstanding and it looks even better in person.'
-    },
-    {
-      id: 2,
-      user: 'Sarah Miller',
-      rating: 4,
-      date: '2023-09-28',
-      comment: 'Beautiful design, but the chain is a bit shorter than I expected. Still very happy with the purchase.'
-    }
-  ]);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({
     rating: 0,
     comment: '',
@@ -40,24 +27,52 @@ const ProductPage = () => {
     cart 
   } = useShop();
 
-  const product = jewelryProducts.find(p => p.id === parseInt(id));
-  const isWishlisted = wishlist.some(item => item.id === product?.id);
+  const isWishlisted = product ? wishlist.some(item => item.id === product._id) : false;
 
   useEffect(() => {
-    if (product) {
-      const related = jewelryProducts
-        .filter(p => p.category === product.category && p.id !== product.id)
-        .slice(0, 4);
-      setRelatedProducts(related);
-    }
-  }, [product]);
+    console.log("Product ID from URL params:", id);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch product details
+        const productResponse = await fetch(`http://localhost:5000/api/products/${id}`);
+        
+        if (!productResponse.ok) {
+          throw new Error('Failed to fetch product');
+        }
+        console.log('Raw product response:', productResponse);
+        const productData = await productResponse.json();
+        setProduct(productData.data);
+        setReviews(productData.data.reviews || []);
+        
+        // Fetch related products
+        const relatedResponse = await fetch(`/api/products?category=${productData.data.category}`);
+        if (!relatedResponse.ok) {
+          throw new Error('Failed to fetch related products');
+        }
+        const relatedData = await relatedResponse.json();
+        const filteredRelated = relatedData.data
+          .filter(p => p._id !== productData.data._id)
+          .slice(0, 4);
+        setRelatedProducts(filteredRelated);
+        
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const imageGallery = [
-    product?.imageUrl,
-    product?.imageUrl,
-    product?.imageUrl,
-    product?.imageUrl
-  ];
+    fetchProduct();
+  }, [id]);
+
+  const imageGallery = product 
+    ? [
+        product.imageUrl,
+        ...(product.additionalImages || []).slice(0, 3) // Show up to 3 additional images
+      ]
+    : [];
 
   const handleRatingChange = (rating) => {
     setNewReview({ ...newReview, rating });
@@ -67,20 +82,42 @@ const ProductPage = () => {
     setNewReview({ ...newReview, comment: e.target.value });
   };
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (newReview.rating === 0 || !newReview.comment.trim()) return;
     
-    const review = {
-      id: reviews.length + 1,
-      user: newReview.user,
-      rating: newReview.rating,
-      date: new Date().toISOString().split('T')[0],
-      comment: newReview.comment
-    };
-    
-    setReviews([...reviews, review]);
-    setNewReview({ rating: 0, comment: '', user: 'Anonymous' });
+    try {
+      const response = await fetch(`/api/products/${id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rating: newReview.rating,
+          comment: newReview.comment
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit review');
+      }
+
+      const responseData = await response.json();
+      
+      setReviews([...reviews, responseData.data]);
+      setNewReview({ rating: 0, comment: '', user: 'Anonymous' });
+      
+      // Update product rating
+      if (product) {
+        setProduct({
+          ...product,
+          rating: responseData.updatedProduct.rating,
+          reviewCount: responseData.updatedProduct.reviewCount
+        });
+      }
+    } catch (err) {
+      console.error('Error submitting review:', err);
+    }
   };
 
   const handleQuantityChange = (change) => {
@@ -91,13 +128,47 @@ const ProductPage = () => {
   };
 
   const handleAddToCart = () => {
-    const productWithQuantity = { ...product, quantity };
-    addToCart(productWithQuantity);
+    if (product) {
+      const productWithQuantity = { 
+        ...product, 
+        quantity,
+        id: product._id // Ensure we use the correct ID field
+      };
+      addToCart(productWithQuantity);
+    }
   };
 
   const handleToggleWishlist = () => {
-    toggleWishlist(product);
+    if (product) {
+      toggleWishlist({
+        ...product,
+        id: product._id // Ensure we use the correct ID field
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Loading Product...</h1>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Error Loading Product</h1>
+        <p className="text-gray-600 mb-6">{error}</p>
+        <Link 
+          to="/products" 
+          className="bg-[#05B171] text-white px-6 py-2 rounded-md hover:bg-[#048a5b] transition-colors inline-flex items-center gap-2"
+        >
+          <IoMdArrowRoundBack /> Back to Products
+        </Link>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -116,9 +187,7 @@ const ProductPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Responsive container */}
       <div className="w-full max-w-full md:container md:mx-auto px-0 md:px-4 py-4 md:py-8">
-        {/* Breadcrumb navigation */}
         <nav className="flex px-4 md:px-0 mb-4 md:mb-6 text-sm text-gray-600 overflow-x-auto whitespace-nowrap md:overflow-visible md:whitespace-normal">
           <Link to="/" className="hover:text-[#05B171]">Home</Link>
           <span className="mx-2">/</span>
@@ -127,7 +196,6 @@ const ProductPage = () => {
           <span className="text-gray-900 truncate max-w-[120px] md:max-w-none inline-block">{product.name}</span>
         </nav>
 
-        {/* Mobile back button */}
         <Link 
           to="/product" 
           className="md:hidden flex items-center gap-2 px-4 mb-4 text-[#05B171] hover:underline text-sm"
@@ -135,9 +203,7 @@ const ProductPage = () => {
           <FaChevronLeft /> Back to Products
         </Link>
 
-        {/* Product section */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-8 md:mb-12 w-full">
-          {/* Image gallery */}
           <div className="w-full md:w-1/2 px-0 md:px-0">
             <div className="bg-white p-2 md:p-4 rounded-none md:rounded-lg shadow-sm md:shadow-md mb-3">
               <img 
@@ -163,7 +229,6 @@ const ProductPage = () => {
             </div>
           </div>
 
-          {/* Product info */}
           <div className="w-full md:w-1/2 px-4 md:px-0">
             <div className="bg-white p-4 md:p-6 rounded-none md:rounded-lg shadow-sm md:shadow-md">
               <div className="flex justify-between items-start">
@@ -211,7 +276,7 @@ const ProductPage = () => {
                 <h2 className="text-lg md:text-xl font-semibold mb-1 md:mb-2">Details</h2>
                 <ul className="text-sm md:text-base text-gray-700 space-y-1">
                   <li><strong>Category:</strong> {product.category}</li>
-                  <li><strong>Material:</strong> Sterling Silver</li>
+                  <li><strong>Material:</strong> {product.material || 'Sterling Silver'}</li>
                   <li><strong>Shipping:</strong> Free delivery on all orders</li>
                 </ul>
               </div>
@@ -252,7 +317,6 @@ const ProductPage = () => {
           </div>
         </div>
 
-        {/* Reviews section */}
         <div className="w-full bg-white p-4 md:p-6 rounded-none md:rounded-lg shadow-sm md:shadow-md">
           <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Customer Reviews</h2>
           
@@ -270,7 +334,6 @@ const ProductPage = () => {
             <p className="text-sm md:text-base text-gray-700">{reviews.length} customer reviews</p>
           </div>
 
-          {/* Review form */}
           <div className="mb-6 md:mb-8 p-3 md:p-4 bg-gray-50 rounded-lg">
             <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">Write a Review</h3>
             <form onSubmit={handleSubmitReview}>
@@ -314,13 +377,14 @@ const ProductPage = () => {
             </form>
           </div>
 
-          {/* Reviews list */}
           <div className="space-y-4 md:space-y-6">
             {reviews.map(review => (
-              <div key={review.id} className="border-b border-gray-200 pb-4 md:pb-6 last:border-0 last:pb-0">
+              <div key={review._id || review.id} className="border-b border-gray-200 pb-4 md:pb-6 last:border-0 last:pb-0">
                 <div className="flex justify-between items-start mb-1 md:mb-2">
                   <h3 className="text-sm md:text-base font-semibold">{review.user}</h3>
-                  <span className="text-xs md:text-sm text-gray-500">{new Date(review.date).toLocaleDateString()}</span>
+                  <span className="text-xs md:text-sm text-gray-500">
+                    {new Date(review.createdAt || review.date).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex mb-1 md:mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -335,18 +399,17 @@ const ProductPage = () => {
           </div>
         </div>
 
-        {/* Related products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-8 md:mt-16 px-4 md:px-0  mb-12">
+          <div className="mt-8 md:mt-16 px-4 md:px-0 mb-12">
             <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">You may also like</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {relatedProducts.map(product => (
+              {relatedProducts.map(relatedProduct => (
                 <ProductItem 
-                  key={product.id} 
-                  product={product}
-                  onAddToCart={cart}
+                  key={relatedProduct._id} 
+                  product={relatedProduct}
+                  onAddToCart={addToCart}
                   onToggleWishlist={toggleWishlist}
-                  isInWishlist={wishlist.some(item => item.id === product.id)}
+                  isInWishlist={wishlist.some(item => item.id === relatedProduct._id)}
                 />
               ))}
             </div>

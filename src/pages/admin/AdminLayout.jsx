@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   FiGrid, FiBox, FiShoppingBag, FiUsers, FiSettings, FiLogOut, FiMenu, FiX,
 } from 'react-icons/fi';
+import { useShop } from '../../context/ShopContext'; // ✅ Adjust path if needed
 
 const navItems = [
   { to: '/admin', icon: FiGrid, label: 'Dashboard' },
@@ -10,10 +11,14 @@ const navItems = [
   { to: '/admin/order', icon: FiShoppingBag, label: 'Orders' },
   { to: '/admin/user', icon: FiUsers, label: 'Users' },
 ];
+
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const { logout } = useShop(); // ✅ Use adminLogout from context
 
   // Close sidebar when route changes
   useEffect(() => {
@@ -32,6 +37,12 @@ const AdminLayout = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    logout();
+    navigate('/login'); // ✅ Redirect after logout
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -74,12 +85,13 @@ const AdminLayout = () => {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#048a5b] h-16">
-          
-          <button className="flex items-center w-full space-x-3 py-2 px-4 rounded-lg hover:bg-[#04965f] transition-colors">
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full space-x-3 py-2 px-4 rounded-lg hover:bg-[#04965f] transition-colors"
+          >
             <FiLogOut className="text-xl" />
             <span className="text-sm font-medium">Logout</span>
           </button>
-
         </div>
       </aside>
 
@@ -96,7 +108,7 @@ const AdminLayout = () => {
           <h2 className="text-lg font-semibold">
             {navItems.find(item => item.to === location.pathname)?.label || 'Admin'}
           </h2>
-          <div className="w-6"></div> {/* Spacer for alignment */}
+          <div className="w-6"></div>
         </header>
 
         {/* Page Content */}

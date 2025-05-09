@@ -58,3 +58,13 @@ background-color: #05B171;}
   color: #000 !important;
 }
 
+/* Smooth pop-in effect */
+@keyframes popIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  80% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop-in {
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+}

@@ -50,7 +50,7 @@ const AppRoutes = () => {
         <Route path="/" exact element={<Home />} />
         <Route path="/product" exact element={<ProductListing />} />
         <Route path="/products/:category" exact element={<ProductListing />} />
-        <Route path="/product/:id" exact element={<ProductPage />} />
+        <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/login" exact element={<Login />} />
         <Route path="/checkout" exact element={<CheckoutPage />} />
         <Route path="/profile" exact element={<Profile />} />

@@ -14,7 +14,15 @@ const CartPage = () => {
     wishlist
   } = useShop();
 
+  // Calculate subtotal
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  // Handle image URL - check if it's already a full URL or needs the server prefix
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return 'https://via.placeholder.com/300x300';
+    if (imagePath.includes('http')) return imagePath;
+    return `http://localhost:5000${imagePath}`;
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
@@ -28,7 +36,7 @@ const CartPage = () => {
           <h2 className="text-xl font-medium mb-2">Your cart is empty</h2>
           <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet</p>
           <Link 
-            to="/product" 
+            to="/products" 
             className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors"
           >
             Continue Shopping
@@ -48,88 +56,94 @@ const CartPage = () => {
               </div>
               
               {/* Cart Items */}
-              {cart.map(item => (
-                <div key={item.id} className="p-4 border-b last:border-b-0 group">
-                  <div className="flex flex-col md:grid md:grid-cols-12 gap-4">
-                    {/* Product Info */}
-                    <div className="md:col-span-5 flex items-start gap-4">
-                      <Link to={`/product/${item.id}`} className="shrink-0">
-                        <img 
-                          src={item.imageUrl} 
-                          alt={item.name}
-                          className="w-20 h-20 object-cover rounded border border-gray-200"
-                        />
-                      </Link>
-                      <div>
-                        <Link to={`/product/${item.id}`} className="font-medium hover:text-emerald-600">
-                          {item.name}
+              {cart.map(item => {
+                const isWishlisted = wishlist.some(w => w._id === item._id);
+                return (
+                  <div key={item._id} className="p-4 border-b last:border-b-0 group">
+                    <div className="flex flex-col md:grid md:grid-cols-12 gap-4">
+                      {/* Product Info */}
+                      <div className="md:col-span-5 flex items-start gap-4">
+                        <Link to={`/product/${item._id}`} className="shrink-0">
+                          <img 
+                            src={getImageUrl(item.images?.[0])}
+                            alt={item.name}
+                            className="w-20 h-20 object-cover rounded border border-gray-200"
+                            onError={(e) => {
+                              e.target.src = 'https://via.placeholder.com/300x300';
+                            }}
+                          />
                         </Link>
-                        <p className="text-sm text-gray-500">{item.category}</p>
-                        <div className="flex items-center mt-1">
+                        <div>
+                          <Link to={`/product/${item._id}`} className="font-medium hover:text-emerald-600">
+                            {item.name}
+                          </Link>
+                          <p className="text-sm text-gray-500">{item.category}</p>
+                          <div className="flex items-center mt-1">
+                            <button 
+                              onClick={() => toggleWishlist(item)}
+                              className="text-sm flex items-center gap-1 text-gray-500 hover:text-pink-500"
+                            >
+                              {isWishlisted ? (
+                                <FaHeart className="text-pink-500" size={14} />
+                              ) : (
+                                <FaRegHeart size={14} />
+                              )}
+                              <span>{isWishlisted ? 'Saved' : 'Save for later'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Price */}
+                      <div className="md:col-span-2 flex items-center">
+                        <span className="font-medium">
+                          {item.price.toFixed(2)} birr
+                        </span>
+                        {item.originalPrice && (
+                          <span className="text-xs text-gray-400 line-through ml-2">
+                            {item.originalPrice.toFixed(2)} birr
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Quantity */}
+                      <div className="md:col-span-3 flex items-center">
+                        <div className="flex items-center border border-gray-300 rounded-md w-fit">
                           <button 
-                            onClick={() => toggleWishlist(item)}
-                            className="text-sm flex items-center gap-1 text-gray-500 hover:text-pink-500"
+                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                            className="px-3 py-1 text-gray-600 hover:bg-gray-100"
+                            disabled={item.quantity <= 1}
                           >
-                            {wishlist.some(w => w.id === item.id) ? (
-                              <FaHeart className="text-pink-500" size={14} />
-                            ) : (
-                              <FaRegHeart size={14} />
-                            )}
-                            <span>{wishlist.some(w => w.id === item.id) ? 'Saved' : 'Save for later'}</span>
+                            -
+                          </button>
+                          <span className="px-3 py-1 border-x border-gray-300">
+                            {item.quantity}
+                          </span>
+                          <button 
+                            onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                            className="px-3 py-1 text-gray-600 hover:bg-gray-100"
+                          >
+                            +
                           </button>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Price */}
-                    <div className="md:col-span-2 flex items-center">
-                      <span className="font-medium">
-                        {item.price.toFixed(2)} birr
-                      </span>
-                      {item.originalPrice && (
-                        <span className="text-xs text-gray-400 line-through ml-2">
-                          {item.originalPrice.toFixed(2)} birr
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Quantity */}
-                    <div className="md:col-span-3 flex items-center">
-                      <div className="flex items-center border border-gray-300 rounded-md w-fit">
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="px-3 py-1 text-gray-600 hover:bg-gray-100"
-                          disabled={item.quantity <= 1}
-                        >
-                          -
-                        </button>
-                        <span className="px-3 py-1 border-x border-gray-300">
-                          {item.quantity}
+                      
+                      {/* Total */}
+                      <div className="md:col-span-2 flex items-center justify-between">
+                        <span className="font-medium">
+                          {(item.price * item.quantity).toFixed(2)} birr
                         </span>
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="px-3 py-1 text-gray-600 hover:bg-gray-100"
+                          onClick={() => removeFromCart(item._id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
                         >
-                          +
+                          <FaTimes />
                         </button>
                       </div>
                     </div>
-                    
-                    {/* Total */}
-                    <div className="md:col-span-2 flex items-center justify-between">
-                      <span className="font-medium">
-                        {(item.price * item.quantity).toFixed(2)} birr
-                      </span>
-                      <button 
-                        onClick={() => removeFromCart(item.id, item.name)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <FaTimes />
-                      </button>
-                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           
@@ -140,7 +154,7 @@ const CartPage = () => {
               
               <div className="space-y-2 mb-4">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
+                  <div key={item._id} className="flex justify-between text-sm">
                     <span>{item.name} x {item.quantity}</span>
                     <span>{(item.price * item.quantity).toFixed(2)} birr</span>
                   </div>
@@ -158,7 +172,7 @@ const CartPage = () => {
                 </button>
               </Link>
               <div className="mt-4 text-center">
-                <Link to="/product" className="text-emerald-600 hover:underline text-sm">
+                <Link to="/products" className="text-emerald-600 hover:underline text-sm">
                   Continue Shopping
                 </Link>
               </div>

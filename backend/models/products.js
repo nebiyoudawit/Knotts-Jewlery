@@ -45,13 +45,14 @@ const productSchema = new Schema(
       default: false,
     },
     images: {
-      type: [String],
+      type: [String], // Array of strings
+      required: [true, 'At least one image is required'],
       validate: {
-        validator(value) {
-          return value.length > 0;
+        validator: function(images) {
+          return images.length > 0;
         },
-        message: 'At least one image is required',
-      },
+        message: 'At least one image is required'
+      }
     },
     description: {
       type: String,

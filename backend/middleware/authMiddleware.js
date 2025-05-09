@@ -1,32 +1,61 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/users.js';
 
-const protect = async (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  console.log("Authorization Header:", authHeader); // Log the authorization header
-
+  // Check if authorization header exists
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'No token provided' });
+    return res.status(401).json({ 
+      success: false,
+      message: 'No token provided' 
+    });
   }
 
   const token = authHeader.split(' ')[1];
 
   try {
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded Token:", decoded); // Log decoded token
+    
+    // Find the user with token version check
+    const user = await User.findOne({
+      _id: decoded.id,
+      tokenVersion: decoded.tokenVersion
+    }).select('-password');
 
-    const user = await User.findById(decoded.id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(401).json({ 
+        success: false,
+        message: 'User not found or token revoked' 
+      });
     }
 
+    // Attach the user to the request object
     req.user = user;
     next();
+
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    console.error('Authentication error:', err.message);
+    
+    const message = err.name === 'TokenExpiredError' 
+      ? 'Token expired' 
+      : 'Invalid token';
+    
+    return res.status(401).json({ 
+      success: false,
+      message 
+    });
   }
 };
 
-
-export default protect;
+// Separate admin middleware for better separation of concerns
+export const adminMiddleware = async (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ 
+      success: false,
+      message: 'Admin access required' 
+    });
+  }
+  next();
+};

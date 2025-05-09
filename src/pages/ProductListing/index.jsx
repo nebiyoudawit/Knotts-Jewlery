@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { FaFilter, FaStar, FaRegStar } from 'react-icons/fa';
 import { IoClose } from 'react-icons/io5';
 import { Drawer } from '@mui/material';
 import { useShop } from '../../context/ShopContext';
-import jewelryProducts from '../../data/jewelryProducts';
 import ProductItem from '../../components/ProductItem';
 
 const ProductListing = () => {
@@ -14,45 +13,130 @@ const ProductListing = () => {
   const categoryMap = {
     bracelets: "Bracelets",
     charms: "Charms",
-    earrings: "Earrings",
+    earrings: "Earrings", 
     rings: "Rings",
     necklaces: "Necklaces",
   };
 
-  const [priceRange, setPriceRange] = useState([0, 200]);
+  // State
+  const [allProducts, setAllProducts] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [ratingsFilter, setRatingsFilter] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [sortOption, setSortOption] = useState('featured');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch products with proper image URLs
   useEffect(() => {
-    if (urlCategory && categoryMap[urlCategory]) {
-      setSelectedCategory(categoryMap[urlCategory]);
-    } else {
-      setSelectedCategory(null);
-    }
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/products');
+        if (!response.ok) throw new Error('Failed to fetch products');
+        
+        const { data } = await response.json();
+        
+        // Process products to ensure proper image URLs
+        const processedProducts = data.map(product => ({
+          ...product,
+          images: (product.images || []).map(img => 
+            img.startsWith('uploads/') 
+              ? `http://localhost:5000/${img.replace(/\\/g, '/')}`
+              : img
+          )
+        }));
+        
+        setAllProducts(processedProducts);
+        
+        
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // Handle URL category
+  useEffect(() => {
+    setSelectedCategory(urlCategory ? categoryMap[urlCategory] : null);
   }, [urlCategory]);
 
-  const filteredProducts = jewelryProducts
-    .filter(product => {
-      if (selectedCategory && product.category !== selectedCategory) return false;
-      if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
-      if (ratingsFilter && Math.floor(product.rating) < ratingsFilter) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortOption === 'lowToHigh') return a.price - b.price;
-      if (sortOption === 'highToLow') return b.price - a.price;
-      if (sortOption === 'newest') return b.id - a.id;
-      return 0;
-    });
+  // Filter and sort products
+  const filteredProducts = useMemo(() => {
+    let results = [...allProducts];
+    
+    // Apply filters
+    if (selectedCategory) {
+      results = results.filter(p => p.category === selectedCategory);
+    }
+    
+    results = results.filter(p => 
+      p.price >= priceRange[0] && 
+      p.price <= priceRange[1]
+    );
+    
+    if (ratingsFilter) {
+      results = results.filter(p => Math.floor(p.rating) >= ratingsFilter);
+    }
+    
+    // Apply sorting
+    switch (sortOption) {
+      case 'lowToHigh': return results.sort((a, b) => a.price - b.price);
+      case 'highToLow': return results.sort((a, b) => b.price - a.price);
+      case 'newest': return results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      default: return results;
+    }
+  }, [allProducts, selectedCategory, priceRange, ratingsFilter, sortOption]);
 
-  const categories = [...new Set(jewelryProducts.map(product => product.category))];
+  // Get unique categories
+  const categories = useMemo(() => (
+    [...new Set(allProducts.map(p => p.category))]
+  ), [allProducts]);
+
+  const handleClearFilters = () => {
+    setSelectedCategory(null);
+    setRatingsFilter(null);
+    setSortOption('featured');
+    if (allProducts.length > 0) {
+      const prices = allProducts.map(p => p.price);
+      setPriceRange([Math.min(...prices), Math.max(...prices)]);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center p-6 bg-white rounded-lg shadow-sm">
+          <h2 className="text-xl font-bold text-red-500 mb-2">Error loading products</h2>
+          <p className="text-gray-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 text-[#05B171] hover:underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#05B171]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        {/* Mobile: Filter + Sort */}
+        {/* Mobile Filter/Sort */}
         <div className="flex md:hidden justify-between items-center gap-4 mb-6">
           <button 
             className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm w-full sm:w-auto"
@@ -65,10 +149,10 @@ const ProductListing = () => {
             onChange={(e) => setSortOption(e.target.value)}
             className="border rounded-md px-3 py-2"
           >
-            <option value="featured">Sort by: Featured</option>
+            <option value="featured">Featured</option>
             <option value="lowToHigh">Price: Low to High</option>
             <option value="highToLow">Price: High to Low</option>
-            <option value="newest">Newest Arrivals</option>
+            <option value="newest">Newest</option>
           </select>
         </div>
 
@@ -119,7 +203,7 @@ const ProductListing = () => {
               <input
                 type="range"
                 min="0"
-                max="200"
+                max="500"
                 value={priceRange[1]}
                 onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                 className="w-full"
@@ -170,11 +254,7 @@ const ProductListing = () => {
             <div className="flex gap-4">
               <button 
                 className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300 transition-colors"
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setPriceRange([0, 200]);
-                  setRatingsFilter(null);
-                }}
+                onClick={handleClearFilters}
               >
                 Clear All
               </button>
@@ -189,7 +269,7 @@ const ProductListing = () => {
         </Drawer>
 
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Desktop Filters Sidebar */}
+          {/* Desktop Filters */}
           <div className="hidden md:block w-full md:w-64 bg-white p-6 rounded-lg shadow-sm h-fit sticky top-20">
             <h2 className="text-lg font-bold mb-4">Filters</h2>
 
@@ -215,7 +295,7 @@ const ProductListing = () => {
               <input
                 type="range"
                 min="0"
-                max="200"
+                max="500"
                 value={priceRange[1]}
                 onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                 className="w-full"
@@ -265,19 +345,14 @@ const ProductListing = () => {
 
             <button 
               className="w-full bg-[#05B171] text-white py-2 rounded-md hover:bg-[#048a5b] transition-colors"
-              onClick={() => {
-                setSelectedCategory(null);
-                setPriceRange([0, 200]);
-                setRatingsFilter(null);
-              }}
+              onClick={handleClearFilters}
             >
               Clear All Filters
             </button>
           </div>
 
-          {/* Products Grid + Header */}
+          {/* Products Grid */}
           <div className="flex-1">
-            {/* Desktop: Product Count & Sort */}
             <div className="hidden md:flex justify-between items-center mb-10">
               <h1 className="text-2xl font-bold">
                 {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'}
@@ -288,14 +363,13 @@ const ProductListing = () => {
                 onChange={(e) => setSortOption(e.target.value)}
                 className="border rounded-md px-3 py-2"
               >
-                <option value="featured">Sort by: Featured</option>
+                <option value="featured">Featured</option>
                 <option value="lowToHigh">Price: Low to High</option>
                 <option value="highToLow">Price: High to Low</option>
-                <option value="newest">Newest Arrivals</option>
+                <option value="newest">Newest</option>
               </select>
             </div>
 
-            {/* Mobile: Product Count */}
             <div className="md:hidden mb-4">
               <h1 className="text-xl font-bold">
                 {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'}
@@ -307,11 +381,11 @@ const ProductListing = () => {
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
                 {filteredProducts.map(product => (
                   <ProductItem 
-                    key={product.id} 
+                    key={product._id} 
                     product={product}
                     onAddToCart={addToCart}
                     onToggleWishlist={toggleWishlist}
-                    isInWishlist={wishlist.some(item => item.id === product.id)}
+                    isInWishlist={wishlist.some(item => item._id === product._id)}
                   />
                 ))}
               </div>
@@ -321,11 +395,7 @@ const ProductListing = () => {
                 <p className="text-gray-600 mb-4">Try adjusting your filters to see more products</p>
                 <button 
                   className="text-[#05B171] hover:underline"
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setPriceRange([0, 200]);
-                    setRatingsFilter(null);
-                  }}
+                  onClick={handleClearFilters}
                 >
                   Clear all filters
                 </button>

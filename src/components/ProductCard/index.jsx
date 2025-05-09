@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { FiEdit2, FiTrash2, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+
 const ProductCard = ({ product, onEdit, onDelete }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  console.log('ProductCard props:', product);
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
@@ -23,7 +25,7 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
             <FiEdit2 />
           </button>
           <button 
-            onClick={() => onDelete(product.id)} 
+            onClick={() => onDelete(product._id)} // Updated to use _id instead of id
             className="text-red-600 hover:text-red-900 p-1"
           >
             <FiTrash2 />
@@ -62,4 +64,5 @@ const ProductCard = ({ product, onEdit, onDelete }) => {
     </div>
   );
 };
+
 export default ProductCard;
