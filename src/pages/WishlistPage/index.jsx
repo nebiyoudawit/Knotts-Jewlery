@@ -12,7 +12,7 @@ const WishlistPage = () => {
     addToCart,
     wishlistCount 
   } = useShop();
-
+console.log('Wishlist in WishlistPage:', wishlist);
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
       <h1 className="text-3xl font-bold mb-8">Your Wishlist ({wishlistCount})</h1>
@@ -35,11 +35,11 @@ const WishlistPage = () => {
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlist.map(product => (
                   <ProductItem 
-                    key={product.id} 
+                    key={product._id} 
                     product={product}
                     onAddToCart={addToCart}
                     onToggleWishlist={toggleWishlist}
-                    isInWishlist={wishlist.some(item => item.id === product.id)}
+                    isInWishlist={wishlist.some(item => item._id === product._id)}
                   />
                 ))}
         </div>

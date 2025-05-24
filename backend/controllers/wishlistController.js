@@ -5,11 +5,11 @@ import Product from '../models/products.js';
 // Helper function to format wishlist items for frontend
 const formatWishlistItems = (items) => {
   return items.map(item => ({
-    id: item.product._id.toString(),
+    _id: item.product._id.toString(),
     name: item.product.name,
     price: item.product.price,
     originalPrice: item.product.originalPrice,
-    imageUrl: item.product.images[0]?.url || '/default-product.jpg',
+    images: item.product.images || ['/default-product.jpg'],  // send full images array
     category: item.product.category?.name || '',
     rating: item.product.rating || 0,
     reviewCount: item.product.reviewCount || 0
@@ -20,37 +20,29 @@ const formatWishlistItems = (items) => {
 // @route   GET /api/user/wishlist
 // @access  Private
 export const getWishlist = async (req, res) => {
-    try {
-      const user = await User.findById(req.user._id)
-        .populate({
-          path: 'wishlist.product',
-          select: 'name price images category rating reviewCount',
-          populate: {
-            path: 'category',
-            select: 'name'
-          }
-        });
-      
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      const formattedItems = user.wishlist.map(item => ({
-        _id: item.product._id,
-        name: item.product.name,
-        price: item.product.price,
-        images: item.product.images, // Ensure images array is included
-        category: item.product.category?.name || '',
-        rating: item.product.rating || 0,
-        reviewCount: item.product.reviewCount || 0
-      }));
-  
-      res.status(200).json(formattedItems);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Server error fetching wishlist' });
+  try {
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'wishlist.product',
+        select: 'name price originalPrice images category rating reviewCount',
+        populate: {
+          path: 'category',
+          select: 'name'
+        }
+      });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-  };
+
+    const formattedItems = formatWishlistItems(user.wishlist);
+
+    res.status(200).json(formattedItems);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error fetching wishlist' });
+  }
+};
 
 // @desc    Toggle product in wishlist
 // @route   POST /api/user/wishlist/:productId
