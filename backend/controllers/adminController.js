@@ -1,5 +1,6 @@
 import Product from '../models/products.js';
 import User from '../models/users.js';
+import Order from '../models/order.js';
 import bcrypt from 'bcryptjs';
 
 /* -------------------- ADMIN PRODUCT ROUTES -------------------- */
@@ -222,5 +223,82 @@ export const updateUser = async (req, res) => {
       message: 'Failed to update user',
       error: err.message 
     });
+  }
+};
+
+/* -------------------- ADMIN ORDER ROUTES -------------------- */
+
+// GET ALL ORDERS
+export const getAdminOrders = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate('user', 'name email')  // Populate user data (name, email)
+      .populate('items.product', 'name price'); // Populate product details in the items array
+
+    res.json({ success: true, orders });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch orders', error: err.message });
+  }
+};
+
+// GET ORDER BY ID
+export const getAdminOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('items.product', 'name price');
+
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
+// UPDATE ORDER STATUS
+export const updateAdminOrderStatus = async (req, res) => {
+  const { status } = req.body;
+  const validStatuses = ['Pending', 'Delivered', 'Cancelled'];
+
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ success: false, message: 'Invalid status' });
+  }
+
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    order.status = status;
+    order.updatedAt = Date.now(); // Update the timestamp
+
+    // If the status is 'Delivered', set delivery date to today (if not already set)
+    if (status === 'Delivered' && !order.deliveryDate) {
+      order.deliveryDate = new Date();
+    }
+
+    await order.save();
+
+    res.json({ success: true, message: 'Order status updated', order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update order status', error: err.message });
+  }
+};
+
+// DELETE ORDER
+export const deleteAdminOrder = async (req, res) => {
+  try {
+    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+
+    if (!deletedOrder) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    res.json({ success: true, message: 'Order deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete order', error: err.message });
   }
 };

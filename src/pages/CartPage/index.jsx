@@ -36,7 +36,7 @@ const CartPage = () => {
           <h2 className="text-xl font-medium mb-2">Your cart is empty</h2>
           <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet</p>
           <Link 
-            to="/products" 
+            to="/product" 
             className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition-colors"
           >
             Continue Shopping
@@ -172,7 +172,7 @@ const CartPage = () => {
                 </button>
               </Link>
               <div className="mt-4 text-center">
-                <Link to="/products" className="text-emerald-600 hover:underline text-sm">
+                <Link to="/product" className="text-emerald-600 hover:underline text-sm">
                   Continue Shopping
                 </Link>
               </div>

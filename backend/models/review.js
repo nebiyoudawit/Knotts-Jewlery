@@ -2,18 +2,17 @@ import mongoose from 'mongoose';
 
 const { Schema, model } = mongoose;
 
-// Define the Review schema
 const reviewSchema = new Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true, // Link to the User model
+      required: true,
     },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
-      required: true, // Link to the Product model
+      required: true,
     },
     rating: {
       type: Number,
@@ -27,7 +26,7 @@ const reviewSchema = new Schema(
     },
   },
   {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 

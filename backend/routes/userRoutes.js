@@ -1,7 +1,10 @@
 import express from 'express';
 import { 
   updateUserProfile, 
-  changeUserPassword 
+  changeUserPassword,
+    getUserOrders,
+    getUserOrderById,
+    cancelUserOrder 
 } from '../controllers/userController.js';
 import { 
   getCart,
@@ -32,5 +35,10 @@ router.delete('/cart/:productId', authMiddleware, removeFromCart);
 router.get('/wishlist', authMiddleware, getWishlist);
 router.post('/wishlist/:productId', authMiddleware, toggleWishlist);
 router.get('/wishlist/check/:productId', authMiddleware, checkWishlist);
+
+// Order management
+router.get('/orders', authMiddleware, getUserOrders);
+router.get('/orders/:orderId', authMiddleware, getUserOrderById);
+router.put('/orders/:orderId/cancel', authMiddleware, cancelUserOrder);
 
 export default router;

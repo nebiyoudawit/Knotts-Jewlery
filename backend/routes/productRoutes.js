@@ -1,8 +1,11 @@
 // routes/productRoutes.js
 import express from 'express';
-import { getProducts, getProductById, addProductReview } from '../controllers/productController.js';
+import { getProducts, getProductById, addProductReview, getSortedProducts } from '../controllers/productController.js';
 
 const router = express.Router();
+
+//Home page - product Sliders
+router.get('/sorted', getSortedProducts);
 
 // Product listing - no reviews
 router.get('/', getProducts);

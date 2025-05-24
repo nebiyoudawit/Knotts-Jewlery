@@ -59,7 +59,11 @@ const orderSchema = new Schema(
     },
     deliveryDate: {
       type: Date,
-      default: null, // Delivery date will be set once the order is delivered
+      default: function() {
+        const now = new Date();
+        now.setDate(now.getDate() + 7); // Add 7 days to the current date
+        return now; // Set the delivery date to be 7 days from now
+      },
     },
     createdAt: {
       type: Date,

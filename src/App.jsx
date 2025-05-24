@@ -21,7 +21,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import ProductManagment from './pages/admin/ProductManagment.jsx'
 import OrderManagment from './pages/admin/OrderManagment.jsx'
 import UserManagment from './pages/admin/UserManagment.jsx'
-
+import OrderConfirmation from './components/OrderConformation'
 import { useEffect } from 'react';
 
 // 👇 Move Routes into a child component so we can use `useLocation`
@@ -53,6 +53,7 @@ const AppRoutes = () => {
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/login" exact element={<Login />} />
         <Route path="/checkout" exact element={<CheckoutPage />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
         <Route path="/profile" exact element={<Profile />} />
         <Route path="/orders" exact element={<UserOrders />} />
         <Route path="/register" exact element={<Register />} />

@@ -22,7 +22,6 @@ const Login = () => {
         : await login(email, password);
 
       if (success) {
-        toast.success(`Logged in successfully as ${isAdminLogin ? 'admin' : 'user'}`);
         navigate(isAdminLogin ? '/admin' : '/');
       } else {
         toast.error(error || (isAdminLogin 

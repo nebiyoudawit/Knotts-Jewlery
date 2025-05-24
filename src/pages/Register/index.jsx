@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiPhone, FiMapPin } from 'react-icons/fi';
 import Lottie from 'lottie-react';
 import successAnimation from '../../success-animation.json';
+import { useShop } from '../../context/ShopContext'; // Adjust path if needed
 
 const Register = () => {
+  const { register } = useShop();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,10 +22,10 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -31,35 +33,19 @@ const Register = () => {
     setLoading(true);
     setError('');
 
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
-      // On successful registration
-      localStorage.setItem('token', data.token);
+    const success = await register(formData);
+    if (success) {
       setShowSuccess(true);
-      
-      // Redirect after 3 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
 
-    } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setShowSuccess(false);
+        navigate('/');
+      }, 2000);
+    } else {
+      setError('Registration failed. Please check your inputs and try again.');
     }
+
+    setLoading(false);
   };
 
   const SuccessModal = () => (
@@ -78,15 +64,15 @@ const Register = () => {
   return (
     <div className="min-h-[100%] bg-gray-50 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
       {showSuccess && <SuccessModal />}
-      
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-[-10px] text-center text-3xl font-extrabold text-gray-900">
           Create your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link 
-            to="/login" 
+          <Link
+            to="/login"
             className="font-medium text-[#05B171] hover:text-[#048a5b]"
           >
             Sign in
@@ -104,7 +90,10 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Full Name
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -125,7 +114,10 @@ const Register = () => {
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -147,7 +139,10 @@ const Register = () => {
 
             {/* Address Field */}
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="address"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Address
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -168,7 +163,10 @@ const Register = () => {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -191,7 +189,10 @@ const Register = () => {
 
             {/* Phone Field */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Phone Number
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
@@ -214,17 +215,37 @@ const Register = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#05B171] hover:bg-[#048a5b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#05B171] transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#05B171] hover:bg-[#048a5b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#05B171] transition-colors ${
+                  loading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Processing...
                   </>
-                ) : 'Sign Up'}
+                ) : (
+                  'Sign Up'
+                )}
               </button>
             </div>
           </form>

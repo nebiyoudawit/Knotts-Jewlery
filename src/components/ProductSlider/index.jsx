@@ -5,7 +5,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import ProductItem from '../ProductItem';
 
-const ProductSlider = ({ items = 3, category = 'All' }) => {
+const ProductSlider = ({ items = 3, sortBy = 'latest', category = 'All' }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,9 +14,14 @@ const ProductSlider = ({ items = 3, category = 'All' }) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `http://localhost:5000/api/products/category/${category}?limit=8`
-        );
+        const url = new URL('http://localhost:5000/api/products/sorted');
+        url.searchParams.append('sortBy', sortBy);
+        url.searchParams.append('limit', 8);
+        if (category && category !== 'All') {
+          url.searchParams.append('category', category);
+        }
+
+        const response = await fetch(url.toString());
 
         if (!response.ok) {
           throw new Error('Failed to fetch products');
@@ -33,7 +38,7 @@ const ProductSlider = ({ items = 3, category = 'All' }) => {
     };
 
     fetchProducts();
-  }, [category]);
+  }, [sortBy, category]);
 
   if (loading) return <div className="text-center py-12">Loading...</div>;
   if (error) return <div className="text-center py-12 text-red-500">Error: {error}</div>;

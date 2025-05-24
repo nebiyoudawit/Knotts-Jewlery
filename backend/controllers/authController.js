@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-// Register user
+// Register user and auto-login
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, address, phone } = req.body;
@@ -30,7 +30,6 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Don't hash manually — let Mongoose pre-save hook handle it
     const user = new User({
       name: userDTO.name,
       email: userDTO.email,
@@ -41,12 +40,22 @@ export const registerUser = async (req, res) => {
 
     await user.save();
 
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
+
     const userResponse = user.toObject();
     delete userResponse.password;
 
     res.status(201).json({
-      message: 'User registered successfully',
-      user: userResponse,
+      message: 'User registered and logged in successfully',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        address: user.address,
+        phone: user.phone,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error('Registration error:', error);

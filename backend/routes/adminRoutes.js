@@ -5,6 +5,10 @@ import {
   addAdminProduct,
   updateAdminProduct,
   deleteAdminProduct,
+  getAdminOrders, 
+  getAdminOrderById, 
+  updateAdminOrderStatus, 
+  deleteAdminOrder, 
   getUsers,
   addUser,
   updateUser,
@@ -31,5 +35,17 @@ router.get('/users', getUsers);
 router.post('/users', addUser);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
+
+// Get all orders
+router.get('/orders', getAdminOrders);
+
+// Get a specific order by ID
+router.get('/orders/:id', getAdminOrderById);
+
+// Update order status
+router.put('/orders/:id/status', updateAdminOrderStatus);
+
+// Delete an order
+router.delete('/orders/:id', deleteAdminOrder);
 
 export default router;

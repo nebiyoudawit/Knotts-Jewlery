@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
+import Review from './Review.js'; // Important: Register the Review model
 
 const { Schema, model } = mongoose;
 
-// Define the product schema
 const productSchema = new Schema(
   {
     name: {
@@ -35,30 +35,37 @@ const productSchema = new Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: {
-        values: ['Bracelets', 'Charms', 'Earrings', 'Rings', 'Necklaces'],
-        message: '{VALUE} is not a valid category',
-      },
+      enum: ['Bracelets', 'Charms', 'Earrings', 'Rings', 'Necklaces'],
     },
     onSale: {
       type: Boolean,
       default: false,
     },
     images: {
-      type: [String], // Array of strings
+      type: [String],
       required: [true, 'At least one image is required'],
       validate: {
-        validator: function(images) {
+        validator: function (images) {
           return images.length > 0;
         },
-        message: 'At least one image is required'
-      }
+        message: 'At least one image is required',
+      },
     },
     description: {
       type: String,
       required: [true, 'Product description is required'],
       minlength: [10, 'Description must be at least 10 characters long'],
       maxlength: [1000, 'Description cannot exceed 1000 characters'],
+    },
+    sales: {
+    type: Number,
+    default: 0,
+    min: [0, 'Sales count cannot be negative']
+  },
+    reviewCount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Review count cannot be negative'],
     },
     rating: {
       type: Number,
@@ -67,32 +74,22 @@ const productSchema = new Schema(
       max: [5, 'Rating cannot exceed 5'],
     },
     reviews: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Review', // Linking to the Review model
-        },
-      ],
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review',
+      },
+    ],
   },
   {
-    timestamps: true, // Automatically manage `createdAt` and `updatedAt`
+    timestamps: true,
   }
 );
 
-// Middleware to update the `updatedAt` field before saving
 productSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
 
-// Create and export the Product model
 const Product = model('Product', productSchema);
 
 export default Product;
