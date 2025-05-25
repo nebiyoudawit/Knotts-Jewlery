@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 export const createOrder = async (req, res) => {
   try {
     const { userId, items, shippingAddress, paymentMethod } = req.body;
-
+     console.log('Incoming order data:', req.body); // Add this for debugging
     // Validate user
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ success: false, message: 'Invalid user ID' });

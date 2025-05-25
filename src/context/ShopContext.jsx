@@ -40,6 +40,7 @@ export const ShopProvider = ({ children }) => {
   // Check auth state on mount and fetch user data
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('Auth token found on mount:', token);
     if (token) {
       verifyToken(token);
     }
@@ -84,18 +85,27 @@ export const ShopProvider = ({ children }) => {
   };
 
   // Verify token validity
-  const verifyToken = async (token) => {
-    setIsLoading(true);
-    try {
-      const data = await makeRequest('http://localhost:5000/api/auth/verify', 'GET');
-      setCurrentUser(data.user);
-      setIsAdmin(data.user?.role === 'admin');
-    } catch (err) {
-      logout();
-    } finally {
-      setIsLoading(false);
+ // Verify token validity
+const verifyToken = async (token) => {
+  setIsLoading(true);
+  try {
+    console.log('Verifying token...');
+    const data = await makeRequest('http://localhost:5000/api/auth/verify', 'GET');
+    console.log('Verify response:', data);
+
+    if (!data || !data.user) {
+      throw new Error('No user data returned from /verify');
     }
-  };
+
+    setCurrentUser(data.user);
+    setIsAdmin(data.user?.role === 'admin');
+  } catch (err) {
+    console.error('Token verification failed:', err.message);
+    logout(false); // don't toast on auto logout
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // 🔐 AUTH FUNCTIONS
   const register = async (userData) => {

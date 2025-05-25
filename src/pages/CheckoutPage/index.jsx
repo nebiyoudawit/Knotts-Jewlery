@@ -21,6 +21,7 @@ const CheckoutPage = () => {
   useEffect(() => {
     setPaymentMethod(''); // Reset payment method when pickup location changes
   }, [selectedLocation]);
+   console.log("Current User:", currentUser);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +33,7 @@ const CheckoutPage = () => {
 
     try {
       const orderData = {
-        userId: currentUser._id,
+        userId: currentUser.id,
         items: cart.map(item => ({
           product: item._id,
           quantity: item.quantity
@@ -42,7 +43,7 @@ const CheckoutPage = () => {
           : deliveryAddress,
         paymentMethod // should now be valid (e.g., 'Pay on Delivery')
       };
-
+      console.log('Order Data:', orderData);
       const response = await fetch('http://localhost:5000/api/orders', {
         method: 'POST',
         headers: {
