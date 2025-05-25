@@ -186,8 +186,8 @@ const ProductManagment = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Units Sold</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -198,10 +198,8 @@ const ProductManagment = () => {
                 <tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">${product.price.toFixed(2)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {product.onSale ? `$${product.originalPrice?.toFixed(2) || ''}` : '-' }
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{product.stock}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">{product.sales}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">{product.stock}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{product.category}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-full text-xs ${product.onSale ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
