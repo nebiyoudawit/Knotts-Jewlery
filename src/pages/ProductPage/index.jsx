@@ -20,12 +20,6 @@ const ProductPage = () => {
     wishlist,
     currentUser
   } = useShop();
-
-  const [newReview, setNewReview] = useState({
-    rating: 0,
-    comment: '',
-    user: currentUser ? currentUser.name : ''
-  });
   
 
   useEffect(() => {
@@ -75,82 +69,78 @@ const ProductPage = () => {
     fetchProductData();
   }, [id]);
 
-  const handleRatingChange = (rating) => {
-    setNewReview({ ...newReview, rating });
-  };
-
-  const handleReviewChange = (e) => {
-    setNewReview({ ...newReview, comment: e.target.value });
-  };
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    if (!currentUser) {
-      alert('Please login to submit a review');
-      return;
-    }
-    if (newReview.rating === 0 || !newReview.comment.trim()) {
-      alert('Please provide both a rating and comment');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`http://localhost:5000/api/products/${id}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          rating: newReview.rating,
-          comment: newReview.comment
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit review');
-      }
-
-      const responseData = await response.json();
-      
-      // Update local state with new review
-      setProduct(prev => ({
-        ...prev,
-        reviews: [...prev.reviews, responseData.data],
-        rating: responseData.updatedProduct.rating,
-        reviewCount: responseData.updatedProduct.reviewCount
-      }));
-      
-      setNewReview({ rating: 0, comment: '', user: currentUser.name });
-    } catch (err) {
-      console.error('Error submitting review:', err);
-      alert(err.message);
-    }
-  };
-
   const handleQuantityChange = (change) => {
     setQuantity(prev => Math.max(1, Math.min(10, prev + change)));
   };
 
-  const handleAddToCart = () => {
-    if (product) {
-      addToCart({ 
-        ...product, 
-        quantity,
-        id: product._id // Ensure we use the correct ID field
-      });
-    }
+const handleAddToCart = () => {
+  if (product) {
+    addToCart(product, quantity);
+  }
+};
+  const handleToggleWishlist = () => {
+      toggleWishlist(product);
+      console.log(`Wishlist updated for product ${product}`);
   };
 
-  const handleToggleWishlist = () => {
-    if (product) {
-      toggleWishlist({
-        ...product,
-        id: product._id // Ensure we use the correct ID field
-      });
+const [newReview, setNewReview] = useState({ rating: 0, comment: '' });
+
+const handleRatingChange = (rating) => {
+  setNewReview(prev => ({ ...prev, rating }));
+};
+
+const handleReviewChange = (e) => {
+  setNewReview(prev => ({ ...prev, comment: e.target.value }));
+};
+
+const handleSubmitReview = async (e) => {
+  e.preventDefault();
+
+  try {
+    const token = localStorage.getItem('token'); // Or however you store your token
+    if (!token) throw new Error('You must be logged in to post a review.');
+
+    const response = await fetch(`http://localhost:5000/api/products/${product._id}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, // 🟢 Include the token
+      },
+      body: JSON.stringify({
+        rating: newReview.rating,
+        comment: newReview.comment,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to submit review');
     }
-  };
+
+    // Refresh product reviews on success
+    setProduct(prev => ({
+      ...prev,
+      reviews: [...prev.reviews, {
+        _id: data.data._id,
+        rating: data.data.rating,
+        comment: data.data.comment,
+        user: { name: currentUser.name },
+        createdAt: new Date().toISOString()
+      }],
+      rating: data.updatedProduct.rating,
+      reviewCount: data.updatedProduct.reviewCount,
+    }));
+
+    setNewReview({ rating: 0, comment: '' }); // Clear form
+  } catch (error) {
+    console.error('Review submit error:', error.message);
+    alert(error.message);
+  }
+};
+
+
+
 
   if (loading) {
     return (
@@ -192,11 +182,16 @@ const ProductPage = () => {
     );
   }
 
-  // Prepare image gallery
-  const imageGallery = product.images && product.images.length > 0 
-    ? product.images.map(img => img.url)
-    : ['/placeholder.jpg'];
+  const getImageUrl = (image) => {
+  if (!image) return '/placeholder.jpg';
+  if (image.startsWith('http')) return image;
+  const filename = image.split('/').pop();
+  return `http://localhost:5000/uploads/${filename}`;
+};
 
+const imageGallery = product.images && product.images.length > 0
+  ? product.images.map(img => typeof img === 'string' ? getImageUrl(img) : getImageUrl(img.url))
+  : ['/placeholder.jpg'];
   const isWishlisted = wishlist.some(item => item._id === product._id);
 
   return (
@@ -206,7 +201,7 @@ const ProductPage = () => {
         <nav className="flex mb-6 text-sm text-gray-600">
           <Link to="/" className="hover:text-[#05B171]">Home</Link>
           <span className="mx-2">/</span>
-          <Link to="/products" className="hover:text-[#05B171]">Products</Link>
+          <Link to="/product" className="hover:text-[#05B171]">Products</Link>
           <span className="mx-2">/</span>
           <span className="text-gray-900">{product.name}</span>
         </nav>
@@ -251,12 +246,12 @@ const ProductPage = () => {
               <div className="flex justify-between items-start">
                 <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
                 <button 
-                  onClick={handleToggleWishlist}
-                  className="text-2xl"
-                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                >
-                  {isWishlisted ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-400 hover:text-red-500" />}
-                </button>
+                   onClick={handleToggleWishlist}
+                   className="text-2xl"
+                   aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                > 
+                {isWishlisted ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-400 hover:text-red-500" />}
+              </button>
               </div>
 
               {/* Rating and price */}
@@ -288,15 +283,14 @@ const ProductPage = () => {
               {/* Description and details */}
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Description</h2>
-                <p className="text-gray-700">{product.description}</p>
+               <p className="text-gray-700 break-words overflow-wrap break-normal">{product.description}</p>
               </div>
 
               <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-2">Details</h2>
                 <ul className="text-gray-700 space-y-1">
                   <li><strong>Category:</strong> {product.category}</li>
                   {product.material && <li><strong>Material:</strong> {product.material}</li>}
-                  <li><strong>Shipping:</strong> Free delivery on all orders</li>
+                  <li><strong>Shipping:</strong>Free delivery at summit, 4 kilo, megenagna, figa,gerji (Unity University)</li>
                 </ul>
               </div>
 
@@ -406,7 +400,7 @@ const ProductPage = () => {
             {product.reviews.map(review => (
               <div key={review._id} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">{review.user?.name || 'Anonymous'}</h3>
+                  <h3 className="font-semibold">{review.name || 'Anonymous'}</h3>
                   <span className="text-sm text-gray-500">
                     {new Date(review.createdAt).toLocaleDateString()}
                   </span>

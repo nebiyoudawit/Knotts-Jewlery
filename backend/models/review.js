@@ -9,6 +9,10 @@ const reviewSchema = new Schema(
       ref: 'User',
       required: true,
     },
+    name: {
+      type: String,
+      required: true,
+    },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
@@ -30,4 +34,4 @@ const reviewSchema = new Schema(
   }
 );
 
-export default model('Review', reviewSchema);
+export default mongoose.models.Review || mongoose.model('Review', reviewSchema);

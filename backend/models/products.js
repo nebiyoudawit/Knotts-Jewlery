@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import Review from './Review.js'; // Important: Register the Review model
+import Review from './review.js'; // Important: Register the Review model
 
 const { Schema, model } = mongoose;
 

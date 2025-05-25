@@ -1,6 +1,8 @@
 // routes/productRoutes.js
 import express from 'express';
-import { getProducts, getProductById, addProductReview, getSortedProducts } from '../controllers/productController.js';
+import { getProducts, getProductById, addProductReview, getSortedProducts, getProductsByCategory } from '../controllers/productController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+
 
 const router = express.Router();
 
@@ -10,9 +12,13 @@ router.get('/sorted', getSortedProducts);
 // Product listing - no reviews
 router.get('/', getProducts);
 
+router.get('/category/:category', getProductsByCategory);
+
+
 // Single product - with reviews
 router.get('/:id', getProductById);
 
-router.post('/:id/reviews', addProductReview);
+// 🔐 Protect this route so only logged-in users can add reviews
+router.post('/:id/reviews', authMiddleware, addProductReview);
 
 export default router;
