@@ -84,7 +84,7 @@ const UserOrders = () => {
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || 'Cancellation failed');
-
+      
       setOrders((prev) =>
         prev.map((order) =>
           order._id === orderId ? { ...order, status: 'cancelled' } : order
@@ -120,7 +120,7 @@ const UserOrders = () => {
       case 'pending':
         return 'Pending';
       default:
-        return 'Pending';
+        return 'pending';
     }
   };
 
@@ -238,11 +238,6 @@ const UserOrders = () => {
                         <span className="text-sm text-gray-600">{order.items.length} items</span>
                         <div className="flex items-center gap-3">
                           <span className="font-medium">Total: {order.totalPrice?.toFixed(2) || '0.00'} birr</span>
-                          {order.status === 'delivered' && (
-                            <button className="px-4 py-2 bg-[#05B171] text-white rounded hover:bg-[#048a5b] text-sm">
-                              Buy Again
-                            </button>
-                          )}
                           {isPending && cancellable ? (
                             <button
                               onClick={() => handleCancelOrder(order._id)}

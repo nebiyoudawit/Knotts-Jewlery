@@ -67,7 +67,6 @@ export const changeUserPassword = async (req, res) => {
 // @route   GET /api/user/orders
 // @access  Private
 export const getUserOrders = async (req, res) => {
-  console.log("✅ getUserOrders hit");
 
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -80,9 +79,9 @@ export const getUserOrders = async (req, res) => {
       user: order.user,
       items: order.items.map(item => ({
         name: item.product?.name || 'Unknown',
-        image: item.product?.image ? `http://localhost:5000/${item.product?.image}` : '',
+        image: `http://localhost:5000${item.product.images[0]}`,
         price: item.product?.price || 0,
-        qty: item.qty,
+        qty: item.quantity,
       })),
       totalPrice: order.total || 0,
       shippingAddress: order.shippingAddress,
@@ -146,7 +145,7 @@ export const cancelUserOrder = async (req, res) => {
     const orderTime = new Date(order.createdAt);
     const hoursDiff = (now - orderTime) / (1000 * 60 * 60);
 
-    if (hoursDiff > 24) {
+    if (hoursDiff >= 24) {
       return res.status(400).json({ message: 'Cancellation window expired (24h)' });
     }
 

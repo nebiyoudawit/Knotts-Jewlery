@@ -54,7 +54,7 @@ const orderSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['Pending', 'Delivered', 'Cancelled'],
+      enum: ['pending', 'pelivered', 'cancelled'],
       default: 'Pending', // Order status defaults to 'Pending'
     },
     deliveryDate: {
@@ -78,12 +78,6 @@ const orderSchema = new Schema(
     timestamps: true, // Automatically adds createdAt and updatedAt fields
   }
 );
-
-// Middleware to update the `updatedAt` field before saving
-orderSchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
 
 // Create and export the Order model
 const Order = model('Order', orderSchema);

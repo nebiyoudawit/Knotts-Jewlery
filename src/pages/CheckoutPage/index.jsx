@@ -33,7 +33,7 @@ const CheckoutPage = () => {
 
     try {
       const orderData = {
-        userId: currentUser.id,
+        userId: currentUser._id,
         items: cart.map(item => ({
           product: item._id,
           quantity: item.quantity

@@ -48,7 +48,7 @@ export const createOrder = async (req, res) => {
       total,
       shippingAddress,
       paymentMethod: paymentMethod || 'Pay on Delivery',
-      status: 'Pending',
+      status: 'pending',
       paymentStatus: 'Pending'
     });
 
