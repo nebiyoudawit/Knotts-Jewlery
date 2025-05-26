@@ -49,6 +49,7 @@ const AppRoutes = () => {
         {/* Public Routes */}
         <Route path="/" exact element={<Home />} />
         <Route path="/product" exact element={<ProductListing />} />
+        <Route path="/products" element={<ProductListing />} />
         <Route path="/products/:category" exact element={<ProductListing />} />
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/login" exact element={<Login />} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { FaFilter, FaStar, FaRegStar } from 'react-icons/fa';
 import { IoClose } from 'react-icons/io5';
 import { Drawer } from '@mui/material';
@@ -8,6 +8,7 @@ import ProductItem from '../../components/ProductItem';
 
 const ProductListing = () => {
   const { category: urlCategory } = useParams();
+  const location = useLocation();
   const { addToCart, toggleWishlist, wishlist } = useShop();
 
   const categoryMap = {
@@ -28,17 +29,21 @@ const ProductListing = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch products with proper image URLs
+  // Get search term from URL
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const urlSearchTerm = searchParams.get('search') || '';
+
+  // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/products');
+        const response = await fetch(`http://localhost:5000/api/product?search=${encodeURIComponent(urlSearchTerm)}`);
         if (!response.ok) throw new Error('Failed to fetch products');
         
         const { data } = await response.json();
         
-        // Process products to ensure proper image URLs
+        // Fix image URLs
         const processedProducts = data.map(product => ({
           ...product,
           images: (product.images || []).map(img => 
@@ -47,10 +52,8 @@ const ProductListing = () => {
               : img
           )
         }));
-        
+
         setAllProducts(processedProducts);
-        
-        
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -59,32 +62,28 @@ const ProductListing = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [urlSearchTerm]); // refetch when URL search term changes
 
-  // Handle URL category
+  // Sync selectedCategory state from urlCategory param for UI
   useEffect(() => {
     setSelectedCategory(urlCategory ? categoryMap[urlCategory] : null);
   }, [urlCategory]);
 
-  // Filter and sort products
+  // Frontend filtering of products based on category, price range, ratings, sorting (all client side)
   const filteredProducts = useMemo(() => {
     let results = [...allProducts];
-    
-    // Apply filters
+
     if (selectedCategory) {
       results = results.filter(p => p.category === selectedCategory);
     }
-    
-    results = results.filter(p => 
-      p.price >= priceRange[0] && 
-      p.price <= priceRange[1]
-    );
-    
+
+    results = results.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
     if (ratingsFilter) {
       results = results.filter(p => Math.floor(p.rating) >= ratingsFilter);
     }
-    
-    // Apply sorting
+
+    // Sorting
     switch (sortOption) {
       case 'lowToHigh': return results.sort((a, b) => a.price - b.price);
       case 'highToLow': return results.sort((a, b) => b.price - a.price);
@@ -93,7 +92,6 @@ const ProductListing = () => {
     }
   }, [allProducts, selectedCategory, priceRange, ratingsFilter, sortOption]);
 
-  // Get unique categories
   const categories = useMemo(() => (
     [...new Set(allProducts.map(p => p.category))]
   ), [allProducts]);
@@ -107,23 +105,6 @@ const ProductListing = () => {
       setPriceRange([Math.min(...prices), Math.max(...prices)]);
     }
   };
-
-  if (error) {
-    return (
-      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="text-center p-6 bg-white rounded-lg shadow-sm">
-          <h2 className="text-xl font-bold text-red-500 mb-2">Error loading products</h2>
-          <p className="text-gray-600">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 text-[#05B171] hover:underline"
-          >
-            Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
@@ -357,6 +338,7 @@ const ProductListing = () => {
               <h1 className="text-2xl font-bold">
                 {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'}
                 {selectedCategory && ` in ${selectedCategory}`}
+                {urlSearchTerm && ` matching "${urlSearchTerm}"`}
               </h1>
               <select 
                 value={sortOption}
@@ -374,6 +356,7 @@ const ProductListing = () => {
               <h1 className="text-xl font-bold">
                 {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'}
                 {selectedCategory && ` in ${selectedCategory}`}
+                {urlSearchTerm && ` matching "${urlSearchTerm}"`}
               </h1>
             </div>
 
@@ -391,14 +374,8 @@ const ProductListing = () => {
               </div>
             ) : (
               <div className="bg-white p-8 rounded-lg text-center">
-                <h3 className="text-lg font-medium mb-2">No products match your filters</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your filters to see more products</p>
-                <button 
-                  className="text-[#05B171] hover:underline"
-                  onClick={handleClearFilters}
-                >
-                  Clear all filters
-                </button>
+                <h3 className="text-lg font-medium mb-2">No products found.</h3>
+                <p className="text-gray-600">Try adjusting your filters or search term.</p>
               </div>
             )}
           </div>

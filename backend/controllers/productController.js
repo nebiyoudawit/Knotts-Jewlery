@@ -37,10 +37,17 @@ export const getSortedProducts = async (req, res) => {
 
 
 
-// Get all products - listing (no reviews or full description)
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().select('-reviews -description');
+    const search = req.query.search || '';
+    const filter = {};
+
+    if (search) {
+      // Simple text search on product name (adjust if you want to search description, category, etc)
+      filter.name = { $regex: search, $options: 'i' };
+    }
+
+    const products = await Product.find(filter).select('-reviews -description');
     const response = products.map(productListingDTO);
 
     res.status(200).json({
