@@ -14,7 +14,7 @@ const ProductSlider = ({ items = 3, sortBy = 'latest', category = 'All' }) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const url = new URL('http://localhost:5000/api/products/sorted');
+        const url = new URL('http://localhost:5000/api/product/sorted');
         url.searchParams.append('sortBy', sortBy);
         url.searchParams.append('limit', 8);
         if (category && category !== 'All') {

@@ -62,60 +62,64 @@ const OrderManagment = () => {
   const getStatusIcon = (status) => {
     switch(status) {
       case 'delivered': return <FiCheckCircle className="text-green-500" />;
-      case 'processing': return <FiClock className="text-amber-500" />;
+      case 'pending': return <FiClock className="text-amber-500" />;
       case 'shipped': return <FiTruck className="text-blue-500" />;
       case 'cancelled': return <FiXCircle className="text-red-500" />;
       default: return <FiClock className="text-gray-500" />;
     }
   };
 
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      const headers = getAuthHeaders();
-      if (!headers) return;
+const updateOrderStatus = async (orderId, newStatus) => {
+  try {
+    const headers = getAuthHeaders();
+    if (!headers) return;
 
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+    // Update order status
+    const statusResponse = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    if (!statusResponse.ok) {
+      throw new Error('Failed to update order status');
+    }
+
+    const updatedOrder = await statusResponse.json();
+
+    // If status changed to delivered, update payment status and sales
+    if (newStatus === 'delivered') {
+      // Update payment status to paid
+      await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ paymentStatus: 'paid' })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update order status');
-      }
-
-      const updatedOrder = await response.json();
-
-      // If status changed to delivered, update payment status and sales
-      if (newStatus === 'delivered') {
-        // Update payment status to paid
-        await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify({ paymentStatus: 'paid' })
-        });
-
-        // Update product sales counts
-        await Promise.all(
-          updatedOrder.items.map(item => 
-            fetch(`${API_BASE_URL}/products/${item.product}/sales`, {
-              method: 'PUT',
-              headers,
-              body: JSON.stringify({ quantity: item.quantity })
-            })
-          )
-        );
-      }
-
-      setOrders(orders.map(order => 
-        order._id === orderId ? updatedOrder.order : order
-      ));
-      toast.success('Order status updated successfully');
-    } catch (err) {
-      handleApiError(err, 'Failed to update order status');
+      // Update product sales counts
+      await Promise.all(
+        updatedOrder.items.map(item => 
+          fetch(`${API_BASE_URL}/products/${item.product}/sales`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({ quantity: item.quantity })
+          })
+        )
+      );
     }
-  };
 
+    setOrders(orders.map(order => 
+      order._id === orderId ? { 
+        ...updatedOrder, 
+        paymentStatus: newStatus === 'delivered' ? 'paid' : order.paymentStatus 
+      } : order
+    ));
+    
+    toast.success('Order status updated successfully');
+  } catch (err) {
+    handleApiError(err, 'Failed to update order status');
+  }
+};
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
@@ -158,7 +162,7 @@ const OrderManagment = () => {
                     onChange={(e) => updateOrderStatus(order._id, e.target.value)}
                     className="border border-gray-300 rounded-md p-1 text-xs"
                   >
-                    <option value="processing">Processing</option>
+                    <option value="pending">Pending</option>
                     <option value="shipped">Shipped</option>
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>

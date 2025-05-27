@@ -12,22 +12,24 @@ import {
   getUsers,
   addUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  updateOrderPaymentStatus,
+  updateProductSales
 } from '../controllers/adminController.js';
 
 import { authMiddleware } from '../middleware/authMiddleware.js';
-import upload from '../middleware/uploads.js'; // ✅ Import upload middleware
+import upload from '../middleware/uploads.js';
 
 const router = express.Router();
 
-// Apply authentication + admin check to all routes
+// Apply authentication to all routes
 router.use(authMiddleware);
 
 // ---------------- PRODUCT ROUTES ----------------
 router.get('/products', getAdminProducts);
 router.get('/products/:id', getAdminProductById);
-router.post('/products', upload.array('images'), addAdminProduct); // ✅ Add multer to handle image uploads
-router.put('/products/:id', upload.array('images'), updateAdminProduct); // ✅ Same for updates
+router.post('/products', upload.array('images'), addAdminProduct);
+router.put('/products/:id', upload.array('images'), updateAdminProduct);
 router.delete('/products/:id', deleteAdminProduct);
 
 // ---------------- USER ROUTES ----------------
@@ -36,16 +38,12 @@ router.post('/users', addUser);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 
-// Get all orders
+// ---------------- ORDER ROUTES ----------------
 router.get('/orders', getAdminOrders);
-
-// Get a specific order by ID
 router.get('/orders/:id', getAdminOrderById);
-
-// Update order status
-router.put('/orders/:id/status', updateAdminOrderStatus);
-
-// Delete an order
+router.put('/orders/:id/status', updateAdminOrderStatus); // Changed to /status endpoint
+router.put('/orders/:id/payment', updateOrderPaymentStatus); // New payment status endpoint
+router.put('/products/:id/sales', updateProductSales); // New sales update endpoint
 router.delete('/orders/:id', deleteAdminOrder);
 
 export default router;

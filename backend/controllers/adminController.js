@@ -245,8 +245,8 @@ export const getAdminOrders = async (req, res) => {
 export const getAdminOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('user', 'name email')
-      .populate('items.product', 'name price');
+      .populate('user', 'name email phone')
+      .populate('items.product', 'name price images');
 
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
@@ -259,7 +259,7 @@ export const getAdminOrderById = async (req, res) => {
 // UPDATE ORDER STATUS
 export const updateAdminOrderStatus = async (req, res) => {
   const { status } = req.body;
-  const validStatuses = ['Pending', 'Delivered', 'Cancelled'];
+  const validStatuses = ['processing', 'shipped', 'delivered', 'cancelled'];
 
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ success: false, message: 'Invalid status' });
@@ -273,10 +273,9 @@ export const updateAdminOrderStatus = async (req, res) => {
     }
 
     order.status = status;
-    order.updatedAt = Date.now(); // Update the timestamp
+    order.updatedAt = Date.now();
 
-    // If the status is 'Delivered', set delivery date to today (if not already set)
-    if (status === 'Delivered' && !order.deliveryDate) {
+    if (status === 'delivered' && !order.deliveryDate) {
       order.deliveryDate = new Date();
     }
 
@@ -285,6 +284,52 @@ export const updateAdminOrderStatus = async (req, res) => {
     res.json({ success: true, message: 'Order status updated', order });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update order status', error: err.message });
+  }
+};
+
+// UPDATE PAYMENT STATUS
+export const updateOrderPaymentStatus = async (req, res) => {
+  const { paymentStatus } = req.body;
+  const validStatuses = ['pending', 'paid'];
+
+  if (!validStatuses.includes(paymentStatus)) {
+    return res.status(400).json({ success: false, message: 'Invalid payment status' });
+  }
+
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    order.paymentStatus = paymentStatus;
+    await order.save();
+
+    res.json({ success: true, message: 'Payment status updated', order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update payment status', error: err.message });
+  }
+};
+
+// UPDATE PRODUCT SALES
+export const updateProductSales = async (req, res) => {
+  const { quantity } = req.body;
+
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    product.sales += parseInt(quantity) || 1;
+    product.stock -= parseInt(quantity) || 1;
+    await product.save();
+
+    res.json({ success: true, message: 'Product sales updated', product });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update product sales', error: err.message });
   }
 };
 

@@ -77,12 +77,14 @@ export const getUserOrders = async (req, res) => {
     const formattedOrders = orders.map(order => ({
       _id: order._id,
       user: order.user,
-      items: order.items.map(item => ({
-        name: item.product?.name || 'Unknown',
-        image: `http://localhost:5000${item.product.images[0]}`,
-        price: item.product?.price || 0,
-        qty: item.quantity,
-      })),
+      items: order.items
+  .filter(item => item.product)  // Only keep items with a valid product
+  .map(item => ({
+    name: item.product.name,
+    image: `http://localhost:5000${item.product.images[0]}`,
+    price: item.product.price,
+    qty: item.quantity,
+  })),
       totalPrice: order.total || 0,
       shippingAddress: order.shippingAddress,
       paymentMethod: order.paymentMethod,
@@ -92,7 +94,7 @@ export const getUserOrders = async (req, res) => {
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     }));
-
+    
     res.status(200).json(formattedOrders);
   } catch (err) {
     console.error(err);

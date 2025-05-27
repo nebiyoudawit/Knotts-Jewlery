@@ -4,7 +4,9 @@ import Product from '../models/products.js';
 
 // Helper function to format wishlist items for frontend
 const formatWishlistItems = (items) => {
-  return items.map(item => ({
+  return items
+  .filter(item => item.product)
+  .map(item => ({
     _id: item.product._id.toString(),
     name: item.product.name,
     price: item.product.price,
