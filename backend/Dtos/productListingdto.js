@@ -7,6 +7,7 @@ const productListingDTO = (product) => ({
     category: product.category,
     images: product.images,
     rating: product.rating,
+    reviewCount: product.reviewCount,
     stock: product.stock,
     onSale: product.onSale
   });

@@ -4,7 +4,7 @@ import ProductForm from '../../components/ProductForm';
 import ProductCard from '../../components/ProductCard';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = 'http://localhost:5000/api/admin'; // Full API URL path
+const API_BASE_URL = 'http://localhost:5000/api/admin';
 
 const ProductManagment = () => {
   const [products, setProducts] = useState([]);
@@ -12,18 +12,20 @@ const ProductManagment = () => {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
-    console.log('Token:', token); // Check for the token
+    console.log('Token:', token);
     if (!token) {
       toast.error('You need to log in to access products');
-      return null; // Return null if there's no token
+      return null;
     }
 
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // Attach token to headers
+      'Authorization': `Bearer ${token}`
     };
   };
 
@@ -52,39 +54,51 @@ const ProductManagment = () => {
       }
 
       const data = await response.json();
-      
       setProducts(data || []);
-      setIsLoading(false);  // Set loading to false when done fetching
+      setIsLoading(false);
     } catch (err) {
       setError(handleApiError(err, 'Failed to fetch products'));
-      setIsLoading(false);  // Set loading to false even when there is an error
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();  // Fetch products when component mounts
-  }, []); // Runs on initial load
+    fetchProducts();
+  }, []);
 
   const handleEdit = (product) => {
     setCurrentProduct(product);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteClick = (id) => {
+    setProductToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDelete = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/products/${productToDelete}`, {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (response.ok) {
+        setProducts(prevProducts => prevProducts.filter(p => p._id !== productToDelete));
+        toast.success('Product deleted successfully');
+      } else {
+        const errorText = await response.text();
+        console.error('Error deleting product:', response.status, errorText);
+        toast.error('Failed to delete product');
       }
-
-      setProducts(products.filter(p => p._id !== id));
-      toast.success('Product deleted successfully');
-    } catch (err) {
-      handleApiError(err, 'Failed to delete product');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+    } finally {
+      setShowDeleteConfirm(false);
+      setProductToDelete(null);
     }
   };
 
@@ -100,18 +114,16 @@ const ProductManagment = () => {
       let body;
       let headers = getAuthHeaders();
 
-      // Use FormData if there are image files
       if (productData.images instanceof FileList || productData.images?.[0] instanceof File) {
         body = new FormData();
         for (const key in productData) {
           if (key === 'images') {
             Array.from(productData.images).forEach(file => body.append('images', file));
           } else {
-            // Always append, even if originalPrice is 0
             body.append(key, productData[key] ?? '');
           }
         }
-        delete headers['Content-Type']; // Let browser set it for multipart/form-data
+        delete headers['Content-Type'];
       } else {
         body = JSON.stringify(productData);
       }
@@ -166,7 +178,7 @@ const ProductManagment = () => {
               key={product._id} 
               product={product} 
               onEdit={handleEdit} 
-              onDelete={handleDelete}
+              onDelete={handleDeleteClick}
             />
           ))
         ) : (
@@ -214,7 +226,7 @@ const ProductManagment = () => {
                       <FiEdit2 />
                     </button>
                     <button 
-                      onClick={() => handleDelete(product._id)} 
+                      onClick={() => handleDeleteClick(product._id)} 
                       className="text-red-600 hover:text-red-900 p-1"
                     >
                       <FiTrash2 />
@@ -231,6 +243,7 @@ const ProductManagment = () => {
         )}
       </div>
 
+      {/* Product Form Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-auto max-h-[90vh] overflow-y-auto">
@@ -240,6 +253,33 @@ const ProductManagment = () => {
               onSave={handleSave} 
               onCancel={() => setIsModalOpen(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Confirm Deletion</h3>
+            <p className="mb-6">Are you sure you want to delete this product? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setProductToDelete(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

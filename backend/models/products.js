@@ -20,12 +20,7 @@ const productSchema = new Schema(
     originalPrice: {
       type: Number,
       min: [0, 'Original price cannot be negative'],
-      validate: {
-        validator(value) {
-          return value === null || value >= this.price;
-        },
-        message: 'Original price must be equal to or greater than the price',
-      },
+
     },
     stock: {
       type: Number,

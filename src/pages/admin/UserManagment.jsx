@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { FiUser, FiEdit2, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
 
-const API_BASE_URL = 'http://localhost:5000/api/admin'; // Update base URL
+const API_BASE_URL = 'http://localhost:5000/api/admin';
 
 const UserManagment = () => {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -15,7 +17,7 @@ const UserManagment = () => {
         const response = await fetch(`${API_BASE_URL}/users`, {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // Replace with how you store the token
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
         if (response.ok) {
@@ -36,33 +38,37 @@ const UserManagment = () => {
     setIsModalOpen(true);
   };
 
-const handleDelete = async (id) => {
-  try {
-    // Ensure id is being passed correctly
-    console.log("Deleting user with id:", id);
+  const handleDeleteClick = (id) => {
+    setUserToDelete(id);
+    setShowDeleteConfirm(true);
+  };
 
-    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
 
-    if (response.ok) {
-      setUsers(users.filter(u => u.id !== id)); // Remove user from the list
-    } else {
-      console.error("Error deleting user:", response.statusText);
+      if (response.ok) {
+        setUsers(users.filter(u => u._id !== userToDelete));
+      } else {
+        console.error("Error deleting user:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    } finally {
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
     }
-  } catch (error) {
-    console.error("Error deleting user:", error);
-  }
-};
+  };
 
   const handleSave = async (userData) => {
-    // If editing an existing user
     if (currentUser) {
       try {
-        const response = await fetch(`${API_BASE_URL}/users/${currentUser.id}`, {
+        const response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -72,8 +78,8 @@ const handleDelete = async (id) => {
         });
   
         if (response.ok) {
-          const updatedUser = await response.json();
-          setUsers(users.map(u => u.id === currentUser.id ? updatedUser : u));
+          const resData = await response.json();
+          setUsers(users.map(u => u._id === currentUser._id ? resData.user : u));
         } else {
           console.error("Error updating user:", response.statusText);
         }
@@ -81,7 +87,6 @@ const handleDelete = async (id) => {
         console.error("Error updating user:", error);
       }
     } else {
-      // If adding a new user
       try {
         const response = await fetch(`${API_BASE_URL}/users`, {
           method: 'POST',
@@ -89,12 +94,12 @@ const handleDelete = async (id) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-          body: JSON.stringify(userData), // Ensure the userData is correct
+          body: JSON.stringify(userData),
         });
   
         if (response.ok) {
-          const newUser = await response.json();
-          setUsers([...users, newUser]); // Add new user to the list
+          const resData = await response.json();
+          setUsers([...users, resData.user]);
         } else {
           console.error("Error adding user:", response.statusText);
         }
@@ -103,7 +108,7 @@ const handleDelete = async (id) => {
       }
     }
     setIsModalOpen(false);
-    setCurrentUser(null); // Clear current user after save
+    setCurrentUser(null);
   };
 
   const filteredUsers = users.filter(user =>
@@ -139,10 +144,10 @@ const handleDelete = async (id) => {
       <div className="md:hidden space-y-4">
         {filteredUsers.map(user => (
           <UserCard 
-            key={user.id} 
+            key={user._id} 
             user={user} 
             onEdit={handleEdit} 
-            onDelete={handleDelete}
+            onDelete={handleDeleteClick}
           />
         ))}
       </div>
@@ -161,7 +166,7 @@ const handleDelete = async (id) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredUsers.map(user => (
-              <tr key={user.id}>
+              <tr key={user._id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#05B171] flex items-center justify-center text-white">
@@ -178,16 +183,16 @@ const handleDelete = async (id) => {
                     {user.role}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{user.joined}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{new Date(user.createdAt).toLocaleDateString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap flex gap-2">
                   <button 
-                    onClick={() => handleEdit(user.id)} 
+                    onClick={() => handleEdit(user)} 
                     className="text-blue-600 hover:text-blue-900 p-1"
                   >
                     <FiEdit2 />
                   </button>
                   <button 
-                    onClick={() => handleDelete(user.id)} 
+                    onClick={() => handleDeleteClick(user._id)} 
                     className="text-red-600 hover:text-red-900 p-1"
                   >
                     <FiTrash2 />
@@ -209,6 +214,33 @@ const handleDelete = async (id) => {
               onSave={handleSave} 
               onCancel={() => setIsModalOpen(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Confirm Deletion</h3>
+            <p className="mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setUserToDelete(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -239,7 +271,7 @@ const UserCard = ({ user, onEdit, onDelete }) => {
             <FiEdit2 />
           </button>
           <button 
-            onClick={() => onDelete(user.id)} 
+            onClick={() => onDelete(user._id)} 
             className="text-red-600 hover:text-red-900 p-1"
           >
             <FiTrash2 />
@@ -255,19 +287,22 @@ const UserCard = ({ user, onEdit, onDelete }) => {
       {isExpanded && (
         <div className="mt-4 text-sm text-gray-600">
           <p>Role: {user.role}</p>
-          <p>Joined: {user.joined}</p>
+          <p>Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
         </div>
       )}
     </div>
   );
 };
+
 const UserForm = ({ user, onSave, onCancel }) => {
-  const [formData, setFormData] = useState(user || {
-    name: '',
-    email: '',
-    role: 'customer',
-    password: ''
-  });
+ const [formData, setFormData] = useState(user || {
+  name: '',
+  email: '',
+  role: 'customer',
+  password: '',
+  address: '',
+  phone: ''
+});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -321,6 +356,28 @@ const UserForm = ({ user, onSave, onCancel }) => {
             <option value="admin">Admin</option>
           </select>
         </div>
+
+        <div>
+  <label className="block text-sm font-medium text-gray-700">Address</label>
+  <input
+    type="text"
+    name="address"
+    value={formData.address}
+    onChange={handleChange}
+    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+  />
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700">Phone</label>
+  <input
+    type="text"
+    name="phone"
+    value={formData.phone}
+    onChange={handleChange}
+    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+  />
+</div>
         
         {!user && (
           <div>
@@ -355,4 +412,5 @@ const UserForm = ({ user, onSave, onCancel }) => {
     </form>
   );
 };
+
 export default UserManagment;

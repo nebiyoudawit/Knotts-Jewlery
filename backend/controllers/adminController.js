@@ -2,6 +2,8 @@ import Product from '../models/products.js';
 import User from '../models/users.js';
 import Order from '../models/order.js';
 import bcrypt from 'bcryptjs';
+import path from 'path';
+import fs from 'fs';
 
 /* -------------------- ADMIN PRODUCT ROUTES -------------------- */
 
@@ -60,26 +62,42 @@ export const updateAdminProduct = async (req, res) => {
   try {
     const { name, price, originalPrice, stock, category, onSale, description } = req.body;
     const imageFiles = req.files;
-    const updateData = {};
 
-    if (name) updateData.name = name;
-    if (price) updateData.price = parseFloat(price);
-    if (stock) updateData.stock = parseInt(stock);
-    if (category) updateData.category = category;
-    if (description) updateData.description = description;
-
-    if (onSale === 'true') {
-      updateData.onSale = true;
-      if (originalPrice) updateData.originalPrice = parseFloat(originalPrice);
-    } else {
-      updateData.onSale = false;
-      updateData.originalPrice = null;
+    // Safely parse existingImages
+    let existingImages = [];
+    if (req.body.existingImages) {
+      if (typeof req.body.existingImages === 'string') {
+        try {
+          existingImages = JSON.parse(req.body.existingImages);
+        } catch (err) {
+          existingImages = [req.body.existingImages]; // single string fallback
+        }
+      } else if (Array.isArray(req.body.existingImages)) {
+        existingImages = req.body.existingImages;
+      } else {
+        existingImages = [];
+      }
     }
 
-    if (imageFiles && imageFiles.length > 0) {
-      updateData.images = imageFiles.map(file => `/uploads/${file.filename}`);
-    }
+    // Construct update data
+    const updateData = {
+      name,
+      price: parseFloat(price),
+      stock: parseInt(stock),
+      category,
+      onSale: onSale === 'true' || onSale === true,
+      description,
+      originalPrice:
+        onSale === 'true' || onSale === true
+          ? parseFloat(originalPrice)
+          : null,
+    };
 
+    // Handle new image uploads
+    const newImagePaths = (imageFiles || []).map(file => `/uploads/${file.filename}`);
+    updateData.images = [...existingImages, ...newImagePaths];
+
+    // Update product in DB
     const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
@@ -94,6 +112,8 @@ export const updateAdminProduct = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to update product', error: err.message });
   }
 };
+
+
 export const deleteAdminProduct = async (req, res) => {
   try {
     const deletedProduct = await Product.findByIdAndDelete(req.params.id);
@@ -134,10 +154,9 @@ export const deleteAdminProduct = async (req, res) => {
 export const getUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
-    res.json({ 
-      success: true,
+    res.json(
       users 
-    });
+    );
   } catch (err) {
     console.error("Error fetching users:", err);
     res.status(500).json({ 
@@ -150,29 +169,20 @@ export const getUsers = async (req, res) => {
 
 export const addUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, address, phone } = req.body;
     const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ 
-      success: false,
-      message: 'User already exists' 
-    });
-  
+    if (exists) return res.status(400).json({ success: false, message: 'User already exists' });
+
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ name, email, password: hashed, role });
+    const newUser = await User.create({ name, email, password: hashed, role, address, phone });
     const { password: _, ...userData } = newUser.toObject();
-    res.status(201).json({ 
-      success: true,
-      user: userData 
-    });
+    res.status(201).json({ success: true, user: userData });
   } catch (err) {
     console.error("Error adding user:", err);
-    res.status(400).json({ 
-      success: false,
-      message: 'Invalid user data',
-      error: err.message 
-    });
+    res.status(400).json({ success: false, message: 'Invalid user data', error: err.message });
   }
 };
+
 
 export const deleteUser = async (req, res) => {
   try {
@@ -199,30 +209,22 @@ export const deleteUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { name, email, role } = req.body;
+    const { name, email, role, address, phone } = req.body;
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ 
-      success: false,
-      message: 'User not found' 
-    });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     user.name = name;
     user.email = email;
     user.role = role;
+    user.address = address;
+    user.phone = phone;
     await user.save();
 
     const { password: _, ...userData } = user.toObject();
-    res.json({ 
-      success: true,
-      user: userData 
-    });
+    res.json({ success: true, user: userData });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Failed to update user',
-      error: err.message 
-    });
+    res.status(500).json({ success: false, message: 'Failed to update user', error: err.message });
   }
 };
 
@@ -232,10 +234,8 @@ export const updateUser = async (req, res) => {
 export const getAdminOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate('user', 'name email')  // Populate user data (name, email)
-      .populate('items.product', 'name price'); // Populate product details in the items array
-
-    res.json({ success: true, orders });
+      .populate('user', 'name phone')
+    res.json(orders);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch orders', error: err.message });
   }
