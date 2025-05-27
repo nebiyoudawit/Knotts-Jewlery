@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FiTruck, FiCheckCircle, FiXCircle, FiClock, FiSearch, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+
 
 const API_BASE_URL = 'http://localhost:5000/api/admin';
 
@@ -11,11 +13,13 @@ const OrderManagment = () => {
   const [currentOrder, setCurrentOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState(null);
+const navigate = useNavigate();
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
     if (!token) {
       toast.error('You need to log in to access orders');
+      navigate('/login'); // Redirect to login if no token
       return null;
     }
     return {
@@ -26,31 +30,38 @@ const OrderManagment = () => {
 
   const handleApiError = (error, defaultMessage) => {
     console.error('API Error:', error);
-    const message = error.message || defaultMessage;
+    const message = error.response?.data?.message || error.message || defaultMessage;
     toast.error(message);
+    
+    // If unauthorized, redirect to login
+    if (error.response?.status === 401) {
+      navigate('/login');
+    }
+    
     return message;
   };
 
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_BASE_URL}/orders`, {
-        headers: getAuthHeaders()
-      });
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
+      const response = await fetch(`${API_BASE_URL}/orders`, { headers });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch orders');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch orders');
       }
 
       const data = await response.json();
       setOrders(data || []);
-      setIsLoading(false);
     } catch (err) {
       handleApiError(err, 'Failed to fetch orders');
+    } finally {
       setIsLoading(false);
     }
   };
-
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -63,63 +74,90 @@ const OrderManagment = () => {
     switch(status) {
       case 'delivered': return <FiCheckCircle className="text-green-500" />;
       case 'pending': return <FiClock className="text-amber-500" />;
-      case 'shipped': return <FiTruck className="text-blue-500" />;
       case 'cancelled': return <FiXCircle className="text-red-500" />;
       default: return <FiClock className="text-gray-500" />;
     }
   };
 
 const updateOrderStatus = async (orderId, newStatus) => {
-  try {
-    const headers = getAuthHeaders();
-    if (!headers) return;
+    try {
+      const headers = getAuthHeaders();
+      if (!headers) return;
 
-    // Update order status
-    const statusResponse = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({ status: newStatus })
-    });
+      // Get current order first
+      const orderRes = await fetch(`${API_BASE_URL}/orders/${orderId}`, { headers });
+      if (!orderRes.ok) throw new Error('Failed to fetch order');
+      const currentOrder = await orderRes.json();
 
-    if (!statusResponse.ok) {
-      throw new Error('Failed to update order status');
-    }
-
-    const updatedOrder = await statusResponse.json();
-
-    // If status changed to delivered, update payment status and sales
-    if (newStatus === 'delivered') {
-      // Update payment status to paid
-      await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
+      // Update order status
+      const statusRes = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify({ paymentStatus: 'paid' })
+        body: JSON.stringify({ status: newStatus })
       });
+      
+      if (!statusRes.ok) {
+        const errorData = await statusRes.json();
+        throw new Error(errorData.message || 'Failed to update status');
+      }
+      
+      const updatedOrder = await statusRes.json();
+      let newPaymentStatus = updatedOrder.paymentStatus;
+      let shouldUpdateSales = false;
 
-      // Update product sales counts
-      await Promise.all(
-        updatedOrder.items.map(item => 
-          fetch(`${API_BASE_URL}/products/${item.product}/sales`, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({ quantity: item.quantity })
-          })
+      // Status transition logic
+      if (newStatus === 'delivered' && currentOrder.status !== 'delivered') {
+        const paymentRes = await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ paymentStatus: 'Paid' })
+        });
+        if (!paymentRes.ok) throw new Error('Failed to update payment status');
+        newPaymentStatus = 'paid';
+        shouldUpdateSales = true;
+      } 
+      else if (currentOrder.status === 'delivered' && newStatus !== 'delivered') {
+        const paymentRes = await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ paymentStatus: 'Pending' })
+        });
+        if (!paymentRes.ok) throw new Error('Failed to update payment status');
+        newPaymentStatus = 'pending';
+      }
+
+      // Update sales if needed
+      if (shouldUpdateSales) {
+        await Promise.all(
+          updatedOrder.items.map(item => 
+            fetch(`${API_BASE_URL}/products/${item.product._id}/sales`, {
+              method: 'PUT',
+              headers,
+              body: JSON.stringify({ quantity: item.quantity })
+            }).then(res => {
+              if (!res.ok) throw new Error('Failed to update product sales');
+              return res.json();
+            })
+          )
+        );
+      }
+
+      // Update local state
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === orderId ? { 
+            ...updatedOrder, 
+            paymentStatus: newPaymentStatus 
+          } : order
         )
       );
+      
+      toast.success('Order status updated successfully');
+    } catch (err) {
+      handleApiError(err, 'Failed to update order status');
     }
+  };
 
-    setOrders(orders.map(order => 
-      order._id === orderId ? { 
-        ...updatedOrder, 
-        paymentStatus: newStatus === 'delivered' ? 'paid' : order.paymentStatus 
-      } : order
-    ));
-    
-    toast.success('Order status updated successfully');
-  } catch (err) {
-    handleApiError(err, 'Failed to update order status');
-  }
-};
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
@@ -163,7 +201,6 @@ const updateOrderStatus = async (orderId, newStatus) => {
                     className="border border-gray-300 rounded-md p-1 text-xs"
                   >
                     <option value="pending">Pending</option>
-                    <option value="shipped">Shipped</option>
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
@@ -265,8 +302,7 @@ const updateOrderStatus = async (orderId, newStatus) => {
                           onChange={(e) => updateOrderStatus(order._id, e.target.value)}
                           className="border border-gray-300 rounded-md p-1 text-sm"
                         >
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
+                          <option value="pending">Pending</option>
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>
                         </select>

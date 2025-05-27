@@ -29,7 +29,7 @@ const ProductPage = () => {
         setError(null);
         
         // Fetch product details
-        const productResponse = await fetch(`http://localhost:5000/api/products/${id}`);
+        const productResponse = await fetch(`http://localhost:5000/api/product/${id}`);
         
         if (!productResponse.ok) {
           const errorData = await productResponse.json().catch(() => ({}));
@@ -47,7 +47,7 @@ const ProductPage = () => {
         // Fetch related products if category exists
         if (productData.data.category) {
           const relatedResponse = await fetch(
-            `http://localhost:5000/api/products/category/${productData.data.category}?limit=4`
+            `http://localhost:5000/api/product/category/${productData.data.category}?limit=4`
           );
           
           if (relatedResponse.ok) {
@@ -100,7 +100,7 @@ const handleSubmitReview = async (e) => {
     const token = localStorage.getItem('token'); // Or however you store your token
     if (!token) throw new Error('You must be logged in to post a review.');
 
-    const response = await fetch(`http://localhost:5000/api/products/${product._id}/reviews`, {
+    const response = await fetch(`http://localhost:5000/api/product/${product._id}/reviews`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -400,7 +400,7 @@ const imageGallery = product.images && product.images.length > 0
             {product.reviews.map(review => (
               <div key={review._id} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">{review.name || 'Anonymous'}</h3>
+                  <h3 className="font-semibold">{review.user?.name || review.name || 'Anonymous'}</h3>
                   <span className="text-sm text-gray-500">
                     {new Date(review.createdAt).toLocaleDateString()}
                   </span>

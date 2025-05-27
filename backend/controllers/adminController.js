@@ -49,6 +49,7 @@ export const addAdminProduct = async (req, res) => {
       onSale: onSale === 'true',
       images: imagePaths,
       description,
+      sales: 0,
     });
 
     res.status(201).json({ success: true, product });
@@ -256,41 +257,79 @@ export const getAdminOrderById = async (req, res) => {
   }
 };
 
-// UPDATE ORDER STATUS
 export const updateAdminOrderStatus = async (req, res) => {
   const { status } = req.body;
-  const validStatuses = ['processing', 'shipped', 'delivered', 'cancelled'];
+  const validStatuses = ['pending', 'delivered', 'cancelled'];
 
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ success: false, message: 'Invalid status' });
   }
 
   try {
-    const order = await Order.findById(req.params.id);
-
+    const order = await Order.findById(req.params.id)
+    .populate('items.product')
+    .populate('user', 'name phone');
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const previousStatus = order.status;
+
+    // Handle reverting from 'delivered'
+    if (previousStatus === 'delivered' && status !== 'delivered') {
+      order.paymentStatus = 'Pending';
+
+      for (let item of order.items) {
+        if (!item.product || !item.product._id) continue;
+
+        const product = await Product.findById(item.product._id);
+        if (!product) continue;
+
+        product.sales = (product.sales || 0) - item.quantity;
+        product.stock = (product.stock || 0) + item.quantity;
+        await product.save();
+      }
+
+      order.deliveryDate = null;
+    }
+
+    // Handle transition to 'delivered'
+    if (status === 'delivered' && previousStatus !== 'delivered') {
+      order.paymentStatus = 'Paid';
+
+      for (let item of order.items) {
+        if (!item.product || !item.product._id) continue;
+
+        const product = await Product.findById(item.product._id);
+        if (!product) continue;
+
+        product.sales = (product.sales || 0) + item.quantity;
+        product.stock = (product.stock || 0) - item.quantity;
+        await product.save();
+      }
+
+      if (!order.deliveryDate) {
+        order.deliveryDate = new Date();
+      }
     }
 
     order.status = status;
     order.updatedAt = Date.now();
 
-    if (status === 'delivered' && !order.deliveryDate) {
-      order.deliveryDate = new Date();
-    }
-
     await order.save();
 
-    res.json({ success: true, message: 'Order status updated', order });
+    res.json(order);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update order status', error: err.message });
   }
 };
 
+
+
 // UPDATE PAYMENT STATUS
 export const updateOrderPaymentStatus = async (req, res) => {
   const { paymentStatus } = req.body;
-  const validStatuses = ['pending', 'paid'];
+  const validStatuses = ['Pending', 'Paid'];
 
   if (!validStatuses.includes(paymentStatus)) {
     return res.status(400).json({ success: false, message: 'Invalid payment status' });
@@ -306,7 +345,7 @@ export const updateOrderPaymentStatus = async (req, res) => {
     order.paymentStatus = paymentStatus;
     await order.save();
 
-    res.json({ success: true, message: 'Payment status updated', order });
+    res.json(order );
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update payment status', error: err.message });
   }
@@ -327,7 +366,7 @@ export const updateProductSales = async (req, res) => {
     product.stock -= parseInt(quantity) || 1;
     await product.save();
 
-    res.json({ success: true, message: 'Product sales updated', product });
+    res.json(product);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update product sales', error: err.message });
   }

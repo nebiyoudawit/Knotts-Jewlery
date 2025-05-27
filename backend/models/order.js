@@ -82,9 +82,13 @@ const orderSchema = new Schema(
 // Middleware to update the `updatedAt` field before saving
 orderSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
+
+  if (this.total) {
+    this.total = Math.round(this.total * 100) / 100; // Round to 2 decimal places
+  }
+
   next();
 });
-
 // Create and export the Order model
 const Order = model('Order', orderSchema);
 
