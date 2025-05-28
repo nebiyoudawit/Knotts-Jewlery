@@ -42,35 +42,41 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     });
   };
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const totalImages = formData.existingImages.length + formData.images.length + files.length;
+const handleImageUpload = (e) => {
+  const files = Array.from(e.target.files);
 
-    if (totalImages > 4) {
-      alert('You can upload a maximum of 4 images');
-      return;
-    }
+  const totalImages = formData.existingImages.length + formData.images.length + files.length;
 
-    const newPreviews = [];
-    const newFiles = [];
+  if (totalImages > 4) {
+    alert('You can upload a maximum of 4 images');
+    return;
+  }
 
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        newPreviews.push(reader.result);
-        if (newPreviews.length === files.length) {
-          setImagePreviews([...formData.existingImages, ...newPreviews]);
-        }
-      };
-      reader.readAsDataURL(file);
-      newFiles.push(file);
-    });
+  const newFiles = [];
+  const newPreviews = [];
 
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, ...newFiles]
-    }));
-  };
+  files.forEach((file) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      newPreviews.push(reader.result);
+
+      // When all previews are ready, append them
+      if (newPreviews.length === files.length) {
+        setImagePreviews(prev => [...prev, ...newPreviews]); // ✅ APPEND previews
+      }
+    };
+    reader.readAsDataURL(file);
+    newFiles.push(file);
+  });
+
+  setFormData(prev => ({
+    ...prev,
+    images: [...prev.images, ...newFiles] // ✅ APPEND files
+  }));
+
+  e.target.value = ''; // optional: allow re-uploading same file
+};
+
 
   const handleRemoveImage = (index) => {
     if (index < formData.existingImages.length) {

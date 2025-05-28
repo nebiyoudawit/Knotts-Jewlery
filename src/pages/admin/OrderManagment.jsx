@@ -167,16 +167,6 @@ const updateOrderStatus = async (orderId, newStatus) => {
     <div className="p-4 md:p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold">Orders Management</h2>
-        <div className="relative w-full md:w-64">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search orders..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#05B171] w-full"
-          />
-        </div>
       </div>
 
       {/* Mobile Cards View */}

@@ -166,7 +166,7 @@ export const addAdminProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
 
-    const imagePaths = imageFiles.map(file => `/uploads/${file.filename}`);
+    const imagePaths = imageFiles ? imageFiles.map(file => `/uploads/${file.filename}`) : [];
 
     const product = await Product.create({
       name,
