@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+  getDashboardStats,
   getAdminProducts,
   getAdminProductById,
   addAdminProduct,
@@ -25,6 +26,8 @@ const router = express.Router();
 // Apply authentication to all routes
 router.use(authMiddleware);
 
+// ---------------- DASHBOARD ROUTE ----------------
+router.get('/', getDashboardStats);
 // ---------------- PRODUCT ROUTES ----------------
 router.get('/products', getAdminProducts);
 router.get('/products/:id', getAdminProductById);
