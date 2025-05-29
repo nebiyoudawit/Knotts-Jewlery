@@ -3,7 +3,7 @@ import productListingDTO from '../Dtos/productListingdto.js';
 import productDetailsDTO from '../Dtos/productDetailsDto.js';
 import mongoose from 'mongoose';
 import Review from '../models/review.js';
-
+import redisClient from '../utils/redisClient.js';
 // Get sorted products for home page - product sliders
 // This endpoint is used to fetch products sorted by latest or bestsellers
 export const getSortedProducts = async (req, res) => {
@@ -41,19 +41,34 @@ export const getProducts = async (req, res) => {
   try {
     const search = req.query.search || '';
     const filter = {};
+    const cacheKey = `products:search:${search}`;
 
+    // 1. Check Redis cache first
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        data: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // 2. Not in cache — query MongoDB
     if (search) {
-      // Simple text search on product name (adjust if you want to search description, category, etc)
       filter.name = { $regex: search, $options: 'i' };
     }
 
     const products = await Product.find(filter).select('-reviews -description');
     const response = products.map(productListingDTO);
 
+    // 3. Cache the result
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(response)); // TTL = 1 hour
+
     res.status(200).json({
       success: true,
       data: response
     });
+
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({

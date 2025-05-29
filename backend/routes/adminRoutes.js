@@ -18,13 +18,13 @@ import {
   updateProductSales
 } from '../controllers/adminController.js';
 
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware,adminMiddleware } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploads.js';
 
 const router = express.Router();
 
 // Apply authentication to all routes
-router.use(authMiddleware);
+router.use(authMiddleware,adminMiddleware);
 
 // ---------------- DASHBOARD ROUTE ----------------
 router.get('/', getDashboardStats);
