@@ -1,9 +1,10 @@
 import React from 'react';
 import { FaInstagram, FaTelegram, FaTiktok, FaPhone, FaQuestionCircle, FaEnvelope } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+
 const Footer = () => {
   return (
-    <footer className="bg-gray-100 py-8 ">
+    <footer className="bg-gray-100 py-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Info */}
@@ -35,14 +36,16 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Products</h3>
+            <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="space-y-2 text-gray-600">
+              <li><Link to="/about" className="link">About Us</Link></li>
+              <li><Link to="/contact" className="link">Contact Us</Link></li>
               <li><a href="#best" className='link cursor-pointer'>Best Selling</a></li>
               <li><a href="#latest" className='link cursor-pointer'>New Release</a></li>
               <li><Link to="/" className="link">Rings</Link></li>
               <li><Link to="/" className="link">Necklaces</Link></li>
               <li><Link to="/" className="link">Charms</Link></li>
-             <li> <Link to="/" className="link">Earrings</Link></li>
+              <li><Link to="/" className="link">Earrings</Link></li>
             </ul>
           </div>
 
@@ -50,13 +53,13 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Follow us on social media:</h3>
             <div className="flex space-x-4">
-              <a href="https://www.instagram.com/knotts_jewelry?igsh=Mzc5MHJ1N3d4d3hw" target="_blank" className="text-gray-600 hover:text-[#05B171]">
+              <a href="https://www.instagram.com/knotts_jewelry?igsh=Mzc5MHJ1N3d4d3hw" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-[#05B171]">
                 <FaInstagram size={20} />
               </a>
-              <a href="https://t.me/knotts_jewelry" className="text-gray-600 hover:text-[#05B171]" target='_blank'>
+              <a href="https://t.me/knotts_jewelry" className="text-gray-600 hover:text-[#05B171]" target="_blank" rel="noopener noreferrer">
                 <FaTelegram size={20} />
               </a>
-              <a href="https://www.tiktok.com/@knotts_jewelry?_t=ZM-8vesDYue3Rl&_r=1" className="text-gray-600 hover:text-[#05B171]" target='_blank'>
+              <a href="https://www.tiktok.com/@knotts_jewelry?_t=ZM-8vesDYue3Rl&_r=1" className="text-gray-600 hover:text-[#05B171]" target="_blank" rel="noopener noreferrer">
                 <FaTiktok size={20} />
               </a>
             </div>

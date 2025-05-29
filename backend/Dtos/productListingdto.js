@@ -1,16 +1,18 @@
-// dtos/productListing.dto.js
-const productListingDTO = (product) => ({
+const productListingDTO = (product) => {
+  // Find the first defined image
+  const fallbackImage = product.images?.find(img => !!img) || null;
+
+  return {
     _id: product._id,
     name: product.name,
     price: product.price,
     originalPrice: product.originalPrice,
     category: product.category,
-    images: product.images,
+    image: fallbackImage,
     rating: product.rating,
     reviewCount: product.reviewCount,
-    stock: product.stock,
     onSale: product.onSale
-  });
+  };
+};
 
-  export default productListingDTO;
-  
+export default productListingDTO;

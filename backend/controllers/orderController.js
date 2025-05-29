@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 export const createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { items, shippingAddress, paymentMethod } = req.body;
+    const { items, shippingAddress, paymentMethod, deliveryFee = 0 } = req.body;
      console.log('Incoming order data:', req.body); // Add this for debugging
     // Validate user
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -33,7 +33,7 @@ export const createOrder = async (req, res) => {
       }
 
       total += product.price * item.quantity;
-
+      total += deliveryFee;
       orderItems.push({
         product: product._id,
         name: product.name,

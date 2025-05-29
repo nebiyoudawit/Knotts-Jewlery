@@ -12,6 +12,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import path from 'path';
 import redisClient from './utils/redisClient.js'; // ✅ Redis client import
 
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,9 +62,9 @@ const PORT = process.env.PORT || 5000;
 
 (async () => {
   try {
+    
     await redisClient.connect();
     console.log('✅ Redis connected');
-
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });

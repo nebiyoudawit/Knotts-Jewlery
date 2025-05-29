@@ -22,6 +22,8 @@ import ProductManagment from './pages/admin/ProductManagment.jsx'
 import OrderManagment from './pages/admin/OrderManagment.jsx'
 import UserManagment from './pages/admin/UserManagment.jsx'
 import OrderConfirmation from './components/OrderConformation'
+import ContactUs from './pages/contactUs/index.jsx'
+import AboutUs from './pages/aboutUs/index.jsx'
 import { useEffect } from 'react';
 
 // 👇 Move Routes into a child component so we can use `useLocation`
@@ -48,6 +50,8 @@ const AppRoutes = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" exact element={<Home />} />
+        <Route path="/about" exact element={<AboutUs />} />
+        <Route path="/contact" exact element={<ContactUs />} />
         <Route path="/product" exact element={<ProductListing />} />
         <Route path="/products" element={<ProductListing />} />
         <Route path="/products/:category" exact element={<ProductListing />} />

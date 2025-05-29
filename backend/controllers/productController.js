@@ -27,15 +27,15 @@ export const getSortedProducts = async (req, res) => {
 
     const products = await Product.find(filter).sort(sortOptions).limit(limit);
 
-    res.status(200).json({ success: true, data: products });
+    // Apply DTO to each product
+    const formattedProducts = products.map(productListingDTO);
+
+    res.status(200).json({ success: true, data: formattedProducts });
   } catch (error) {
     console.error('Error sorting products:', error);
     res.status(500).json({ success: false, message: 'Failed to retrieve sorted products' });
   }
 };
-
-
-
 
 export const getProducts = async (req, res) => {
   try {

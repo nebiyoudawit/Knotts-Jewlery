@@ -16,19 +16,17 @@ const ProductItem = ({ product }) => {
   console.log("Product in ProductItem:", product);
   console.log("Product images:", product.images);
 
-  // Handle image URL - check if it's already a full URL or needs the server prefix
-  const getImageUrl = () => {
-    const image = product.images?.[0];
-    if (!image) return "/default-product.jpg";
+const getImageUrl = () => {
+  const image = product.image;
+  if (!image) return "/default-product.jpg";
 
-    if (image.startsWith("http")) return image;
+  if (image.startsWith("http")) return image;
 
-    const filename = image.split("/").pop();
-    const fullUrl = `http://localhost:5000/uploads/${filename}`;
-    console.log("Resolved Image URL:", fullUrl); // Add this
-    return fullUrl;
-  };
-
+  const filename = image.split("/").pop();
+  const fullUrl = `http://localhost:5000/uploads/${filename}`;
+  console.log("Resolved Image URL:", fullUrl);
+  return fullUrl;
+};
   return (
     <div className="group relative flex flex-col bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full">
       {/* Product Image with Wishlist Button */}

@@ -1,65 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaMapMarkerAlt, FaMoneyBillWave, FaCreditCard } from 'react-icons/fa';
-import { useShop } from '../../context/ShopContext';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { FaMapMarkerAlt, FaMoneyBillWave, FaCreditCard } from "react-icons/fa";
+import { useShop } from "../../context/ShopContext";
 
 const CheckoutPage = () => {
   const { cart, currentUser } = useShop();
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryFee] = useState(200);
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
   const pickupLocations = [
-    { id: 1, name: 'Figa', address: 'Figa Mall, 1st Floor' },
-    { id: 2, name: 'Gerji', address: 'Gerji Main Road, Shop 25' },
-    { id: 3, name: 'Megenagna', address: 'Megenagna Square, Unit 12' }
+    { id: 1, name: "Figa", address: "Figa Mall, 1st Floor" },
+    { id: 2, name: "Gerji", address: "Gerji Main Road, Shop 25" },
+    { id: 3, name: "Megenagna", address: "Megenagna Square, Unit 12" },
   ];
 
   useEffect(() => {
-    setPaymentMethod(''); // Reset payment method when pickup location changes
+    setPaymentMethod(""); // Reset payment method when pickup location changes
   }, [selectedLocation]);
-   console.log("Current User:", currentUser);
+  console.log("Current User:", currentUser);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!paymentMethod || (!selectedLocation && !deliveryAddress.trim())) {
-      alert('Please complete all required fields.');
+      alert("Please complete all required fields.");
       return;
     }
 
     try {
+      const total = selectedLocation ? subtotal : subtotal + deliveryFee;
+
       const orderData = {
-        items: cart.map(item => ({
+        items: cart.map((item) => ({
           product: item._id,
-          quantity: item.quantity
+          quantity: item.quantity,
         })),
         shippingAddress: selectedLocation
           ? `PICKUP: ${selectedLocation}`
           : deliveryAddress,
-        paymentMethod // should now be valid (e.g., 'Pay on Delivery')
+        paymentMethod,
+        totalPrice: total, // <-- Add this line
+        deliveryFee: selectedLocation ? 0 : deliveryFee, // Optional, for clarity
       };
-      console.log('Order Data:', orderData);
-      const response = await fetch('http://localhost:5000/api/orders', {
-        method: 'POST',
+      console.log("Order Data:", orderData);
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(orderData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create order');
+        throw new Error("Failed to create order");
       }
 
       const data = await response.json();
       window.location.href = `/order-confirmation/${data.data._id}`;
     } catch (error) {
-      console.error('Order submission error:', error);
+      console.error("Order submission error:", error);
       alert(`Order failed: ${error.message}`);
     }
   };
@@ -79,20 +86,21 @@ const CheckoutPage = () => {
               Pickup Location (Optional)
             </h2>
             <p className="text-sm text-gray-600 mb-4">
-              Select a pickup location to avoid delivery fees. Leave blank for home delivery.
+              Select a pickup location to avoid delivery fees. Leave blank for
+              home delivery.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {pickupLocations.map(location => (
+              {pickupLocations.map((location) => (
                 <div
                   key={location.id}
                   className={`border rounded-lg p-4 cursor-pointer transition-all ${
                     selectedLocation === location.name
-                      ? 'border-[#05B171] bg-green-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? "border-[#05B171] bg-green-50"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                   onClick={() =>
-                    setSelectedLocation(prev =>
-                      prev === location.name ? '' : location.name
+                    setSelectedLocation((prev) =>
+                      prev === location.name ? "" : location.name
                     )
                   }
                 >
@@ -109,11 +117,14 @@ const CheckoutPage = () => {
             <div className="bg-gray-50 p-4 rounded-lg space-y-2">
               {selectedLocation ? (
                 <p className="text-green-600">
-                  You've selected pickup at <strong>{selectedLocation}</strong>. No delivery fee will be charged.
+                  You've selected pickup at <strong>{selectedLocation}</strong>.
+                  No delivery fee will be charged.
                 </p>
               ) : (
                 <>
-                  <p className="text-gray-600">Your order will be delivered to your address.</p>
+                  <p className="text-gray-600">
+                    Your order will be delivered to your address.
+                  </p>
                   <p className="font-medium">Delivery Fee: {deliveryFee} ETB</p>
                   <input
                     type="text"
@@ -135,31 +146,33 @@ const CheckoutPage = () => {
               {/* Pay on Delivery */}
               <div
                 className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                  paymentMethod === 'Pay on Delivery'
-                    ? 'border-[#05B171] bg-green-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                  paymentMethod === "Pay on Delivery"
+                    ? "border-[#05B171] bg-green-50"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
-                onClick={() => setPaymentMethod('Pay on Delivery')}
+                onClick={() => setPaymentMethod("Pay on Delivery")}
               >
                 <div className="flex items-center">
                   <FaMoneyBillWave className="mr-3 text-xl text-[#05B171]" />
                   <div>
                     <h3 className="font-medium">Pay on Delivery</h3>
-                    <p className="text-sm text-gray-600">Pay cash when your order arrives</p>
+                    <p className="text-sm text-gray-600">
+                      Pay cash when your order arrives
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Online Payment (Coming Soon) */}
-              <div
-                className="border rounded-lg p-4 cursor-not-allowed opacity-60 bg-gray-100"
-              >
+              <div className="border rounded-lg p-4 cursor-not-allowed opacity-60 bg-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <FaCreditCard className="mr-3 text-xl text-gray-400" />
                     <div>
                       <h3 className="font-medium">Online Payment</h3>
-                      <p className="text-sm text-gray-600">Pay securely with your card</p>
+                      <p className="text-sm text-gray-600">
+                        Pay securely with your card
+                      </p>
                     </div>
                   </div>
                   <span className="text-xs bg-yellow-400 text-white px-2 py-1 rounded-md font-semibold">
@@ -175,8 +188,13 @@ const CheckoutPage = () => {
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
             <div className="space-y-2 mb-4">
               {cart.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm text-gray-700">
-                  <span>{item.name} x {item.quantity}</span>
+                <div
+                  key={item.id}
+                  className="flex justify-between text-sm text-gray-700"
+                >
+                  <span>
+                    {item.name} x {item.quantity}
+                  </span>
                   <span>{(item.price * item.quantity).toFixed(2)} ETB</span>
                 </div>
               ))}
@@ -199,7 +217,8 @@ const CheckoutPage = () => {
               <span>
                 {selectedLocation
                   ? subtotal.toFixed(2)
-                  : (subtotal + deliveryFee).toFixed(2)} ETB
+                  : (subtotal + deliveryFee).toFixed(2)}{" "}
+                ETB
               </span>
             </div>
           </div>
@@ -214,11 +233,15 @@ const CheckoutPage = () => {
             </Link>
             <button
               type="submit"
-              disabled={paymentMethod !== 'Pay on Delivery' || (!selectedLocation && !deliveryAddress)}
+              disabled={
+                paymentMethod !== "Pay on Delivery" ||
+                (!selectedLocation && !deliveryAddress)
+              }
               className={`px-6 py-3 rounded-md text-white ${
-                paymentMethod === 'Pay on Delivery' && (selectedLocation || deliveryAddress)
-                  ? 'bg-[#05B171] hover:bg-[#048a5b]'
-                  : 'bg-gray-400 cursor-not-allowed'
+                paymentMethod === "Pay on Delivery" &&
+                (selectedLocation || deliveryAddress)
+                  ? "bg-[#05B171] hover:bg-[#048a5b]"
+                  : "bg-gray-400 cursor-not-allowed"
               } transition-colors`}
             >
               Place Order
