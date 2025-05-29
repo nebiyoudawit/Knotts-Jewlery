@@ -126,22 +126,6 @@ const updateOrderStatus = async (orderId, newStatus) => {
         newPaymentStatus = 'pending';
       }
 
-      // Update sales if needed
-      if (shouldUpdateSales) {
-        await Promise.all(
-          updatedOrder.items.map(item => 
-            fetch(`${API_BASE_URL}/products/${item.product._id}/sales`, {
-              method: 'PUT',
-              headers,
-              body: JSON.stringify({ quantity: item.quantity })
-            }).then(res => {
-              if (!res.ok) throw new Error('Failed to update product sales');
-              return res.json();
-            })
-          )
-        );
-      }
-
       // Update local state
       setOrders(prevOrders => 
         prevOrders.map(order => 

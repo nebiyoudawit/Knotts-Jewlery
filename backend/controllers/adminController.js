@@ -1,6 +1,7 @@
 import Product from '../models/products.js';
 import User from '../models/users.js';
 import Order from '../models/order.js';
+import redisClient from '../utils/redisClient.js';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import fs from 'fs';
@@ -179,7 +180,7 @@ export const addAdminProduct = async (req, res) => {
       description,
       sales: 0,
     });
-
+    await redisClient.del('products:search:*');
     res.status(201).json({ success: true, product });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to create product', error: err.message });
@@ -231,7 +232,7 @@ export const updateAdminProduct = async (req, res) => {
       new: true,
       runValidators: true,
     });
-
+    await redisClient.del('products:search:*');
     if (!updatedProduct) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -252,7 +253,7 @@ export const deleteAdminProduct = async (req, res) => {
         message: 'Product not found' 
       });
     }
-
+    await redisClient.del('products:search:*');
     // Delete images from the filesystem
     if (deletedProduct.images && deletedProduct.images.length > 0) {
       deletedProduct.images.forEach((imagePath) => {

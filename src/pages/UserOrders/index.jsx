@@ -8,6 +8,8 @@ import {
   FiXCircle,
   FiCalendar,
   FiX,
+  FiTruck,
+  FiCreditCard,
 } from 'react-icons/fi';
 import { useShop } from '../../context/ShopContext';
 
@@ -19,19 +21,18 @@ const UserOrders = () => {
   const { currentUser, updateUserProfile } = useShop();
 
   const [user, setUser] = useState({
-      name: '',
-      email: '',
-    });
+    name: '',
+    email: '',
+  });
 
-    useEffect(() => {
-        if (currentUser) {
-          setUser({
-            name: currentUser.name,
-            email: currentUser.email,
-          });
-        }
-      }, [currentUser]);
-
+  useEffect(() => {
+    if (currentUser) {
+      setUser({
+        name: currentUser.name,
+        email: currentUser.email,
+      });
+    }
+  }, [currentUser]);
 
   const fetchOrders = async () => {
     const token = localStorage.getItem('token');
@@ -124,6 +125,17 @@ const UserOrders = () => {
     }
   };
 
+  const getPaymentStatusText = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return 'Paid';
+      case 'pending':
+        return 'Pending';
+      default:
+        return status || 'Pending';
+    }
+  };
+
   const canCancelOrder = (orderDate) => {
     const now = new Date();
     const placed = new Date(orderDate);
@@ -139,6 +151,16 @@ const UserOrders = () => {
     });
   };
 
+  const formatDeliveryDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
@@ -149,7 +171,7 @@ const UserOrders = () => {
           <div className="w-full md:w-64 bg-white rounded-lg shadow-sm p-4 h-fit">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-full bg-[#05B171] flex items-center justify-center text-white text-xl font-bold">
-              {user.name.charAt(0)}
+                {user.name.charAt(0)}
               </div>
               <div>
                 <h3 className="font-medium">{user.name}</h3>
@@ -210,11 +232,34 @@ const UserOrders = () => {
                         </div>
                       </div>
 
+                      {/* Order Info */}
+                      <div className="p-4 border-b border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-start gap-3">
+                          <FiTruck className="text-gray-500 mt-1" />
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-1">Shipping Address</h4>
+                            <p className="text-sm text-gray-600">{order.shippingAddress || 'Not specified'}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <FiCreditCard className="text-gray-500 mt-1" />
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-1">Payment</h4>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="text-sm text-gray-600">{order.paymentMethod || 'Not specified'}</span>
+                              <span className="text-sm px-2 py-1 rounded bg-gray-100">
+                                {getPaymentStatusText(order.paymentStatus)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Items */}
                       <div className="divide-y divide-gray-200">
                         {order.items.map((item, i) => {
                           const name = item.name || 'Unnamed product';
-                          const image = item.image || '/placeholder.png'; // Add placeholder image in public folder
+                          const image = item.image || '/placeholder.png';
                           const price = typeof item.price === 'number' ? item.price : 0;
                           const qty = item.qty || 0;
 
@@ -235,7 +280,14 @@ const UserOrders = () => {
 
                       {/* Footer */}
                       <div className="p-4 border-t border-gray-200 bg-gray-50 flex flex-wrap justify-between gap-3 items-center">
-                        <span className="text-sm text-gray-600">{order.items.length} items</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm text-gray-600">{order.items.length} items</span>
+                          {order.deliveryDate && (
+                            <span className="text-xs text-gray-500">
+                              Expected delivery: {formatDeliveryDate(order.deliveryDate)}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-3">
                           <span className="font-medium">Total: {order.totalPrice?.toFixed(2) || '0.00'} birr</span>
                           {isPending && cancellable ? (

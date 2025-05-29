@@ -5,18 +5,17 @@ import mongoose from 'mongoose';
 
 // Helper function to format cart items for frontend
 const formatCartItem = (item) => {
-  // Guard against missing product (e.g. deleted product)
   if (!item.product) return null;
+
+  // Get the first valid image or use default
+  const firstImage = item.product.images?.find(img => !!img) || '/default-product.jpg';
 
   return {
     _id: item.product._id.toString(),
     name: item.product.name,
     price: item.product.price,
     originalPrice: item.product.originalPrice,
-    images: item.product.images && item.product.images.length > 0
-      ? item.product.images
-      : ['/default-product.jpg'], // fallback default image
-    category: item.product.category?.name || '',
+    images: [firstImage], // wrap single image in an array
     quantity: item.quantity
   };
 };

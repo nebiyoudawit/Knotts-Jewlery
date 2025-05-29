@@ -62,7 +62,7 @@ export const getProducts = async (req, res) => {
     const response = products.map(productListingDTO);
 
     // 3. Cache the result
-    await redisClient.setEx(cacheKey, 3600, JSON.stringify(response)); // TTL = 1 hour
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(response)); 
 
     res.status(200).json({
       success: true,
@@ -124,9 +124,12 @@ export const getProductsByCategory = async (req, res) => {
 
     const products = await Product.find({ category }).limit(limit);
 
+    // Apply productListingDTO to each product
+    const formattedProducts = products.map(productListingDTO);
+
     res.status(200).json({
       success: true,
-      data: products,
+      data: formattedProducts,
     });
   } catch (error) {
     console.error('Error fetching products by category:', error);
@@ -136,7 +139,6 @@ export const getProductsByCategory = async (req, res) => {
     });
   }
 };
-
 
 // Add a review to a product
 export const addProductReview = async (req, res) => {
@@ -177,7 +179,7 @@ export const addProductReview = async (req, res) => {
     product.rating = averageRating;
 
     await product.save();
-
+    await redisClient.del(`products:search:`);
     res.status(201).json({
       success: true,
       message: 'Review added successfully',

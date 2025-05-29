@@ -5,17 +5,22 @@ import Product from '../models/products.js';
 // Helper function to format wishlist items for frontend
 const formatWishlistItems = (items) => {
   return items
-  .filter(item => item.product)
-  .map(item => ({
-    _id: item.product._id.toString(),
-    name: item.product.name,
-    price: item.product.price,
-    originalPrice: item.product.originalPrice,
-    images: item.product.images || ['/default-product.jpg'],  // send full images array
-    category: item.product.category?.name || '',
-    rating: item.product.rating || 0,
-    reviewCount: item.product.reviewCount || 0
-  }));
+    .filter(item => item.product)
+    .map(item => {
+      const images = item.product.images || [];
+      const firstImage = images.find(img => typeof img === 'string' && img.trim() !== '');
+
+      return {
+        _id: item.product._id.toString(),
+        name: item.product.name,
+        price: item.product.price,
+        originalPrice: item.product.originalPrice,
+        image: firstImage || '/default-product.jpg', // only send first image
+        category: item.product.category || '',
+        rating: item.product.rating || 0,
+        reviewCount: item.product.reviewCount || 0,
+      };
+    });
 };
 
 // @desc    Get user's wishlist

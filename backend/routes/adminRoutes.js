@@ -44,9 +44,9 @@ router.delete('/users/:id', deleteUser);
 // ---------------- ORDER ROUTES ----------------
 router.get('/orders', getAdminOrders);
 router.get('/orders/:id', getAdminOrderById);
-router.put('/orders/:id/status', updateAdminOrderStatus); // Changed to /status endpoint
-router.put('/orders/:id/payment', updateOrderPaymentStatus); // New payment status endpoint
-router.put('/products/:id/sales', updateProductSales); // New sales update endpoint
+router.put('/orders/:id/status', updateAdminOrderStatus); 
+router.put('/orders/:id/payment', updateOrderPaymentStatus); 
+router.put('/products/:id/sales', updateProductSales); 
 router.delete('/orders/:id', deleteAdminOrder);
 
 export default router;

@@ -43,15 +43,15 @@ const OrderConfirmation = () => {
           <FaCheckCircle className="mx-auto text-6xl text-green-500 mb-4" />
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Order Confirmed!</h1>
           <p className="text-gray-600 mb-6">
-            Thank you for your purchase. Your order #{order?._id} has been received.
+            Thank you for your purchase. Your order #{order?.orderId} has been received.
           </p>
           
           <div className="bg-gray-50 rounded-lg p-6 mb-6 text-left">
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-            <p className="mb-2"><strong>Order ID:</strong> {order?._id}</p>
-            <p className="mb-2"><strong>Delivery Method:</strong> {order?.shippingAddress.includes('PICKUP:') ? 'Pickup' : 'Delivery'}</p>
+            <p className="mb-2"><strong>Order ID:</strong> {order?.orderId}</p>
+            <p className="mb-2"><strong>Delivery Method:</strong> {order?.deliveryMethod}</p>
             <p className="mb-2"><strong>Payment Method:</strong> {order?.paymentMethod}</p>
-            <p className="mb-2"><strong>Total:</strong> {order?.total.toFixed(2)} ETB</p>
+            <p className="mb-2"><strong>Total:</strong> {order?.total}</p>
           </div>
 
           <Link

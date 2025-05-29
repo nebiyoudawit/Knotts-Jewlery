@@ -92,34 +92,40 @@ export const createOrder = async (req, res) => {
     });
   }
 };
-export const getOrderById = async (req, res) => {
-    try {
-      const { id } = req.params;
-  
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ success: false, message: 'Invalid order ID' });
-      }
-  
-      const order = await Order.findById(id)
-        .populate('user', 'name email')
-        .populate('items.product', 'name price images');
-  
-      if (!order) {
-        return res.status(404).json({ success: false, message: 'Order not found' });
-      }
-  
-      res.status(200).json({
-        success: true,
-        data: order
-      });
-    } catch (error) {
-      console.error('Error fetching order:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Server error fetching order',
-        error: error.message
-      });
-    }
-  };
 
-  
+export const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid order ID' });
+    }
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Simplified response
+    const summary = {
+      orderId: order._id,
+      deliveryMethod: order.shippingAddress, // Assuming this stores "PICKUP: Figa"
+      paymentMethod: order.paymentMethod,
+      total: `${order.total.toFixed(2)} ETB`
+    };
+
+    res.status(200).json({
+      success: true,
+      data: summary
+    });
+
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching order',
+      error: error.message
+    });
+  }
+};
