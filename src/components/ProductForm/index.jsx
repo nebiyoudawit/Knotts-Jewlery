@@ -233,14 +233,14 @@ const ProductForm = ({ product, onSave, onCancel }) => {
             {imagePreviews.map((preview, index) => (
               <div key={index} className="relative group">
                 <img
-  src={
-    preview.startsWith('http') || preview.startsWith('data:')
-      ? preview
-      : `${BASE_URL}${preview}`
-  }
-  alt={`Product preview ${index + 1}`}
-  className="h-20 w-20 object-cover rounded border border-gray-200"
-/>
+                  src={
+                    preview.startsWith("http") || preview.startsWith("data:")
+                      ? preview
+                      : `${BASE_URL}${preview}`
+                  }
+                  alt={`Product preview ${index + 1}`}
+                  className="h-20 w-20 object-cover rounded border border-gray-200"
+                />
                 <button
                   type="button"
                   onClick={() => handleRemoveImage(index)}
