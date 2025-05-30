@@ -64,6 +64,7 @@ const PORT = process.env.PORT || 5000;
   try {
     
     await redisClient.connect();
+    await redisClient.flushAll(); 
     console.log('✅ Redis connected');
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
