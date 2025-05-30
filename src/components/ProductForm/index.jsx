@@ -1,82 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { FiImage, FiX } from 'react-icons/fi';
+import React, { useState, useEffect } from "react";
+import { FiImage, FiX } from "react-icons/fi";
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = "http://localhost:5000";
 
 const ProductForm = ({ product, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    originalPrice: '',
-    stock: '',
-    category: '',
+    name: "",
+    price: "",
+    originalPrice: "",
+    stock: "",
+    category: "",
     onSale: false,
     images: [], // Files
     existingImages: [], // URLs
-    description: ''
+    description: "",
   });
 
   const [imagePreviews, setImagePreviews] = useState([]);
 
- useEffect(() => {
-  if (product) {
-    const existingImages = (product.images || []).map(img =>
-      img.startsWith('http') ? img : `${BASE_URL}${img}`
-    );
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        ...product,
+        images: [],
+        existingImages: product.images || [],
+      });
 
-    setFormData({
-      ...product,
-      images: [], // new uploads
-      existingImages, // for display
-    });
-
-    setImagePreviews(existingImages);
-  }
-}, [product]);
+      setImagePreviews(
+        product.images?.map((img) =>
+          img.startsWith("http") ? img : `${BASE_URL}${img}`
+        ) || []
+      );
+    }
+  }, [product]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
-const handleImageUpload = (e) => {
-  const files = Array.from(e.target.files);
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
 
-  const totalImages = formData.existingImages.length + formData.images.length + files.length;
+    const totalImages =
+      formData.existingImages.length + formData.images.length + files.length;
 
-  if (totalImages > 4) {
-    alert('You can upload a maximum of 4 images');
-    return;
-  }
+    if (totalImages > 4) {
+      alert("You can upload a maximum of 4 images");
+      return;
+    }
 
-  const newFiles = [];
-  const newPreviews = [];
+    const newFiles = [];
+    const newPreviews = [];
 
-  files.forEach((file) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      newPreviews.push(reader.result);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        newPreviews.push(reader.result);
 
-      // When all previews are ready, append them
-      if (newPreviews.length === files.length) {
-        setImagePreviews(prev => [...prev, ...newPreviews]); // ✅ APPEND previews
-      }
-    };
-    reader.readAsDataURL(file);
-    newFiles.push(file);
-  });
+        // When all previews are ready, append them
+        if (newPreviews.length === files.length) {
+          setImagePreviews((prev) => [...prev, ...newPreviews]); // ✅ APPEND previews
+        }
+      };
+      reader.readAsDataURL(file);
+      newFiles.push(file);
+    });
 
-  setFormData(prev => ({
-    ...prev,
-    images: [...prev.images, ...newFiles] // ✅ APPEND files
-  }));
+    setFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, ...newFiles], // ✅ APPEND files
+    }));
 
-  e.target.value = ''; // optional: allow re-uploading same file
-};
-
+    e.target.value = ""; // optional: allow re-uploading same file
+  };
 
   const handleRemoveImage = (index) => {
     if (index < formData.existingImages.length) {
@@ -84,7 +84,7 @@ const handleImageUpload = (e) => {
       newExisting.splice(index, 1);
       setFormData((prev) => ({
         ...prev,
-        existingImages: newExisting
+        existingImages: newExisting,
       }));
       const updatedPreviews = [...imagePreviews];
       updatedPreviews.splice(index, 1);
@@ -97,7 +97,7 @@ const handleImageUpload = (e) => {
       updatedPreviews.splice(index, 1);
       setFormData((prev) => ({
         ...prev,
-        images: newFiles
+        images: newFiles,
       }));
       setImagePreviews(updatedPreviews);
     }
@@ -108,7 +108,7 @@ const handleImageUpload = (e) => {
 
     const dataToSave = {
       ...formData,
-      originalPrice: formData.onSale ? formData.originalPrice : undefined
+      originalPrice: formData.onSale ? formData.originalPrice : undefined,
     };
     onSave(dataToSave);
   };
@@ -117,7 +117,9 @@ const handleImageUpload = (e) => {
     <form onSubmit={handleSubmit}>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Product Name</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Product Name
+          </label>
           <input
             type="text"
             name="name"
@@ -130,7 +132,9 @@ const handleImageUpload = (e) => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Current Price ($)</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Current Price ($)
+            </label>
             <input
               type="number"
               name="price"
@@ -143,7 +147,9 @@ const handleImageUpload = (e) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Stock Quantity</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Stock Quantity
+            </label>
             <input
               type="number"
               name="stock"
@@ -155,7 +161,9 @@ const handleImageUpload = (e) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Category
+            </label>
             <select
               name="category"
               value={formData.category}
@@ -181,16 +189,20 @@ const handleImageUpload = (e) => {
             onChange={handleChange}
             className="h-4 w-4 text-[#05B171] focus:ring-[#05B171] border-gray-300 rounded"
           />
-          <label className="ml-2 block text-sm text-gray-700">Put on sale</label>
+          <label className="ml-2 block text-sm text-gray-700">
+            Put on sale
+          </label>
         </div>
 
         {formData.onSale && (
           <div>
-            <label className="block text-sm font-medium text-gray-700">Original Price ($)</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Original Price ($)
+            </label>
             <input
               type="number"
               name="originalPrice"
-              value={formData.originalPrice || ''}
+              value={formData.originalPrice || ""}
               onChange={handleChange}
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
               min="0"
@@ -201,7 +213,9 @@ const handleImageUpload = (e) => {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
           <textarea
             name="description"
             value={formData.description}
@@ -212,15 +226,21 @@ const handleImageUpload = (e) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Product Images (Max 4)</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Product Images (Max 4)
+          </label>
           <div className="mt-1 flex flex-wrap gap-2">
             {imagePreviews.map((preview, index) => (
               <div key={index} className="relative group">
                 <img
-                  src={preview}
-                  alt={`Product preview ${index + 1}`}
-                  className="h-20 w-20 object-cover rounded border border-gray-200"
-                />
+  src={
+    preview.startsWith('http') || preview.startsWith('data:')
+      ? preview
+      : `${BASE_URL}${preview}`
+  }
+  alt={`Product preview ${index + 1}`}
+  className="h-20 w-20 object-cover rounded border border-gray-200"
+/>
                 <button
                   type="button"
                   onClick={() => handleRemoveImage(index)}

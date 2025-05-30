@@ -5,6 +5,9 @@ import Lottie from 'lottie-react';
 import successAnimation from '../../success-animation.json';
 import { useShop } from '../../context/ShopContext'; // Adjust path if needed
 
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import L from 'leaflet';
+
 const Register = () => {
   const { register } = useShop();
   const [formData, setFormData] = useState({
@@ -18,6 +21,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [userLocation, setUserLocation] = useState(null); // For map display
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -27,6 +31,42 @@ const Register = () => {
       [name]: value,
     }));
   };
+
+  const getCurrentLocation = () => {
+  setError('');
+  if (!navigator.geolocation) {
+    setError('Geolocation is not supported by your browser');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      setUserLocation([latitude, longitude]);
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+        );
+        const data = await response.json();
+        const address = data.display_name || `${latitude}, ${longitude}`;
+
+        setFormData((prev) => ({ ...prev, address }));
+      } catch (err) {
+        setError('Failed to get address from location.');
+      }
+    },
+    (error) => {
+      if (error.code === error.PERMISSION_DENIED) {
+        setError(
+          'Location access denied. Please enable location permissions in your browser settings and try again.'
+        );
+      } else {
+        setError('Unable to retrieve your location.');
+      }
+    }
+  );
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,6 +100,13 @@ const Register = () => {
       </div>
     </div>
   );
+
+  // Leaflet marker icon setup
+  const markerIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  });
 
   return (
     <div className="min-h-[100%] bg-gray-50 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
@@ -137,7 +184,7 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Address Field */}
+            {/* Address Field with location button */}
             <div>
               <label
                 htmlFor="address"
@@ -156,9 +203,35 @@ const Register = () => {
                   value={formData.address}
                   onChange={handleChange}
                   required
-                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
+                  className="py-2 pl-10 pr-12 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
                 />
+                {/* Location Button */}
+                <button
+                  type="button"
+                  onClick={getCurrentLocation}
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-[#05B171] hover:text-[#048a5b]"
+                  title="Use my location"
+                >
+                  <FiMapPin className="h-5 w-5" />
+                </button>
               </div>
+              {/* Map showing location */}
+              {userLocation && (
+                <div className="mt-4 rounded overflow-hidden border">
+                  <MapContainer
+                    center={userLocation}
+                    zoom={13}
+                    scrollWheelZoom={false}
+                    style={{ height: 300, width: '100%' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker position={userLocation} icon={markerIcon} />
+                  </MapContainer>
+                </div>
+              )}
             </div>
 
             {/* Password Field */}

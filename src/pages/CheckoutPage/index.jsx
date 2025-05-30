@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaMapMarkerAlt, FaMoneyBillWave, FaCreditCard } from "react-icons/fa";
+import { FiMapPin } from "react-icons/fi";  // Add this for location icon
 import { useShop } from "../../context/ShopContext";
 
 const CheckoutPage = () => {
@@ -9,6 +10,7 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryFee] = useState(200);
+  const [locationError, setLocationError] = useState(""); // New for errors
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -24,7 +26,41 @@ const CheckoutPage = () => {
   useEffect(() => {
     setPaymentMethod(""); // Reset payment method when pickup location changes
   }, [selectedLocation]);
-  console.log("Current User:", currentUser);
+
+  const getCurrentLocation = () => {
+    setLocationError("");
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+          );
+          const data = await response.json();
+          const address = data.display_name || `${latitude}, ${longitude}`;
+
+          setDeliveryAddress(address);
+        } catch (err) {
+          setLocationError("Failed to get address from location.");
+        }
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationError(
+            "Location access denied. Please enable it in your browser settings and try again."
+          );
+        } else {
+          setLocationError("Unable to retrieve your location.");
+        }
+      }
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,8 +82,8 @@ const CheckoutPage = () => {
           ? `PICKUP: ${selectedLocation}`
           : deliveryAddress,
         paymentMethod,
-        totalPrice: total, // <-- Add this line
-        deliveryFee: selectedLocation ? 0 : deliveryFee, // Optional, for clarity
+        totalPrice: total,
+        deliveryFee: selectedLocation ? 0 : deliveryFee,
       };
       console.log("Order Data:", orderData);
       const response = await fetch("http://localhost:5000/api/orders", {
@@ -126,14 +162,31 @@ const CheckoutPage = () => {
                     Your order will be delivered to your address.
                   </p>
                   <p className="font-medium">Delivery Fee: {deliveryFee} ETB</p>
-                  <input
-                    type="text"
-                    placeholder="Enter delivery address"
-                    className="mt-2 w-full border border-gray-300 rounded-md p-2"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    required
-                  />
+
+                  {/* Address input with location icon button */}
+                  <div className="relative mt-2">
+                    <input
+                      type="text"
+                      placeholder="Enter delivery address"
+                      className="w-full border border-gray-300 rounded-md p-2 pr-10"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={getCurrentLocation}
+                      className="absolute right-2 top-2 text-gray-500 hover:text-[#05B171]"
+                      aria-label="Use current location"
+                      title="Use current location"
+                    >
+                      <FiMapPin size={20} />
+                    </button>
+                  </div>
+
+                  {locationError && (
+                    <p className="mt-1 text-sm text-red-600">{locationError}</p>
+                  )}
                 </>
               )}
             </div>
