@@ -135,6 +135,13 @@ export const getDashboardStats = async (req, res) => {
 
 
 /* -------------------- ADMIN PRODUCT ROUTES -------------------- */
+const deleteProductSearchCache = async () => {
+  const keys = await redisClient.keys('products:search:*');
+  if (keys.length > 0) {
+    await redisClient.del(keys);
+    console.log(`Deleted Redis cache keys: ${keys.join(', ')}`);
+  }
+};
 
 // GET ALL PRODUCTS
 export const getAdminProducts = async (req, res) => {
@@ -180,7 +187,7 @@ export const addAdminProduct = async (req, res) => {
       description,
       sales: 0,
     });
-    await redisClient.del('products:search:*');
+    await deleteProductSearchCache();
     res.status(201).json({ success: true, product });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to create product', error: err.message });
@@ -232,7 +239,7 @@ export const updateAdminProduct = async (req, res) => {
       new: true,
       runValidators: true,
     });
-    await redisClient.del('products:search:*');
+    await deleteProductSearchCache();
     if (!updatedProduct) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -253,7 +260,6 @@ export const deleteAdminProduct = async (req, res) => {
         message: 'Product not found' 
       });
     }
-    await redisClient.del('products:search:*');
     // Delete images from the filesystem
     if (deletedProduct.images && deletedProduct.images.length > 0) {
       deletedProduct.images.forEach((imagePath) => {
@@ -265,7 +271,7 @@ export const deleteAdminProduct = async (req, res) => {
         });
       });
     }
-
+    await deleteProductSearchCache();
     res.json({ 
       success: true,
       message: 'Product and images deleted successfully' 

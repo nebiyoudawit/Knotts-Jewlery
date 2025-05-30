@@ -4,6 +4,13 @@ import productDetailsDTO from '../Dtos/productDetailsDto.js';
 import mongoose from 'mongoose';
 import Review from '../models/review.js';
 import redisClient from '../utils/redisClient.js';
+const deleteProductSearchCache = async () => {
+  const keys = await redisClient.keys('products:search:*');
+  if (keys.length > 0) {
+    await redisClient.del(keys);
+    console.log(`Deleted Redis cache keys: ${keys.join(', ')}`);
+  }
+};
 // Get sorted products for home page - product sliders
 // This endpoint is used to fetch products sorted by latest or bestsellers
 export const getSortedProducts = async (req, res) => {
