@@ -101,23 +101,36 @@ export const getOrderById = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid order ID' });
     }
 
-    const order = await Order.findById(id);
+    const order = await Order.findById(id).populate('items.product');
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Simplified response
-    const summary = {
-      orderId: order._id,
-      deliveryMethod: order.shippingAddress, // Assuming this stores "PICKUP: Figa"
+    // Enhanced response with all fields needed by the frontend
+    const responseData = {
+      _id: order._id,
+      shippingAddress: order.shippingAddress,
       paymentMethod: order.paymentMethod,
-      total: `${order.total.toFixed(2)} ETB`
+      paymentStatus: order.paymentStatus,
+      status: order.status,
+      total: order.total,
+      deliveryDate: order.deliveryDate,
+      // Include additional fields if needed by the frontend
+      items: order.items.map(item => ({
+        product: {
+          name: item.product?.name,
+          price: item.product?.price,
+          // include other product fields if needed
+        },
+        quantity: item.quantity
+      })),
+      createdAt: order.createdAt
     };
 
     res.status(200).json({
       success: true,
-      data: summary
+      data: responseData
     });
 
   } catch (error) {
