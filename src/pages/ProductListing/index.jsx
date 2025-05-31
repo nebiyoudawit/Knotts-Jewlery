@@ -5,7 +5,7 @@ import { IoClose } from "react-icons/io5";
 import { Drawer } from "@mui/material";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
-
+const apiUrl = import.meta.env.VITE_API_URL;
 const ProductListing = () => {
   const { category: urlCategory } = useParams();
   const location = useLocation();
@@ -42,7 +42,7 @@ const ProductListing = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:5000/api/product?search=${encodeURIComponent(
+          `${apiUrl}/product?search=${encodeURIComponent(
             urlSearchTerm
           )}`
         );

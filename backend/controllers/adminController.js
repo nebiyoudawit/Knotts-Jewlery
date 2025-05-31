@@ -254,34 +254,43 @@ export const updateAdminProduct = async (req, res) => {
 export const deleteAdminProduct = async (req, res) => {
   try {
     const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+
     if (!deletedProduct) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        message: 'Product not found' 
+        message: 'Product not found'
       });
     }
+
     // Delete images from the filesystem
     if (deletedProduct.images && deletedProduct.images.length > 0) {
       deletedProduct.images.forEach((imagePath) => {
-        const fullPath = path.resolve(imagePath);
-        fs.unlink(fullPath, (err) => {
-          if (err) {
-            console.error(`Failed to delete image file: ${imagePath}`, err);
-          }
-        });
+        const fullPath = path.join(process.cwd(), imagePath);
+
+        if (fs.existsSync(fullPath)) {
+          fs.unlink(fullPath, (err) => {
+            if (err) {
+              console.error(`Failed to delete image file: ${imagePath}`, err);
+            }
+          });
+        } else {
+          console.warn(`Image file not found: ${fullPath}`);
+        }
       });
     }
+
     await deleteProductSearchCache();
-    res.json({ 
+
+    res.json({
       success: true,
-      message: 'Product and images deleted successfully' 
+      message: 'Product and images deleted successfully'
     });
   } catch (err) {
     console.error("Error deleting product:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to delete product',
-      error: err.message 
+      error: err.message
     });
   }
 };

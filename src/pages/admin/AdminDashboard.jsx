@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { FiDollarSign, FiShoppingBag, FiUsers, FiTrendingUp } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = 'http://localhost:5000/api/admin';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -21,7 +21,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(API_BASE_URL, {
+        const response = await fetch(`${apiUrl}/admin`, {
           headers: getAuthHeaders()
         });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { FaCheckCircle, FaShoppingBag } from 'react-icons/fa';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 const OrderConfirmation = () => {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
@@ -11,7 +11,7 @@ const OrderConfirmation = () => {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+        const response = await fetch(`${apiUrl}/orders/${orderId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

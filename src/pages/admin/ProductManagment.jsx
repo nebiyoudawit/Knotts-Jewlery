@@ -4,7 +4,7 @@ import ProductForm from '../../components/ProductForm';
 import ProductCard from '../../components/ProductCard';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = 'http://localhost:5000/api/admin';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/admin`;
 
 const ProductManagment = () => {
   const [products, setProducts] = useState([]);

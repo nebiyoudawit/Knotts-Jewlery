@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FaMapMarkerAlt, FaMoneyBillWave, FaCreditCard } from "react-icons/fa";
 import { FiMapPin } from "react-icons/fi";  // Add this for location icon
 import { useShop } from "../../context/ShopContext";
-
+const apiUrl = import.meta.env.VITE_API_URL;
 const CheckoutPage = () => {
   const { cart, currentUser } = useShop();
   const [selectedLocation, setSelectedLocation] = useState("");
@@ -86,7 +86,7 @@ const CheckoutPage = () => {
         deliveryFee: selectedLocation ? 0 : deliveryFee,
       };
       console.log("Order Data:", orderData);
-      const response = await fetch("http://localhost:5000/api/orders", {
+      const response = await fetch(`${apiUrl}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

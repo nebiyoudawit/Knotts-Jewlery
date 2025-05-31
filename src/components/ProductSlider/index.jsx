@@ -4,7 +4,7 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import ProductItem from '../ProductItem';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 const ProductSlider = ({ items = 3, sortBy = 'latest', category = 'All' }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +14,7 @@ const ProductSlider = ({ items = 3, sortBy = 'latest', category = 'All' }) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const url = new URL('http://localhost:5000/api/product/sorted');
+        const url = new URL(`${apiUrl}/product/sorted`);
         url.searchParams.append('sortBy', sortBy);
         url.searchParams.append('limit', 8);
         if (category && category !== 'All') {

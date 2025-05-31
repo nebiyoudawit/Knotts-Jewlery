@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiShoppingBag } from 'react-icons/fi';
 import { useShop } from '../../context/ShopContext';
 import { toast } from 'react-toastify';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 const Profile = () => {
   const { currentUser, updateUserProfile } = useShop();
 
@@ -57,7 +57,7 @@ const Profile = () => {
   const submitPasswordChange = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/user/change-password', {
+      const res = await fetch(`${apiUrl}/user/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

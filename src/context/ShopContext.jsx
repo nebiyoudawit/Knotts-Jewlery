@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { toast } from 'react-toastify';
-
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { toast } from "react-toastify";
+const apiUrl = import.meta.env.VITE_API_URL;
 const defaultContextValue = {
   cart: [],
   wishlist: [],
@@ -39,8 +39,8 @@ export const ShopProvider = ({ children }) => {
 
   // Check auth state on mount and fetch user data
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    console.log('Auth token found on mount:', token);
+    const token = localStorage.getItem("token");
+    console.log("Auth token found on mount:", token);
     if (token) {
       verifyToken(token);
     }
@@ -59,13 +59,13 @@ export const ShopProvider = ({ children }) => {
 
   // Helper function for API requests
   const makeRequest = async (url, method, body = null) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     const headers = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     const config = {
@@ -78,46 +78,50 @@ export const ShopProvider = ({ children }) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      throw new Error(data.message || "Request failed");
     }
 
     return data;
   };
 
   // Verify token validity
- // Verify token validity
-const verifyToken = async (token) => {
-  setIsLoading(true);
-  try {
-    console.log('Verifying token...');
-    const data = await makeRequest('http://localhost:5000/api/auth/verify', 'GET');
-    console.log('Verify response:', data);
+  // Verify token validity
+  const verifyToken = async (token) => {
+    setIsLoading(true);
+    try {
+      console.log("Verifying token...");
+      const data = await makeRequest(`${apiUrl}/auth/verify`, "GET");
+      console.log("Verify response:", data);
 
-    if (!data || !data.user) {
-      throw new Error('No user data returned from /verify');
+      if (!data || !data.user) {
+        throw new Error("No user data returned from /verify");
+      }
+
+      setCurrentUser(data.user);
+      setIsAdmin(data.user?.role === "admin");
+    } catch (err) {
+      console.error("Token verification failed:", err.message);
+      logout(false); // don't toast on auto logout
+    } finally {
+      setIsLoading(false);
     }
-
-    setCurrentUser(data.user);
-    setIsAdmin(data.user?.role === 'admin');
-  } catch (err) {
-    console.error('Token verification failed:', err.message);
-    logout(false); // don't toast on auto logout
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   // 🔐 AUTH FUNCTIONS
   const register = async (userData) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await makeRequest('http://localhost:5000/api/auth/register', 'POST', userData);
-      
-      localStorage.setItem('token', data.token);
+      const data = await makeRequest(
+        `${apiUrl}/auth/register`,
+        "POST",
+        userData
+      );
+
+      localStorage.setItem("token", data.token);
       setCurrentUser(data.user);
-      setIsAdmin(data.user?.role === 'admin');
-      toast.success('Registration successful!');
+      setIsAdmin(data.user?.role === "admin");
+      toast.success("Registration successful!");
       return true;
     } catch (err) {
       setError(err.message);
@@ -132,12 +136,16 @@ const verifyToken = async (token) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await makeRequest('http://localhost:5000/api/auth/login', 'POST', { email, password });
-      
-      localStorage.setItem('token', data.token);
+      const data = await makeRequest(
+        `${apiUrl}/auth/login`,
+        "POST",
+        { email, password }
+      );
+
+      localStorage.setItem("token", data.token);
       setCurrentUser(data.user);
-      setIsAdmin(data.user?.role === 'admin');
-      toast.success('Login successful!');
+      setIsAdmin(data.user?.role === "admin");
+      toast.success("Login successful!");
       return true;
     } catch (err) {
       setError(err.message);
@@ -152,16 +160,20 @@ const verifyToken = async (token) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await makeRequest('http://localhost:5000/api/auth/login', 'POST', { email, password });
-      
-      if (data.user?.role !== 'admin') {
-        throw new Error('Access denied: Not an admin');
+      const data = await makeRequest(
+        `${apiUrl}/auth/login`,
+        "POST",
+        { email, password }
+      );
+
+      if (data.user?.role !== "admin") {
+        throw new Error("Access denied: Not an admin");
       }
 
-      localStorage.setItem('token', data.token);
+      localStorage.setItem("token", data.token);
       setCurrentUser(data.user);
       setIsAdmin(true);
-      toast.success('Admin login successful!');
+      toast.success("Admin login successful!");
       return true;
     } catch (err) {
       setError(err.message);
@@ -173,28 +185,31 @@ const verifyToken = async (token) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setCurrentUser(null);
     setIsAdmin(false);
     setCart([]);
     setWishlist([]);
-    toast.success('Logged out successfully');
+    toast.success("Logged out successfully");
   };
 
   const adminLogout = () => {
-    if (currentUser?.role === 'admin') {
+    if (currentUser?.role === "admin") {
       logout();
-      toast.success('Admin logged out successfully');
+      toast.success("Admin logged out successfully");
     }
   };
 
   // 🛒 CART FUNCTIONS
   const fetchCart = async () => {
     try {
-      const data = await makeRequest('http://localhost:5000/api/user/cart', 'GET');
+      const data = await makeRequest(
+        `${apiUrl}/user/cart`,
+        "GET"
+      );
       setCart(data);
     } catch (err) {
-      console.error('Error fetching cart:', err);
+      console.error("Error fetching cart:", err);
     }
   };
 
@@ -202,13 +217,17 @@ const verifyToken = async (token) => {
     try {
       // Ensure product has an _id (MongoDB uses _id by default)
       if (!product._id) {
-        throw new Error('Invalid product ID');
+        throw new Error("Invalid product ID");
       }
-  
-      const data = await makeRequest('http://localhost:5000/api/user/cart', 'POST', {
-        productId: product._id,  // Use _id instead of id
-        quantity
-      });
+
+      const data = await makeRequest(
+        `${apiUrl}/user/cart`,
+        "POST",
+        {
+          productId: product._id, // Use _id instead of id
+          quantity,
+        }
+      );
       setCart(data);
       toast.success(`${product.name} added to cart`);
     } catch (err) {
@@ -218,9 +237,12 @@ const verifyToken = async (token) => {
 
   const removeFromCart = async (productId) => {
     try {
-      const data = await makeRequest(`http://localhost:5000/api/user/cart/${productId}`, 'DELETE');
+      const data = await makeRequest(
+        `${apiUrl}/user/cart/${productId}`,
+        "DELETE"
+      );
       setCart(data);
-      toast.info('Item removed from cart');
+      toast.info("Item removed from cart");
     } catch (err) {
       toast.error(err.message);
     }
@@ -231,9 +253,13 @@ const verifyToken = async (token) => {
       if (quantity < 1) {
         return removeFromCart(productId);
       }
-      const data = await makeRequest(`http://localhost:5000/api/user/cart/${productId}`, 'PUT', { quantity });
+      const data = await makeRequest(
+        `${apiUrl}/user/cart/${productId}`,
+        "PUT",
+        { quantity }
+      );
       setCart(data);
-      toast.success('Quantity updated');
+      toast.success("Quantity updated");
     } catch (err) {
       toast.error(err.message);
     }
@@ -242,26 +268,29 @@ const verifyToken = async (token) => {
   // 💖 WISHLIST FUNCTIONS
   const fetchWishlist = async () => {
     try {
-      const data = await makeRequest('http://localhost:5000/api/user/wishlist', 'GET');
+      const data = await makeRequest(
+        `${apiUrl}/user/wishlist`,
+        "GET"
+      );
       setWishlist(data);
     } catch (err) {
-      console.error('Error fetching wishlist:', err);
+      console.error("Error fetching wishlist:", err);
     }
   };
 
   const toggleWishlist = async (product) => {
     try {
       if (!product._id) {
-        throw new Error('Invalid product ID');
+        throw new Error("Invalid product ID");
       }
-  
+
       const { wishlist: updatedWishlist, isInWishlist } = await makeRequest(
-        `http://localhost:5000/api/user/wishlist/${product._id}`,
-        'POST'
+        `${apiUrl}/user/wishlist/${product._id}`,
+        "POST"
       );
       setWishlist(updatedWishlist);
-      toast[isInWishlist ? 'success' : 'info'](
-        isInWishlist 
+      toast[isInWishlist ? "success" : "info"](
+        isInWishlist
           ? `${product.name} added to wishlist`
           : `${product.name} removed from wishlist`
       );
@@ -273,12 +302,12 @@ const verifyToken = async (token) => {
   const checkWishlistStatus = async (productId) => {
     try {
       const { isInWishlist } = await makeRequest(
-        `http://localhost:5000/api/user/wishlist/check/${productId}`,
-        'GET'
+        `${apiUrl}/user/wishlist/check/${productId}`,
+        "GET"
       );
       return isInWishlist;
     } catch (err) {
-      console.error('Error checking wishlist:', err);
+      console.error("Error checking wishlist:", err);
       return false;
     }
   };
@@ -289,12 +318,12 @@ const verifyToken = async (token) => {
     setError(null);
     try {
       const data = await makeRequest(
-        'http://localhost:5000/api/user/update',
-        'PUT',
+        `${apiUrl}/user/update`,
+        "PUT",
         updatedUserData
       );
       setCurrentUser(data.user);
-      toast.success('Profile updated successfully');
+      toast.success("Profile updated successfully");
       return true;
     } catch (err) {
       setError(err.message);
@@ -310,11 +339,11 @@ const verifyToken = async (token) => {
     setError(null);
     try {
       await makeRequest(
-        'http://localhost:5000/api/user/change-password',
-        'PUT',
+        `${apiUrl}/user/change-password`,
+        "PUT",
         { currentPassword, newPassword }
       );
-      toast.success('Password changed successfully');
+      toast.success("Password changed successfully");
       return true;
     } catch (err) {
       setError(err.message);
@@ -366,7 +395,7 @@ const verifyToken = async (token) => {
 export const useShop = () => {
   const context = useContext(ShopContext);
   if (!context) {
-    throw new Error('useShop must be used within a ShopProvider');
+    throw new Error("useShop must be used within a ShopProvider");
   }
   return context;
 };

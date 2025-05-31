@@ -12,6 +12,7 @@ import {
   FiCreditCard,
 } from 'react-icons/fi';
 import { useShop } from '../../context/ShopContext';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const UserOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -43,7 +44,7 @@ const UserOrders = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/user/orders', {
+      const res = await fetch(`${apiUrl}/user/orders`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -74,7 +75,7 @@ const UserOrders = () => {
 
     setCanceling(orderId);
     try {
-      const res = await fetch(`http://localhost:5000/api/user/orders/${orderId}/cancel`, {
+      const res = await fetch(`${apiUrl}/user/orders/${orderId}/cancel`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

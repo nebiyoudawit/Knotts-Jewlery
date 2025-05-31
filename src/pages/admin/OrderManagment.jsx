@@ -11,7 +11,7 @@ import {
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = "http://localhost:5000/api/admin";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/admin`;
 
 const OrderManagment = () => {
   const [orders, setOrders] = useState([]);

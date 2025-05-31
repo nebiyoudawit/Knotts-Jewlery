@@ -4,7 +4,7 @@ import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingBag, FaChevronLeft } 
 import { IoMdArrowRoundBack } from 'react-icons/io';
 import { useShop } from '../../context/ShopContext';
 import ProductItem from '../../components/ProductItem';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 const ProductPage = () => {
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
@@ -29,7 +29,7 @@ const ProductPage = () => {
         setError(null);
         
         // Fetch product details
-        const productResponse = await fetch(`http://localhost:5000/api/product/${id}`);
+        const productResponse = await fetch(`${apiUrl}/product/${id}`);
         
         if (!productResponse.ok) {
           const errorData = await productResponse.json().catch(() => ({}));
@@ -47,7 +47,7 @@ const ProductPage = () => {
         // Fetch related products if category exists
         if (productData.data.category) {
           const relatedResponse = await fetch(
-            `http://localhost:5000/api/product/category/${productData.data.category}?limit=4`
+            `${apiUrl}/product/category/${productData.data.category}?limit=4`
           );
           
           if (relatedResponse.ok) {
@@ -100,7 +100,7 @@ const handleSubmitReview = async (e) => {
     const token = localStorage.getItem('token'); // Or however you store your token
     if (!token) throw new Error('You must be logged in to post a review.');
 
-    const response = await fetch(`http://localhost:5000/api/product/${product._id}/reviews`, {
+    const response = await fetch(`${apiUrl}/product/${product._id}/reviews`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

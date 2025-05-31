@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiUser, FiEdit2, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
 
-const API_BASE_URL = 'http://localhost:5000/api/admin';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/admin`;
 
 const UserManagment = () => {
   const [users, setUsers] = useState([]);
