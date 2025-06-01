@@ -8,7 +8,7 @@ const deleteProductSearchCache = async () => {
   const keys = await redisClient.keys('products:search:*');
   if (keys.length > 0) {
     await redisClient.del(keys);
-    console.log(`Deleted Redis cache keys: ${keys.join(', ')}`);
+    
   }
 };
 // Get sorted products for home page - product sliders

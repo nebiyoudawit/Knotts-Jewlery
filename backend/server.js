@@ -61,10 +61,10 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 (async () => {
-  try {
-    
-    await redisClient.connect();
-    await redisClient.flushAll(); 
+  try { 
+    await redisClient.connect({
+  url: process.env.REDIS_URL,
+});
     console.log('✅ Redis connected');
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
