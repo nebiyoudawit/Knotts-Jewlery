@@ -13,20 +13,16 @@ const ProductItem = ({ product }) => {
   const { addToCart, toggleWishlist, wishlist } = useShop();
   const isWishlisted = wishlist.some((item) => item._id === product._id);
 
-  console.log("Product in ProductItem:", product);
-  console.log("Product images:", product.images);
+  const API_BASE = import.meta.env.VITE_API_URL;
+  const BASE_URL = API_BASE.replace("/api", "");
 
-const getImageUrl = () => {
-  const image = product.image;
-  if (!image) return "/default-product.jpg";
+  const getImageUrl = () => {
+    const image = product.image || (product.images?.[0] ?? "");
+    if (!image) return "/default-product.jpg";
+    if (image.startsWith("http")) return image;
+    return `${BASE_URL}${image}`;
+  };
 
-  if (image.startsWith("http")) return image;
-
-  const filename = image.split("/").pop();
-  const fullUrl = `http://localhost:5000/uploads/${filename}`;
-  console.log("Resolved Image URL:", fullUrl);
-  return fullUrl;
-};
   return (
     <div className="group relative flex flex-col bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full">
       {/* Product Image with Wishlist Button */}
@@ -53,11 +49,11 @@ const getImageUrl = () => {
         {/* Wishlist Button */}
         <button
           className={`absolute top-3 right-3 p-2 rounded-full transition-all shadow-sm
-        ${
-          isWishlisted
-            ? "bg-pink-100 hover:bg-pink-200"
-            : "bg-white/90 hover:bg-white"
-        }`}
+          ${
+            isWishlisted
+              ? "bg-pink-100 hover:bg-pink-200"
+              : "bg-white/90 hover:bg-white"
+          }`}
           onClick={() => toggleWishlist(product)}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >

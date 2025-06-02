@@ -81,7 +81,7 @@ export const getUserOrders = async (req, res) => {
       .filter(item => item.product)  // Only keep items with a valid product
        .map(item => ({
     name: item.product.name,
-    image: `http://localhost:5000${item.product.images[0]}`,
+    image: item.product.images[0],
     price: item.product.price,
     qty: item.quantity,
   })),

@@ -174,7 +174,7 @@ export const addAdminProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
 
-    const imagePaths = imageFiles ? imageFiles.map(file => `/uploads/${file.filename}`) : [];
+    const imageUrls = imageFiles ? imageFiles.map(file => file.path) : [];
 
     const product = await Product.create({
       name,
@@ -183,40 +183,40 @@ export const addAdminProduct = async (req, res) => {
       stock: parseInt(stock),
       category,
       onSale: onSale === 'true',
-      images: imagePaths,
+      images: imageUrls,
       description,
       sales: 0,
     });
+
     await deleteProductSearchCache();
+
     res.status(201).json({ success: true, product });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to create product', error: err.message });
   }
 };
 
-// UPDATE PRODUCT WITH IMAGE SUPPORT
 export const updateAdminProduct = async (req, res) => {
   try {
     const { name, price, originalPrice, stock, category, onSale, description } = req.body;
     const imageFiles = req.files;
 
-    // Safely parse existingImages
+    // Parse existing images
     let existingImages = [];
     if (req.body.existingImages) {
       if (typeof req.body.existingImages === 'string') {
         try {
           existingImages = JSON.parse(req.body.existingImages);
-        } catch (err) {
-          existingImages = [req.body.existingImages]; // single string fallback
+        } catch {
+          existingImages = [req.body.existingImages];
         }
       } else if (Array.isArray(req.body.existingImages)) {
         existingImages = req.body.existingImages;
-      } else {
-        existingImages = [];
       }
     }
 
-    // Construct update data
+    const newImageUrls = imageFiles ? imageFiles.map(file => file.path) : [];
+
     const updateData = {
       name,
       price: parseFloat(price),
@@ -224,22 +224,17 @@ export const updateAdminProduct = async (req, res) => {
       category,
       onSale: onSale === 'true' || onSale === true,
       description,
-      originalPrice:
-        onSale === 'true' || onSale === true
-          ? parseFloat(originalPrice)
-          : null,
+      originalPrice: (onSale === 'true' || onSale === true) ? parseFloat(originalPrice) : null,
+      images: [...existingImages, ...newImageUrls],
     };
 
-    // Handle new image uploads
-    const newImagePaths = (imageFiles || []).map(file => `/uploads/${file.filename}`);
-    updateData.images = [...existingImages, ...newImagePaths];
-
-    // Update product in DB
     const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
+
     await deleteProductSearchCache();
+
     if (!updatedProduct) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -256,44 +251,28 @@ export const deleteAdminProduct = async (req, res) => {
     const deletedProduct = await Product.findByIdAndDelete(req.params.id);
 
     if (!deletedProduct) {
-      return res.status(404).json({
-        success: false,
-        message: 'Product not found'
-      });
+      return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Delete images from the filesystem
-    if (deletedProduct.images && deletedProduct.images.length > 0) {
-      deletedProduct.images.forEach((imagePath) => {
-        const fullPath = path.join(process.cwd(), imagePath);
-
-        if (fs.existsSync(fullPath)) {
-          fs.unlink(fullPath, (err) => {
-            if (err) {
-              console.error(`Failed to delete image file: ${imagePath}`, err);
-            }
-          });
-        } else {
-          console.warn(`Image file not found: ${fullPath}`);
-        }
-      });
-    }
+    // Optional: log image URLs (could clean them via Cloudinary API later)
+    console.log('Deleted product images:', deletedProduct.images);
 
     await deleteProductSearchCache();
 
     res.json({
       success: true,
-      message: 'Product and images deleted successfully'
+      message: 'Product deleted successfully',
     });
   } catch (err) {
     console.error("Error deleting product:", err);
     res.status(500).json({
       success: false,
       message: 'Failed to delete product',
-      error: err.message
+      error: err.message,
     });
   }
 };
+
 /* -------------------- USER ROUTES  -------------------- */
 
 export const getUsers = async (req, res) => {
