@@ -1,7 +1,7 @@
 import User from '../models/users.js';
 import Order from '../models/order.js';
 import bcrypt from 'bcrypt';
-
+import { invalidateAdminOrderList, invalidateAdminUserList } from '../utils/cacheUtils.js';
 // @desc    Update user profile
 // @route   PUT /api/user/update
 // @access  Private
@@ -19,7 +19,8 @@ export const updateUserProfile = async (req, res) => {
     user.address = address || user.address;
 
     const updatedUser = await user.save();
-
+    await invalidateAdminUserList(); // Invalidate admin user list cache
+    await invalidateAdminOrderList(); // Invalidate admin order list cache
     res.status(200).json({
       message: 'Profile updated successfully',
       user: {
@@ -55,7 +56,8 @@ export const changeUserPassword = async (req, res) => {
 
     user.password = newPassword; // Will be hashed by pre-save hook
     await user.save();
-
+    await invalidateAdminUserList(); // Invalidate admin user list cache
+    await invalidateAdminOrderList(); // Invalidate admin order list cache
     res.status(200).json({ message: 'Password changed successfully' });
   } catch (err) {
     console.error(err);
@@ -153,7 +155,8 @@ export const cancelUserOrder = async (req, res) => {
 
     order.status = 'cancelled';
     await order.save();
-
+    await invalidateAdminOrderList(); // Invalidate admin order list cache
+    await invalidateDashboardCache(); // Invalidate dashboard cache
     res.status(200).json({ message: 'Order cancelled successfully' });
   } catch (err) {
     console.error(err);

@@ -2,6 +2,7 @@ import Order from '../models/order.js';
 import Product from '../models/products.js';
 import User from '../models/users.js';
 import mongoose from 'mongoose';
+import { invalidateDashboardCache, invalidateAdminOrderList } from '../utils/cacheUtils.js';
 
 export const createOrder = async (req, res) => {
   try {
@@ -53,7 +54,8 @@ export const createOrder = async (req, res) => {
     });
 
     await order.save();
-
+    await invalidateDashboardCache(); // Invalidate cache after order creation
+    await invalidateAdminOrderList(); // Invalidate admin order list cache
     // Format response
     const response = {
       _id: order._id,

@@ -2,6 +2,7 @@ import User from '../models/users.js';
 import RegisterDTO from '../Dtos/registerDto.js';
 import LoginDTO from '../Dtos/loginDto.js';
 import jwt from 'jsonwebtoken';
+import { invalidateDashboardCache, invalidateAdminUserList} from '../utils/cacheUtils.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -39,7 +40,9 @@ export const registerUser = async (req, res) => {
     });
 
     await user.save();
-
+    await invalidateDashboardCache(); // Invalidate cache after user registration
+    await invalidateAdminUserList(); // Invalidate admin user list cache
+    
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
 
     const userResponse = user.toObject();

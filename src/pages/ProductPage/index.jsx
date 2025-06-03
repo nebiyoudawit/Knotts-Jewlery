@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingBag, FaChevronLeft } from 'react-icons/fa';
-import { IoMdArrowRoundBack } from 'react-icons/io';
-import { useShop } from '../../context/ShopContext';
-import ProductItem from '../../components/ProductItem';
+import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import {
+  FaStar,
+  FaRegStar,
+  FaHeart,
+  FaRegHeart,
+  FaShoppingBag,
+  FaChevronLeft,
+} from "react-icons/fa";
+import { IoMdArrowRoundBack } from "react-icons/io";
+import { useShop } from "../../context/ShopContext";
+import ProductItem from "../../components/ProductItem";
 const apiUrl = import.meta.env.VITE_API_URL;
 const ProductPage = () => {
   const { id } = useParams();
@@ -12,54 +19,49 @@ const ProductPage = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  const { 
-    addToCart, 
-    toggleWishlist, 
-    wishlist,
-    currentUser
-  } = useShop();
-  
+
+  const { addToCart, toggleWishlist, wishlist, currentUser } = useShop();
 
   useEffect(() => {
     const fetchProductData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch product details
         const productResponse = await fetch(`${apiUrl}/product/${id}`);
-        
+
         if (!productResponse.ok) {
           const errorData = await productResponse.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Failed to fetch product');
+          throw new Error(errorData.message || "Failed to fetch product");
         }
 
         const productData = await productResponse.json();
-        
+
         if (!productData.success || !productData.data) {
-          throw new Error('Invalid product data received');
+          throw new Error("Invalid product data received");
         }
 
         setProduct(productData.data);
-        
+
         // Fetch related products if category exists
         if (productData.data.category) {
           const relatedResponse = await fetch(
             `${apiUrl}/product/category/${productData.data.category}?limit=4`
           );
-          
+
           if (relatedResponse.ok) {
             const relatedData = await relatedResponse.json();
             const filteredRelated = relatedData.data
-              .filter(p => p._id !== productData.data._id)
+              .filter((p) => p._id !== productData.data._id)
               .slice(0, 4);
             setRelatedProducts(filteredRelated);
           }
         }
       } catch (err) {
-        console.error('Error fetching product:', err);
+        console.error("Error fetching product:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -70,77 +72,80 @@ const ProductPage = () => {
   }, [id]);
 
   const handleQuantityChange = (change) => {
-    setQuantity(prev => Math.max(1, Math.min(10, prev + change)));
+    setQuantity((prev) => Math.max(1, Math.min(10, prev + change)));
   };
 
-const handleAddToCart = () => {
-  if (product) {
-    addToCart(product, quantity);
-  }
-};
-  const handleToggleWishlist = () => {
-      toggleWishlist(product);
-      console.log(`Wishlist updated for product ${product}`);
-  };
-
-const [newReview, setNewReview] = useState({ rating: 0, comment: '' });
-
-const handleRatingChange = (rating) => {
-  setNewReview(prev => ({ ...prev, rating }));
-};
-
-const handleReviewChange = (e) => {
-  setNewReview(prev => ({ ...prev, comment: e.target.value }));
-};
-
-const handleSubmitReview = async (e) => {
-  e.preventDefault();
-
-  try {
-    const token = localStorage.getItem('token'); // Or however you store your token
-    if (!token) throw new Error('You must be logged in to post a review.');
-
-    const response = await fetch(`${apiUrl}/product/${product._id}/reviews`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // 🟢 Include the token
-      },
-      body: JSON.stringify({
-        rating: newReview.rating,
-        comment: newReview.comment,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to submit review');
+  const handleAddToCart = () => {
+    if (product) {
+      addToCart(product, quantity);
     }
+  };
+  const handleToggleWishlist = () => {
+    toggleWishlist(product);
+    console.log(`Wishlist updated for product ${product}`);
+  };
 
-    // Refresh product reviews on success
-    setProduct(prev => ({
-      ...prev,
-      reviews: [...prev.reviews, {
-        _id: data.data._id,
-        rating: data.data.rating,
-        comment: data.data.comment,
-        user: { name: currentUser.name },
-        createdAt: new Date().toISOString()
-      }],
-      rating: data.updatedProduct.rating,
-      reviewCount: data.updatedProduct.reviewCount,
-    }));
+  const [newReview, setNewReview] = useState({ rating: 0, comment: "" });
 
-    setNewReview({ rating: 0, comment: '' }); // Clear form
-  } catch (error) {
-    console.error('Review submit error:', error.message);
-    alert(error.message);
-  }
-};
+  const handleRatingChange = (rating) => {
+    setNewReview((prev) => ({ ...prev, rating }));
+  };
 
+  const handleReviewChange = (e) => {
+    setNewReview((prev) => ({ ...prev, comment: e.target.value }));
+  };
 
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
 
+    try {
+      setReviewLoading(true); // start loading
+
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("You must be logged in to post a review.");
+
+      const response = await fetch(`${apiUrl}/product/${product._id}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          rating: newReview.rating,
+          comment: newReview.comment,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to submit review");
+      }
+
+      setProduct((prev) => ({
+        ...prev,
+        reviews: [
+          ...prev.reviews,
+          {
+            _id: data.data._id,
+            rating: data.data.rating,
+            comment: data.data.comment,
+            user: { name: currentUser.name },
+            createdAt: new Date().toISOString(),
+          },
+        ],
+        rating: data.updatedProduct.rating,
+        reviewCount: data.updatedProduct.reviewCount,
+      }));
+
+      setNewReview({ rating: 0, comment: "" });
+    } catch (error) {
+      console.error("Review submit error:", error.message);
+      alert(error.message);
+    } finally {
+      setReviewLoading(false); // stop loading
+    }
+  };
 
   if (loading) {
     return (
@@ -157,8 +162,8 @@ const handleSubmitReview = async (e) => {
         <FiXCircle className="inline-block text-4xl text-red-500 mb-4" />
         <h1 className="text-2xl font-bold mb-4">Error Loading Product</h1>
         <p className="text-gray-600 mb-6">{error}</p>
-        <Link 
-          to="/products" 
+        <Link
+          to="/products"
           className="bg-[#05B171] text-white px-6 py-2 rounded-md hover:bg-[#048a5b] transition-colors inline-flex items-center gap-2"
         >
           <IoMdArrowRoundBack /> Back to Products
@@ -171,9 +176,11 @@ const handleSubmitReview = async (e) => {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-        <p className="text-gray-600 mb-6">The product you're looking for doesn't exist.</p>
-        <Link 
-          to="/products" 
+        <p className="text-gray-600 mb-6">
+          The product you're looking for doesn't exist.
+        </p>
+        <Link
+          to="/products"
           className="bg-[#05B171] text-white px-6 py-2 rounded-md hover:bg-[#048a5b] transition-colors inline-flex items-center gap-2"
         >
           <IoMdArrowRoundBack /> Back to Products
@@ -183,25 +190,32 @@ const handleSubmitReview = async (e) => {
   }
 
   const getImageUrl = (image) => {
-  if (!image) return '/placeholder.jpg';
-  if (image.startsWith('http')) return image;
-  const filename = image.split('/').pop();
-  return `http://localhost:5000/uploads/${filename}`;
-};
+    if (!image) return "/placeholder.jpg";
+    if (image.startsWith("http")) return image;
+    const filename = image.split("/").pop();
+    return `http://localhost:5000/uploads/${filename}`;
+  };
 
-const imageGallery = product.images && product.images.length > 0
-  ? product.images.map(img => typeof img === 'string' ? getImageUrl(img) : getImageUrl(img.url))
-  : ['/placeholder.jpg'];
-  const isWishlisted = wishlist.some(item => item._id === product._id);
+  const imageGallery =
+    product.images && product.images.length > 0
+      ? product.images.map((img) =>
+          typeof img === "string" ? getImageUrl(img) : getImageUrl(img.url)
+        )
+      : ["/placeholder.jpg"];
+  const isWishlisted = wishlist.some((item) => item._id === product._id);
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="container mx-auto px-4 py-8">
         {/* Navigation breadcrumbs */}
         <nav className="flex mb-6 text-sm text-gray-600">
-          <Link to="/" className="hover:text-[#05B171]">Home</Link>
+          <Link to="/" className="hover:text-[#05B171]">
+            Home
+          </Link>
           <span className="mx-2">/</span>
-          <Link to="/product" className="hover:text-[#05B171]">Products</Link>
+          <Link to="/product" className="hover:text-[#05B171]">
+            Products
+          </Link>
           <span className="mx-2">/</span>
           <span className="text-gray-900">{product.name}</span>
         </nav>
@@ -211,12 +225,12 @@ const imageGallery = product.images && product.images.length > 0
           {/* Product images */}
           <div className="w-full md:w-1/2">
             <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-              <img 
-                src={imageGallery[selectedImage]} 
+              <img
+                src={imageGallery[selectedImage]}
                 alt={product.name}
                 className="w-full h-auto rounded-lg object-cover"
                 onError={(e) => {
-                  e.target.src = '/placeholder.jpg';
+                  e.target.src = "/placeholder.jpg";
                 }}
               />
             </div>
@@ -224,15 +238,19 @@ const imageGallery = product.images && product.images.length > 0
               {imageGallery.map((img, index) => (
                 <button
                   key={index}
-                  className={`bg-white p-1 rounded-md border ${selectedImage === index ? 'border-[#05B171]' : 'border-gray-200'}`}
+                  className={`bg-white p-1 rounded-md border ${
+                    selectedImage === index
+                      ? "border-[#05B171]"
+                      : "border-gray-200"
+                  }`}
                   onClick={() => setSelectedImage(index)}
                 >
-                  <img 
-                    src={img} 
+                  <img
+                    src={img}
                     alt={`Thumbnail ${index + 1}`}
                     className="w-full h-16 object-cover rounded-md"
                     onError={(e) => {
-                      e.target.src = '/placeholder.jpg';
+                      e.target.src = "/placeholder.jpg";
                     }}
                   />
                 </button>
@@ -245,29 +263,41 @@ const imageGallery = product.images && product.images.length > 0
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="flex justify-between items-start">
                 <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
-                <button 
-                   onClick={handleToggleWishlist}
-                   className="text-2xl"
-                   aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                > 
-                {isWishlisted ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-400 hover:text-red-500" />}
-              </button>
+                <button
+                  onClick={handleToggleWishlist}
+                  className="text-2xl"
+                  aria-label={
+                    isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                  }
+                >
+                  {isWishlisted ? (
+                    <FaHeart className="text-red-500" />
+                  ) : (
+                    <FaRegHeart className="text-gray-400 hover:text-red-500" />
+                  )}
+                </button>
               </div>
 
               {/* Rating and price */}
               <div className="flex items-center mb-4">
                 <div className="flex mr-2">
-                  {[...Array(5)].map((_, i) => (
-                    i < product.rating ? 
-                    <FaStar key={i} className="h-5 w-5 text-yellow-400" /> : 
-                    <FaRegStar key={i} className="h-5 w-5 text-yellow-400" />
-                  ))}
+                  {[...Array(5)].map((_, i) =>
+                    i < product.rating ? (
+                      <FaStar key={i} className="h-5 w-5 text-yellow-400" />
+                    ) : (
+                      <FaRegStar key={i} className="h-5 w-5 text-yellow-400" />
+                    )
+                  )}
                 </div>
-                <span className="text-gray-600">({product.reviewCount} reviews)</span>
+                <span className="text-gray-600">
+                  ({product.reviewCount} reviews)
+                </span>
               </div>
 
               <div className="mb-6">
-                <span className="text-2xl font-bold">${product.price.toFixed(2)}</span>
+                <span className="text-2xl font-bold">
+                  ${product.price.toFixed(2)}
+                </span>
                 {product.originalPrice && (
                   <span className="text-lg text-gray-500 line-through ml-2">
                     ${product.originalPrice.toFixed(2)}
@@ -283,40 +313,55 @@ const imageGallery = product.images && product.images.length > 0
               {/* Description and details */}
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Description</h2>
-               <p className="text-gray-700 break-words overflow-wrap break-normal">{product.description}</p>
+                <p className="text-gray-700 break-words overflow-wrap break-normal">
+                  {product.description}
+                </p>
               </div>
 
               <div className="mb-6">
                 <ul className="text-gray-700 space-y-1">
-                  <li><strong>Category:</strong> {product.category}</li>
-                  {product.material && <li><strong>Material:</strong> {product.material}</li>}
-                  <li><strong>Shipping:</strong>Free delivery at summit, 4 kilo, megenagna, figa,gerji (Unity University)</li>
+                  <li>
+                    <strong>Category:</strong> {product.category}
+                  </li>
+                  {product.material && (
+                    <li>
+                      <strong>Material:</strong> {product.material}
+                    </li>
+                  )}
+                  <li>
+                    <strong>Shipping:</strong>Free delivery at summit, 4 kilo,
+                    megenagna, figa,gerji (Unity University)
+                  </li>
                 </ul>
               </div>
 
               {/* Add to cart section */}
               <div className="flex items-center mb-6 gap-3">
                 <div className="flex items-center border border-gray-300 rounded-md">
-                  <button 
+                  <button
                     className="px-3 py-2 text-gray-600 hover:bg-gray-100 w-10"
                     onClick={() => handleQuantityChange(-1)}
                   >
                     -
                   </button>
-                  <span className="px-3 py-2 text-center flex-1">{quantity}</span>
-                  <button 
+                  <span className="px-3 py-2 text-center flex-1">
+                    {quantity}
+                  </span>
+                  <button
                     className="px-3 py-2 text-gray-600 hover:bg-gray-100 w-10"
                     onClick={() => handleQuantityChange(1)}
                   >
                     +
                   </button>
                 </div>
-                <button 
+                <button
                   onClick={handleAddToCart}
                   className="flex-1 bg-[#05B171] text-white px-6 py-3 rounded-md hover:bg-[#048a5b] transition-colors flex items-center justify-center gap-2"
                 >
-                  <FaShoppingBag /> 
-                  <span>Add to Cart (${(product.price * quantity).toFixed(2)})</span>
+                  <FaShoppingBag />
+                  <span>
+                    Add to Cart (${(product.price * quantity).toFixed(2)})
+                  </span>
                 </button>
               </div>
 
@@ -334,19 +379,25 @@ const imageGallery = product.images && product.images.length > 0
         {/* Reviews section */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-12">
           <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-          
+
           <div className="mb-8">
             <div className="flex items-center mb-4">
               <div className="flex mr-4">
-                {[...Array(5)].map((_, i) => (
-                  i < product.rating ? 
-                  <FaStar key={i} className="h-6 w-6 text-yellow-400" /> : 
-                  <FaRegStar key={i} className="h-6 w-6 text-yellow-400" />
-                ))}
+                {[...Array(5)].map((_, i) =>
+                  i < product.rating ? (
+                    <FaStar key={i} className="h-6 w-6 text-yellow-400" />
+                  ) : (
+                    <FaRegStar key={i} className="h-6 w-6 text-yellow-400" />
+                  )
+                )}
               </div>
-              <span className="text-lg font-semibold">{product.rating.toFixed(1)} out of 5</span>
+              <span className="text-lg font-semibold">
+                {product.rating.toFixed(1)} out of 5
+              </span>
             </div>
-            <p className="text-gray-700">{product.reviewCount} customer reviews</p>
+            <p className="text-gray-700">
+              {product.reviewCount} customer reviews
+            </p>
           </div>
 
           {/* Review form */}
@@ -355,7 +406,9 @@ const imageGallery = product.images && product.images.length > 0
               <h3 className="text-lg font-semibold mb-4">Write a Review</h3>
               <form onSubmit={handleSubmitReview}>
                 <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Your Rating</label>
+                  <label className="block text-gray-700 mb-2">
+                    Your Rating
+                  </label>
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -374,7 +427,9 @@ const imageGallery = product.images && product.images.length > 0
                   </div>
                 </div>
                 <div className="mb-4">
-                  <label htmlFor="review" className="block text-gray-700 mb-2">Your Review</label>
+                  <label htmlFor="review" className="block text-gray-700 mb-2">
+                    Your Review
+                  </label>
                   <textarea
                     id="review"
                     rows="3"
@@ -386,10 +441,14 @@ const imageGallery = product.images && product.images.length > 0
                 </div>
                 <button
                   type="submit"
-                  className="bg-[#05B171] text-white px-6 py-2 rounded-md hover:bg-[#048a5b] transition-colors"
-                  disabled={!newReview.rating || !newReview.comment.trim()}
+                  className="bg-[#05B171] text-white px-6 py-2 rounded-md hover:bg-[#048a5b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={
+                    !newReview.rating ||
+                    !newReview.comment.trim() ||
+                    reviewLoading
+                  }
                 >
-                  Submit Review
+                  {reviewLoading ? "Submitting..." : "Submit Review"}
                 </button>
               </form>
             </div>
@@ -397,20 +456,27 @@ const imageGallery = product.images && product.images.length > 0
 
           {/* Reviews list */}
           <div className="space-y-6">
-            {product.reviews.map(review => (
-              <div key={review._id} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
+            {product.reviews.map((review) => (
+              <div
+                key={review._id}
+                className="border-b border-gray-200 pb-6 last:border-0 last:pb-0"
+              >
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">{review.user?.name || review.name || 'Anonymous'}</h3>
+                  <h3 className="font-semibold">
+                    {review.user?.name || review.name || "Anonymous"}
+                  </h3>
                   <span className="text-sm text-gray-500">
                     {new Date(review.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    i < review.rating ? 
-                    <FaStar key={i} className="h-4 w-4 text-yellow-400" /> : 
-                    <FaRegStar key={i} className="h-4 w-4 text-yellow-400" />
-                  ))}
+                  {[...Array(5)].map((_, i) =>
+                    i < review.rating ? (
+                      <FaStar key={i} className="h-4 w-4 text-yellow-400" />
+                    ) : (
+                      <FaRegStar key={i} className="h-4 w-4 text-yellow-400" />
+                    )
+                  )}
                 </div>
                 <p className="text-gray-700">{review.comment}</p>
               </div>
@@ -423,9 +489,9 @@ const imageGallery = product.images && product.images.length > 0
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-6">You may also like</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {relatedProducts.map(relatedProduct => (
-                <ProductItem 
-                  key={relatedProduct._id} 
+              {relatedProducts.map((relatedProduct) => (
+                <ProductItem
+                  key={relatedProduct._id}
                   product={relatedProduct}
                 />
               ))}

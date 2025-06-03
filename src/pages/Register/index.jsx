@@ -89,7 +89,7 @@ const Register = () => {
   };
 
   const SuccessModal = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-150 flex items-center justify-center">
       <div className="p-6 bg-white rounded-xl shadow-2xl border border-gray-100 animate-pop-in">
         <Lottie
           animationData={successAnimation}
@@ -217,7 +217,7 @@ const Register = () => {
               </div>
               {/* Map showing location */}
               {userLocation && (
-                <div className="mt-4 rounded overflow-hidden border">
+                <div className="mt-4 rounded overflow-hidden border z-0">
                   <MapContainer
                     center={userLocation}
                     zoom={13}

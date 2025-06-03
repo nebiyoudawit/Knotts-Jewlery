@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaMapMarkerAlt, FaMoneyBillWave, FaCreditCard } from "react-icons/fa";
-import { FiMapPin } from "react-icons/fi";  // Add this for location icon
+import { FiMapPin } from "react-icons/fi";
 import { useShop } from "../../context/ShopContext";
+
 const apiUrl = import.meta.env.VITE_API_URL;
+
 const CheckoutPage = () => {
   const { cart, currentUser } = useShop();
   const [selectedLocation, setSelectedLocation] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryFee] = useState(200);
-  const [locationError, setLocationError] = useState(""); // New for errors
+  const [locationError, setLocationError] = useState("");
+  const [loading, setLoading] = useState(false); // New loading state
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -24,7 +27,7 @@ const CheckoutPage = () => {
   ];
 
   useEffect(() => {
-    setPaymentMethod(""); // Reset payment method when pickup location changes
+    setPaymentMethod("");
   }, [selectedLocation]);
 
   const getCurrentLocation = () => {
@@ -44,7 +47,6 @@ const CheckoutPage = () => {
           );
           const data = await response.json();
           const address = data.display_name || `${latitude}, ${longitude}`;
-
           setDeliveryAddress(address);
         } catch (err) {
           setLocationError("Failed to get address from location.");
@@ -71,6 +73,8 @@ const CheckoutPage = () => {
     }
 
     try {
+      setLoading(true);
+
       const total = selectedLocation ? subtotal : subtotal + deliveryFee;
 
       const orderData = {
@@ -85,7 +89,7 @@ const CheckoutPage = () => {
         totalPrice: total,
         deliveryFee: selectedLocation ? 0 : deliveryFee,
       };
-      console.log("Order Data:", orderData);
+
       const response = await fetch(`${apiUrl}/orders`, {
         method: "POST",
         headers: {
@@ -104,6 +108,8 @@ const CheckoutPage = () => {
     } catch (error) {
       console.error("Order submission error:", error);
       alert(`Order failed: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -122,8 +128,7 @@ const CheckoutPage = () => {
               Pickup Location (Optional)
             </h2>
             <p className="text-sm text-gray-600 mb-4">
-              Select a pickup location to avoid delivery fees. Leave blank for
-              home delivery.
+              Select a pickup location to avoid delivery fees. Leave blank for home delivery.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {pickupLocations.map((location) => (
@@ -163,7 +168,6 @@ const CheckoutPage = () => {
                   </p>
                   <p className="font-medium">Delivery Fee: {deliveryFee} ETB</p>
 
-                  {/* Address input with location icon button */}
                   <div className="relative mt-2">
                     <input
                       type="text"
@@ -196,7 +200,6 @@ const CheckoutPage = () => {
           <div className="mb-8">
             <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
             <div className="space-y-4">
-              {/* Pay on Delivery */}
               <div
                 className={`border rounded-lg p-4 cursor-pointer transition-all ${
                   paymentMethod === "Pay on Delivery"
@@ -216,7 +219,6 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              {/* Online Payment (Coming Soon) */}
               <div className="border rounded-lg p-4 cursor-not-allowed opacity-60 bg-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -287,17 +289,44 @@ const CheckoutPage = () => {
             <button
               type="submit"
               disabled={
+                loading ||
                 paymentMethod !== "Pay on Delivery" ||
                 (!selectedLocation && !deliveryAddress)
               }
-              className={`px-6 py-3 rounded-md text-white ${
+              className={`px-6 py-3 rounded-md text-white flex justify-center items-center gap-2 ${
                 paymentMethod === "Pay on Delivery" &&
-                (selectedLocation || deliveryAddress)
+                (selectedLocation || deliveryAddress) && !loading
                   ? "bg-[#05B171] hover:bg-[#048a5b]"
                   : "bg-gray-400 cursor-not-allowed"
               } transition-colors`}
             >
-              Place Order
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 01-8 8z"
+                    ></path>
+                  </svg>
+                  Placing Order...
+                </>
+              ) : (
+                "Place Order"
+              )}
             </button>
           </div>
         </form>
