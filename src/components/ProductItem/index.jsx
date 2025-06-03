@@ -24,43 +24,43 @@ const ProductItem = ({ product }) => {
   };
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-200 h-full">
-      {/* Product Image with Wishlist Button */}
+    <div className="group relative flex flex-col bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 h-full hover:border-gray-200">
       <div className="relative pt-[100%]">
         <Link to={`/product/${product._id}`}>
           <img
             src={getImageUrl()}
             alt={product.name}
-            className="absolute top-0 left-0 w-full h-full object-cover"
+            className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = "/default-product.jpg";
             }}
+            loading="lazy"
           />
         </Link>
 
         {/* Sale section */}
-        {product.onSale && (
-          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+               {product.onSale && (
+          <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
             SALE
           </div>
         )}
 
         {/* Wishlist Button */}
         <button
-          className={`absolute top-3 right-3 p-2 rounded-full transition-all shadow-sm
+          className={`absolute top-3 right-3 p-2 rounded-full transition-all shadow-md backdrop-blur-sm
           ${
             isWishlisted
-              ? "bg-pink-100 hover:bg-pink-200"
-              : "bg-white/90 hover:bg-white"
+              ? "bg-pink-100/90 hover:bg-pink-200/90 text-pink-500"
+              : "bg-white/80 hover:bg-white text-gray-500 hover:text-pink-500"
           }`}
           onClick={() => toggleWishlist(product)}
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           {isWishlisted ? (
-            <FaHeart className="h-5 w-5 text-pink-500 hover:text-pink-600 transition-colors" />
+            <FaHeart className="h-4 w-4 transition-transform hover:scale-110" />
           ) : (
-            <FaRegHeart className="h-5 w-5 text-gray-500 hover:text-pink-500 transition-colors" />
+            <FaRegHeart className="h-4 w-4 transition-transform hover:scale-110" />
           )}
         </button>
       </div>
@@ -71,7 +71,7 @@ const ProductItem = ({ product }) => {
           {product.category}
         </span>
         <Link to={`/product/${product._id}`} className="link">
-          <h3 className="font-medium mb-1 text-gray-900 lg:line-clamp-1 line-clamp-2 overflow-hidden text-ellipsis hover:text-[#05B171] transition-colors">
+          <h3 className="font-bold mb-1 text-black-900 lg:line-clamp-1 line-clamp-2 overflow-hidden text-ellipsis hover:text-[#05B171] transition-colors">
             {product.name}
           </h3>
         </Link>

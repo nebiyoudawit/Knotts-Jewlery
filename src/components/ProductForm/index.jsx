@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiImage, FiX } from "react-icons/fi";
+import { FiImage, FiX, FiUpload, FiDollarSign, FiTag, FiPackage, FiList, FiEdit2 } from "react-icons/fi";
 import axios from "axios";
 import { ClipLoader } from "react-spinners";
 
@@ -164,56 +164,83 @@ const ProductForm = ({ product, onCancel, onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Product Name</label>
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="pb-2 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {product ? "Edit Product" : "Add New Product"}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {product ? "Update your product details" : "Fill in the details for your new product"}
+          </p>
+        </div>
+
+        {/* Product Name */}
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+          <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <FiEdit2 className="mr-2 text-gray-500" size={16} />
+            Product Name
+          </label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            className="mt-1 block w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            placeholder="e.g. Diamond Necklace"
             required
             disabled={isSubmitting}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Current Price ($)</label>
+        {/* Price, Stock, Category */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+            <label className=" text-sm font-medium text-gray-700 mb-1 flex items-center">
+              <FiDollarSign className="mr-2 text-gray-500" size={16} />
+              Current Price ($)
+            </label>
             <input
               type="number"
               name="price"
               value={formData.price}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              className="mt-1 block w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
               required
               min="0"
               step="0.01"
               disabled={isSubmitting}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Stock Quantity</label>
+
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+              <FiPackage className="mr-2 text-gray-500" size={16} />
+              Stock Quantity
+            </label>
             <input
               type="number"
               name="stock"
               value={formData.stock}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              className="mt-1 block w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
               required
               min="0"
               disabled={isSubmitting}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
+
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+              <FiTag className="mr-2 text-gray-500" size={16} />
+              Category
+            </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              className="mt-1 block w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all appearance-none bg-white"
               required
               disabled={isSubmitting}
             >
@@ -227,73 +254,96 @@ const ProductForm = ({ product, onCancel, onSuccess }) => {
           </div>
         </div>
 
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            name="onSale"
-            checked={formData.onSale}
-            onChange={handleChange}
-            className="h-4 w-4 text-[#05B171] focus:ring-[#05B171] border-gray-300 rounded"
-            disabled={isSubmitting}
-          />
-          <label className="ml-2 block text-sm text-gray-700">Put on sale</label>
+        {/* Sale Toggle */}
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+          <div className="flex items-center">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                name="onSale"
+                checked={formData.onSale}
+                onChange={handleChange}
+                className="sr-only peer"
+                disabled={isSubmitting}
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              <span className="ml-3 text-sm font-medium text-gray-700">Put on sale</span>
+            </label>
+          </div>
+
+          {formData.onSale && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Original Price ($)
+              </label>
+              <input
+                type="number"
+                name="originalPrice"
+                value={formData.originalPrice || ""}
+                onChange={handleChange}
+                className="mt-1 block w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                min="0"
+                step="0.01"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
         </div>
 
-        {formData.onSale && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Original Price ($)</label>
-            <input
-              type="number"
-              name="originalPrice"
-              value={formData.originalPrice || ""}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              min="0"
-              step="0.01"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
+        {/* Description */}
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+          <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <FiList className="mr-2 text-gray-500" size={16} />
+            Description
+          </label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            rows="3"
+            className="mt-1 block w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            rows="4"
+            placeholder="Describe your product in detail..."
             disabled={isSubmitting}
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Product Images (Max 4)</label>
-          <div className="mt-1 flex flex-wrap gap-2">
-            {imagePreviews.map((preview, index) => (
-              <div key={index} className="relative group">
-                <img
-                  src={preview}
-                  alt={`Preview ${index}`}
-                  className="h-20 w-20 object-cover rounded border border-gray-200"
-                />
-                {!isSubmitting && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <FiX size={12} />
-                  </button>
-                )}
-              </div>
-            ))}
-            {imagePreviews.length < 4 && !isSubmitting && (
-              <div className="relative">
-                <label className="flex flex-col items-center justify-center h-20 w-20 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-gray-400">
-                  <FiImage className="text-gray-400" size={24} />
-                  <span className="text-xs text-gray-500">Add Image</span>
+        {/* Images */}
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+          <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <FiImage className="mr-2 text-gray-500" size={16} />
+            Product Images (Max 4)
+          </label>
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-4">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative group">
+                  <div className="h-28 w-28 rounded-lg overflow-hidden border border-gray-200 hover:border-emerald-400 transition-all duration-200">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  {!isSubmitting && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                    >
+                      <FiX size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              
+              {imagePreviews.length < 4 && !isSubmitting && (
+                <label className="flex flex-col items-center justify-center h-28 w-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-400 hover:bg-emerald-50 transition-all duration-200">
+                  <div className="flex flex-col items-center justify-center text-center p-2">
+                    <FiUpload className="text-gray-400 mb-1" size={20} />
+                    <span className="text-xs text-gray-500">Upload Image</span>
+                    <span className="text-xs text-gray-400 mt-1">(Max 4)</span>
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
@@ -303,29 +353,39 @@ const ProductForm = ({ product, onCancel, onSuccess }) => {
                     disabled={isSubmitting}
                   />
                 </label>
-              </div>
-            )}
+              )}
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Recommended size: 800x800 pixels. JPG, PNG format.
+            </p>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4">
+        {/* Form Actions */}
+        <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium text-gray-700 flex items-center"
             disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-[#05B171] text-white rounded-md hover:bg-[#048a5b] flex items-center justify-center min-w-20"
+            className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors duration-200 font-medium flex items-center justify-center min-w-28"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ClipLoader color="#ffffff" size={20} />
+              <>
+                <ClipLoader color="#ffffff" size={18} className="mr-2" />
+                Processing...
+              </>
             ) : (
-              "Save"
+              <>
+                <FiEdit2 className="mr-2" size={16} />
+                {product ? "Update" : "Create"} Product
+              </>
             )}
           </button>
         </div>
