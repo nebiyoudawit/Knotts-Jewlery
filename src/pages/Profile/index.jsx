@@ -1,25 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiShoppingBag } from 'react-icons/fi';
-import { useShop } from '../../context/ShopContext';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiLock,
+  FiShoppingBag,
+} from "react-icons/fi";
+import { useShop } from "../../context/ShopContext";
+import { toast } from "react-toastify";
 const apiUrl = import.meta.env.VITE_API_URL;
 const Profile = () => {
   const { currentUser, updateUserProfile } = useShop();
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const [user, setUser] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    password: '********',
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    password: "********",
   });
 
   const [editMode, setEditMode] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [passwords, setPasswords] = useState({
-    currentPassword: '',
-    newPassword: '',
+    currentPassword: "",
+    newPassword: "",
   });
 
   useEffect(() => {
@@ -29,7 +38,7 @@ const Profile = () => {
         email: currentUser.email,
         phone: currentUser.phone,
         address: currentUser.address,
-        password: '********',
+        password: "********",
       });
     }
   }, [currentUser]);
@@ -45,22 +54,26 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
+    setSavingProfile(true);
     try {
-      await updateUserProfile(user); // calls API via context
+      await updateUserProfile(user);
       setEditMode(false);
-      toast.success('Profile updated successfully!');
+      toast.success("Profile updated successfully!");
     } catch (err) {
-      toast.error('Failed to update profile.');
+      toast.error("Failed to update profile.");
+    } finally {
+      setSavingProfile(false);
     }
   };
 
   const submitPasswordChange = async () => {
+    setChangingPassword(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await fetch(`${apiUrl}/user/change-password`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(passwords),
@@ -68,20 +81,24 @@ const Profile = () => {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || 'Failed to change password');
+      if (!res.ok) throw new Error(data.message || "Failed to change password");
 
-      toast.success('Password changed successfully');
-      setPasswords({ currentPassword: '', newPassword: '' });
+      toast.success("Password changed successfully");
+      setPasswords({ currentPassword: "", newPassword: "" });
       setShowPasswordFields(false);
     } catch (err) {
       toast.error(err.message);
+    } finally {
+      setChangingPassword(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto mb-10">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">My Profile</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">
+          My Profile
+        </h1>
 
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
@@ -118,7 +135,9 @@ const Profile = () => {
           <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800">Profile Information</h2>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Profile Information
+                </h2>
                 {editMode ? (
                   <div className="flex gap-2">
                     <button
@@ -129,9 +148,10 @@ const Profile = () => {
                     </button>
                     <button
                       onClick={handleSave}
-                      className="px-4 py-2 bg-[#05B171] text-white rounded-md hover:bg-[#048a5b]"
+                      disabled={savingProfile}
+                      className="px-4 py-2 bg-[#05B171] text-white rounded-md hover:bg-[#048a5b] disabled:opacity-50"
                     >
-                      Save Changes
+                      {savingProfile ? "Saving..." : "Save Changes"}
                     </button>
                   </div>
                 ) : (
@@ -248,14 +268,20 @@ const Profile = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={submitPasswordChange}
-                            className="px-4 py-2 bg-[#05B171] text-white rounded-md hover:bg-[#048a5b]"
+                            disabled={changingPassword}
+                            className="px-4 py-2 bg-[#05B171] text-white rounded-md hover:bg-[#048a5b] disabled:opacity-50"
                           >
-                            Update Password
+                            {changingPassword
+                              ? "Updating..."
+                              : "Update Password"}
                           </button>
                           <button
                             onClick={() => {
                               setShowPasswordFields(false);
-                              setPasswords({ currentPassword: '', newPassword: '' });
+                              setPasswords({
+                                currentPassword: "",
+                                newPassword: "",
+                              });
                             }}
                             className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                           >
