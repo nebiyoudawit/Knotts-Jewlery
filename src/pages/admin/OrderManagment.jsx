@@ -7,6 +7,7 @@ import {
   FiSearch,
   FiChevronDown,
   FiChevronUp,
+  FiTrash2,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -16,17 +17,23 @@ const API_BASE_URL = `${import.meta.env.VITE_API_URL}/admin`;
 const OrderManagment = () => {
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentOrder, setCurrentOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState({
+    orderId: null,
+    newStatus: null,
+  });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
   const navigate = useNavigate();
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You need to log in to access orders");
-      navigate("/login"); // Redirect to login if no token
+      navigate("/login");
       return null;
     }
     return {
@@ -41,7 +48,6 @@ const OrderManagment = () => {
       error.response?.data?.message || error.message || defaultMessage;
     toast.error(message);
 
-    // If unauthorized, redirect to login
     if (error.response?.status === 401) {
       navigate("/login");
     }
@@ -70,6 +76,7 @@ const OrderManagment = () => {
       setIsLoading(false);
     }
   };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -163,10 +170,53 @@ const OrderManagment = () => {
         )
       );
 
-      toast.success("Order status updated successfully");
+      return true;
     } catch (err) {
       handleApiError(err, "Failed to update order status");
+      return false;
     }
+  };
+
+  const deleteOrder = async (orderId) => {
+    try {
+      setIsUpdating(true);
+      const headers = getAuthHeaders();
+      if (!headers) return;
+
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete order");
+      }
+
+      // Remove the order from local state
+      setOrders((prevOrders) =>
+        prevOrders.filter((order) => order._id !== orderId)
+      );
+
+      toast.success("Order deleted successfully");
+      return true;
+    } catch (err) {
+      handleApiError(err, "Failed to delete order");
+      return false;
+    } finally {
+      setIsUpdating(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  const initiateStatusChange = (orderId, newStatus) => {
+    setPendingUpdate({ orderId, newStatus });
+    setShowConfirmModal(true);
+  };
+
+  const initiateDeleteOrder = (orderId) => {
+    setOrderToDelete(orderId);
+    setShowDeleteModal(true);
   };
 
   const formatDate = (dateString) => {
@@ -174,8 +224,137 @@ const OrderManagment = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const ConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <h3 className="text-lg font-medium mb-4">Confirm Status Change</h3>
+        <p className="mb-6">
+          Are you sure you want to change this order's status to{" "}
+          <span className="font-semibold capitalize">
+            {pendingUpdate.newStatus}
+          </span>
+          ?
+        </p>
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={() => setShowConfirmModal(false)}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            disabled={isUpdating}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              setIsUpdating(true);
+              const success = await updateOrderStatus(
+                pendingUpdate.orderId,
+                pendingUpdate.newStatus
+              );
+              setIsUpdating(false);
+
+              if (success) {
+                setShowConfirmModal(false);
+                toast.success(
+                  `Order status updated to ${pendingUpdate.newStatus}`
+                );
+              }
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            disabled={isUpdating}
+          >
+            {isUpdating ? (
+              <span className="flex items-center">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Updating...
+              </span>
+            ) : (
+              "Confirm"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const DeleteConfirmationModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <h3 className="text-lg font-medium mb-4">Confirm Order Deletion</h3>
+        <p className="mb-6">
+          Are you sure you want to delete this order? This action cannot be undone.
+        </p>
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={() => setShowDeleteModal(false)}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            disabled={isUpdating}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              await deleteOrder(orderToDelete);
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            disabled={isUpdating}
+          >
+            {isUpdating ? (
+              <span className="flex items-center">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Deleting...
+              </span>
+            ) : (
+              "Delete"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-4 md:p-6">
+      {showConfirmModal && <ConfirmationModal />}
+      {showDeleteModal && <DeleteConfirmationModal />}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold">Orders Management</h2>
       </div>
@@ -183,8 +362,8 @@ const OrderManagment = () => {
       {/* Mobile Cards View */}
       <div className="md:hidden space-y-4">
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">
-            Loading orders...
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : orders.length > 0 ? (
           orders.map((order) => (
@@ -201,17 +380,28 @@ const OrderManagment = () => {
                   <select
                     value={order.status}
                     onChange={(e) =>
-                      updateOrderStatus(order._id, e.target.value)
+                      initiateStatusChange(order._id, e.target.value)
                     }
-                    className="border border-gray-300 rounded-md p-1 text-xs"
+                    disabled={isUpdating}
+                    className={`border border-gray-300 rounded-md p-1 text-xs ${
+                      isUpdating ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
                     <option value="pending">Pending</option>
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
                   <button
+                    onClick={() => initiateDeleteOrder(order._id)}
+                    className="text-red-600 hover:text-red-800 p-1"
+                    disabled={isUpdating}
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
+                  <button
                     onClick={() => toggleOrderDetails(order._id)}
                     className="text-gray-600 hover:text-gray-900 p-1"
+                    disabled={isUpdating}
                   >
                     {expandedOrder === order._id ? (
                       <FiChevronUp />
@@ -254,7 +444,6 @@ const OrderManagment = () => {
                       {order.paymentStatus}
                     </span>
                   </div>
-                  {/* Add shipping address here */}
                   <div className="flex flex-col">
                     <span className="text-sm text-gray-500">
                       Shipping Address:
@@ -289,8 +478,8 @@ const OrderManagment = () => {
       {/* Desktop Table View */}
       <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
         {isLoading ? (
-          <div className="text-center py-8 text-gray-500">
-            Loading orders...
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : orders.length > 0 ? (
           <table className="min-w-full divide-y divide-gray-200">
@@ -357,17 +546,28 @@ const OrderManagment = () => {
                         <select
                           value={order.status}
                           onChange={(e) =>
-                            updateOrderStatus(order._id, e.target.value)
+                            initiateStatusChange(order._id, e.target.value)
                           }
-                          className="border border-gray-300 rounded-md p-1 text-sm"
+                          disabled={isUpdating}
+                          className={`border border-gray-300 rounded-md p-1 text-sm ${
+                            isUpdating ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         >
                           <option value="pending">Pending</option>
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
                         <button
+                          onClick={() => initiateDeleteOrder(order._id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                          disabled={isUpdating}
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                        <button
                           onClick={() => toggleOrderDetails(order._id)}
                           className="text-gray-600 hover:text-gray-900 p-1"
+                          disabled={isUpdating}
                         >
                           {expandedOrder === order._id ? (
                             <FiChevronUp />
@@ -411,7 +611,6 @@ const OrderManagment = () => {
                                   {formatDate(order.deliveryDate)}
                                 </p>
                               )}
-                              {/* Add shipping address here */}
                               <p>
                                 <span className="text-gray-500">
                                   Shipping Address:
