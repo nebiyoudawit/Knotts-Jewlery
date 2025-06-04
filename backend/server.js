@@ -19,12 +19,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-// ✅ Enable CORS (allow requests from frontend)
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN,
-  credentials: true,
-};
-app.use(cors(corsOptions));
+app.use(cors());
 
 // ✅ Parse JSON requests
 app.use(express.json());
