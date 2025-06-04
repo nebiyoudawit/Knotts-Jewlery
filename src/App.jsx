@@ -22,8 +22,8 @@ import ProductManagment from './pages/admin/ProductManagment.jsx'
 import OrderManagment from './pages/admin/OrderManagment.jsx'
 import UserManagment from './pages/admin/UserManagment.jsx'
 import OrderConfirmation from './components/OrderConformation'
-import ContactUs from './pages/contactUs/index.jsx'
-import AboutUs from './pages/aboutUs/index.jsx'
+import ContactUs from './pages/ContactUs/index.jsx'
+import AboutUs from './pages/AboutUs/index.jsx'
 import { useEffect } from 'react';
 
 // 👇 Move Routes into a child component so we can use `useLocation`
