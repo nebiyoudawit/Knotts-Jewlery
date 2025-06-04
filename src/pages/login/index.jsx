@@ -17,16 +17,12 @@ const Login = () => {
     clearError();
 
     try {
-      const success = isAdminLogin 
-        ? await adminLogin(email, password)
-        : await login(email, password);
+      const success = await login(email, password);
 
       if (success) {
-        navigate(isAdminLogin ? '/admin' : '/');
+        navigate('/');
       } else {
-        toast.error(error || (isAdminLogin 
-          ? 'Invalid admin credentials' 
-          : 'Invalid email or password'));
+        toast.error(error,'Invalid email or password');
       }
     } catch (err) {
       toast.error(error || 'An error occurred during login');
@@ -73,22 +69,6 @@ const Login = () => {
               required
               autoComplete="current-password"
             />
-          </div>
-
-          <div className="mb-4 flex items-center">
-            <input
-              type="checkbox"
-              id="admin-login"
-              checked={isAdminLogin}
-              onChange={() => {
-                clearError();
-                setIsAdminLogin(!isAdminLogin);
-              }}
-              className="h-4 w-4 text-[#05B171] focus:ring-[#05B171] border-gray-300 rounded"
-            />
-            <label htmlFor="admin-login" className="ml-2 block text-sm text-gray-700">
-              Admin Login
-            </label>
           </div>
           
           <button

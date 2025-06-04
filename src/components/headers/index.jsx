@@ -1,33 +1,44 @@
 // src/components/Header/index.jsx
-import React, { useState } from 'react';
-import { 
-  Badge, 
-  IconButton, 
-  Tooltip, 
-  Menu, 
-  MenuItem, 
+import React, { useState } from "react";
+import {
+  Badge,
+  IconButton,
+  Tooltip,
+  Menu,
+  MenuItem,
   Divider,
   Typography,
   Avatar,
   Box,
-  ListItemIcon, 
-  ListItemText
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { IoCartOutline, IoMenu, IoBagOutline, IoSearchOutline } from "react-icons/io5";
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import {
+  IoCartOutline,
+  IoMenu,
+  IoBagOutline,
+  IoSearchOutline,
+} from "react-icons/io5";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
-import { FiUser, FiLogIn, FiUserPlus, FiLogOut, FiShoppingBag } from "react-icons/fi";
-import { Link } from 'react-router-dom';
-import Navigation from './Navigation';
-import Search from '../Search';
-import { useShop } from '../../context/ShopContext';
+import {
+  FiUser,
+  FiLogIn,
+  FiUserPlus,
+  FiLogOut,
+  FiShoppingBag,
+} from "react-icons/fi";
+import { Link } from "react-router-dom";
+import Navigation from "./Navigation";
+import Search from "../Search";
+import { useShop } from "../../context/ShopContext";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
-  '& .MuiBadge-badge': {
+  "& .MuiBadge-badge": {
     right: -3,
     top: 5,
     border: `2px solid ${(theme.vars || theme).palette.background.paper}`,
-    padding: '0 4px',
+    padding: "0 4px",
   },
 }));
 
@@ -36,13 +47,13 @@ const Header = () => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [desktopAnchorEl, setDesktopAnchorEl] = useState(null);
   const [mobileAnchorEl, setMobileAnchorEl] = useState(null);
-  
-  const { 
-    cartCount = 0, 
-    wishlistCount = 0, 
+
+  const {
+    cartCount = 0,
+    wishlistCount = 0,
     wishlist = [],
     currentUser,
-    logout
+    logout,
   } = useShop();
 
   const handleDrawerToggle = () => {
@@ -72,16 +83,16 @@ const Header = () => {
       open={Boolean(anchorEl)}
       onClose={onClose}
       anchorOrigin={{
-        vertical: isMobile ? 'top' : 'bottom',
-        horizontal: isMobile ? 'center' : 'right',
+        vertical: isMobile ? "top" : "bottom",
+        horizontal: isMobile ? "center" : "right",
       }}
       transformOrigin={{
-        vertical: isMobile ? 'bottom' : 'top',
-        horizontal: isMobile ? 'center' : 'right',
+        vertical: isMobile ? "bottom" : "top",
+        horizontal: isMobile ? "center" : "right",
       }}
       PaperProps={{
         style: {
-          width: '200px',
+          width: "200px",
         },
       }}
     >
@@ -97,28 +108,53 @@ const Header = () => {
           </Box>
           <Divider />
           <MenuItem component={Link} to="/profile" onClick={onClose}>
-            <ListItemIcon><FiUser size={18} /></ListItemIcon>
+            <ListItemIcon>
+              <FiUser size={18} />
+            </ListItemIcon>
             <ListItemText>Profile</ListItemText>
           </MenuItem>
           <MenuItem component={Link} to="/orders" onClick={onClose}>
-            <ListItemIcon><FiShoppingBag size={18} /></ListItemIcon>
+            <ListItemIcon>
+              <FiShoppingBag size={18} />
+            </ListItemIcon>
             <ListItemText>My Orders</ListItemText>
           </MenuItem>
           <Divider />
-          <MenuItem onClick={() => { logout(); onClose(); }}>
-            <ListItemIcon><FiLogOut size={18} /></ListItemIcon>
+          {currentUser?.role === "admin" && (
+            <>
+              <MenuItem component={Link} to="/admin" onClick={onClose}>
+                <ListItemIcon>
+                  <FiUser size={18} />
+                </ListItemIcon>
+                <ListItemText>Switch to Admin</ListItemText>
+              </MenuItem>
+            </>
+          )}
+          <MenuItem
+            onClick={() => {
+              logout();
+              onClose();
+            }}
+          >
+            <ListItemIcon>
+              <FiLogOut size={18} />
+            </ListItemIcon>
             <ListItemText>Logout</ListItemText>
           </MenuItem>
         </>
       ) : (
         <>
           <MenuItem component={Link} to="/login" onClick={onClose}>
-            <ListItemIcon><FiLogIn size={18} /></ListItemIcon>
+            <ListItemIcon>
+              <FiLogIn size={18} />
+            </ListItemIcon>
             <ListItemText>Login</ListItemText>
           </MenuItem>
           <Divider />
           <MenuItem component={Link} to="/register" onClick={onClose}>
-            <ListItemIcon><FiUserPlus size={18} /></ListItemIcon>
+            <ListItemIcon>
+              <FiUserPlus size={18} />
+            </ListItemIcon>
             <ListItemText>Register</ListItemText>
           </MenuItem>
         </>
@@ -133,70 +169,81 @@ const Header = () => {
         <div className="container">
           <div className="flex items-center justify-between">
             <div className="col1 w-[50%]">
-              <p className="text-[14px]">Free delivery at summit, 4 kilo, megenagna, figa,gerji (Unity University)🚛📦</p>
+              <p className="text-[14px]">
+                Free delivery at summit, 4 kilo, megenagna, figa,gerji (Unity
+                University)🚛📦
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Header */}
-                <div className="header border-b border-opacity-20 border-gray-300 bg-white">
-                  <div className="container">
-                    {/* Mobile Top Row */}
-                    <div className="flex items-center justify-between py-3 md:hidden">
-                        <div className="w-1/4 flex justify-start">
-                          <IconButton onClick={handleDrawerToggle}>
-                            <IoMenu size={25} />
-                          </IconButton>
-                        </div>
+      <div className="header border-b border-opacity-20 border-gray-300 bg-white">
+        <div className="container">
+          {/* Mobile Top Row */}
+          <div className="flex items-center justify-between py-3 md:hidden">
+            <div className="w-1/4 flex justify-start">
+              <IconButton onClick={handleDrawerToggle}>
+                <IoMenu size={25} />
+              </IconButton>
+            </div>
 
-                      <div className="flex justify-center">
-                        {showMobileSearch ? (
-                          <div className="w-full max-w-[700px]">
-                            <Search />
-                          </div>
-                        ) : (
-                          <Link to={"/"}>
-                            <img src="/logo.png" alt="Logo" className="h-10" />
-                          </Link>
-                        )}
-                      </div>
+            <div className="flex justify-center">
+              {showMobileSearch ? (
+                <div className="w-full max-w-[700px]">
+                  <Search />
+                </div>
+              ) : (
+                <Link to={"/"}>
+                  <img src="/logo.png" alt="Logo" className="h-10" />
+                </Link>
+              )}
+            </div>
 
-                      <div className="w-1/4 flex justify-end">
-                        <IconButton 
-                          aria-label="search"
-                          onClick={() => setShowMobileSearch(prev => !prev)}
-                        >
-                          <IoSearchOutline size={22} />
-                        </IconButton>
-                      </div>
+            <div className="w-1/4 flex justify-end">
+              <IconButton
+                aria-label="search"
+                onClick={() => setShowMobileSearch((prev) => !prev)}
+              >
+                <IoSearchOutline size={22} />
+              </IconButton>
+            </div>
           </div>
           {/* Desktop Header */}
           <div className="hidden md:flex items-center justify-between py-3">
             <div className="col1 w-[25%]">
-              <Link to={"/"}><img src="/logo.png" alt="Logo" className="h-10" /></Link>
+              <Link to={"/"}>
+                <img src="/logo.png" alt="Logo" className="h-10" />
+              </Link>
             </div>
             <div className="col2 w-[45%] px-4">
               <Search />
             </div>
             <div className="col3 w-[30%] flex items-center pl-7">
-              <ul className='flex items-center justify-end gap-3 w-full'>
+              <ul className="flex items-center justify-end gap-3 w-full">
                 {currentUser ? (
-                  <li className='flex items-center gap-2'>
+                  <li className="flex items-center gap-2">
                     <IconButton onClick={handleDesktopMenuOpen}>
-                      <Avatar sx={{ width: 30, height: 30 }} src={currentUser.avatar}>
+                      <Avatar
+                        sx={{ width: 30, height: 30 }}
+                        src={currentUser.avatar}
+                      >
                         {currentUser.name.charAt(0)}
                       </Avatar>
                     </IconButton>
                     <Typography variant="body2" className="hidden sm:block">
-                      {currentUser.name.split(' ')[0]}
+                      {currentUser.name.split(" ")[0]}
                     </Typography>
                   </li>
                 ) : (
-                  <li className='flex items-center gap-2'>
+                  <li className="flex items-center gap-2">
                     <FiUser size={25} className="text-gray-600" />
-                    <div className='flex gap-1'>
-                      <Link to="/login" className="link transition flex items-center gap-1">
+                    <div className="flex gap-1">
+                      <Link
+                        to="/login"
+                        className="link transition flex items-center gap-1"
+                      >
                         <FiLogIn size={19} /> Login
                       </Link>
                       <span>|</span>
@@ -210,7 +257,10 @@ const Header = () => {
                   <Link to="/wishlist">
                     <Tooltip title="Wishlist" arrow placement="top">
                       <IconButton aria-label="heart">
-                        <StyledBadge badgeContent={wishlistCount} color="secondary">
+                        <StyledBadge
+                          badgeContent={wishlistCount}
+                          color="secondary"
+                        >
                           {wishlist.length > 0 ? (
                             <FaHeart className="text-pink-500" size={22} />
                           ) : (
@@ -233,8 +283,8 @@ const Header = () => {
                   </Link>
                 </li>
               </ul>
-              <AccountMenu 
-                anchorEl={desktopAnchorEl} 
+              <AccountMenu
+                anchorEl={desktopAnchorEl}
                 onClose={handleDesktopMenuClose}
               />
             </div>
@@ -248,20 +298,18 @@ const Header = () => {
               </IconButton>
               <span className="text-xs">Shop</span>
             </Link>
-            
-           
-              <Link to="/cart" className='flex flex-col items-center'>
-                <Tooltip title="Cart" arrow placement="top">
-                  <IconButton aria-label="cart">
-                    <StyledBadge badgeContent={cartCount} color="secondary">
-                      <IoCartOutline size={25} />
-                    </StyledBadge>
-                  </IconButton>
-                </Tooltip>
-                <span className="text-xs">Cart</span>
-              </Link>
-            
-            
+
+            <Link to="/cart" className="flex flex-col items-center">
+              <Tooltip title="Cart" arrow placement="top">
+                <IconButton aria-label="cart">
+                  <StyledBadge badgeContent={cartCount} color="secondary">
+                    <IoCartOutline size={25} />
+                  </StyledBadge>
+                </IconButton>
+              </Tooltip>
+              <span className="text-xs">Cart</span>
+            </Link>
+
             <Link to="/wishlist" className="flex flex-col items-center">
               <Tooltip title="Wishlist" arrow placement="top">
                 <IconButton aria-label="wishlist">
@@ -276,14 +324,14 @@ const Header = () => {
               </Tooltip>
               <span className="text-xs">Wishlist</span>
             </Link>
-            
+
             <div className="flex flex-col items-center">
-              <IconButton 
-                aria-label="account"
-                onClick={handleMobileMenuOpen}
-              >
+              <IconButton aria-label="account" onClick={handleMobileMenuOpen}>
                 {currentUser ? (
-                  <Avatar sx={{ width: 24, height: 24 }} src={currentUser.avatar}>
+                  <Avatar
+                    sx={{ width: 24, height: 24 }}
+                    src={currentUser.avatar}
+                  >
                     {currentUser.name.charAt(0)}
                   </Avatar>
                 ) : (
@@ -291,8 +339,8 @@ const Header = () => {
                 )}
               </IconButton>
               <span className="text-xs">Account</span>
-              <AccountMenu 
-                anchorEl={mobileAnchorEl} 
+              <AccountMenu
+                anchorEl={mobileAnchorEl}
                 onClose={handleMobileMenuClose}
                 isMobile={true}
               />
@@ -301,7 +349,10 @@ const Header = () => {
         </div>
       </div>
 
-      <Navigation mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} />
+      <Navigation
+        mobileOpen={mobileOpen}
+        handleDrawerToggle={handleDrawerToggle}
+      />
     </header>
   );
 };

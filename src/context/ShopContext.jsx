@@ -132,28 +132,28 @@ export const ShopProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await makeRequest(`${apiUrl}/auth/login`, "POST", {
-        email,
-        password,
-      });
+const login = async (email, password) => {
+  setIsLoading(true);
+  setError(null);
+  try {
+    const data = await makeRequest(`${apiUrl}/auth/login`, "POST", {
+      email,
+      password,
+    });
 
-      localStorage.setItem("token", data.token);
-      setCurrentUser(data.user);
-      setIsAdmin(data.user?.role === "admin");
-      toast.success("Login successful!");
-      return true;
-    } catch (err) {
-      setError(err.message);
-      toast.error(err.message);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    localStorage.setItem("token", data.token);
+    setCurrentUser(data.user);
+    setIsAdmin(data.user?.role === "admin");
+    toast.success("Login successful!");
+    return true;
+  } catch (err) {
+    setError(err.message);
+    toast.error(err.message);
+    return false;
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const adminLogin = async (email, password) => {
     setIsLoading(true);

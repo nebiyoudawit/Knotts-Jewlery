@@ -318,13 +318,15 @@ export const getUsers = async (req, res) => {
 export const addUser = async (req, res) => {
   try {
     const { name, email, password, role, address, phone } = req.body;
+
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ success: false, message: 'User already exists' });
 
-    const hashed = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ name, email, password: hashed, role, address, phone });
+    const newUser = await User.create({ name, email, password, role, address, phone });
+
     await invalidateDashboardCache(); // Invalidate cache after adding user
     await invalidateAdminUserList(); // Invalidate user list cache
+
     const { password: _, ...userData } = newUser.toObject();
     res.status(201).json({ success: true, user: userData });
   } catch (err) {
@@ -332,6 +334,7 @@ export const addUser = async (req, res) => {
     res.status(400).json({ success: false, message: 'Invalid user data', error: err.message });
   }
 };
+
 
 
 export const deleteUser = async (req, res) => {
