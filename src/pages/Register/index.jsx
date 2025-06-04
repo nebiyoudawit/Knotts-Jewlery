@@ -296,6 +296,7 @@ const Register = () => {
                   id="phone"
                   name="phone"
                   type="tel"
+                  required
                   value={formData.phone}
                   onChange={handleChange}
                   className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"

@@ -31,11 +31,7 @@ const userSchema = new Schema(
     },
     phone: {
       type: String,
-      match: [
-        /^(?:\+2519\d{8}|09\d{8})$/,
-        'Please provide a valid phone number (e.g., +251912345678)',
-      ],
-      required: false, // Optional
+      required: [true, 'Phone number is required'],
     },
     address: {
       type: String,
