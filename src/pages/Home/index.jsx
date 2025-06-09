@@ -6,7 +6,6 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import ProductSlider from "../../components/ProductSlider";
 import Footer from "../../components/Footer";
-import { Helmet } from "react-helmet-async";
 
 const Home = () => {
   const categories = [
