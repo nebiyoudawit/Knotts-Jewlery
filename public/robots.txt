@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://knotts-jewlery-xjku.vercel.app/sitemap.xml

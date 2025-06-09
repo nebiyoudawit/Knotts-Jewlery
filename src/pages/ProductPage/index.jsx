@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { useShop } from "../../context/ShopContext";
+import { Helmet } from "react-helmet-async";
 import ProductItem from "../../components/ProductItem";
 const apiUrl = import.meta.env.VITE_API_URL;
 const ProductPage = () => {

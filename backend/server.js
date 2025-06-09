@@ -10,24 +10,22 @@ import adminRoutes from './routes/adminRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import path from 'path';
-import redisClient from './utils/redisClient.js'; // ✅ Redis client import
-
+import redisClient from './utils/redisClient.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
 
 app.use(cors());
-
-// ✅ Parse JSON requests
-app.use(express.json());
+app.use(express.json()); // Parse JSON requests
 
 // ✅ Connect to MongoDB
 connectDB();
 
-// ✅ Routes
+// ✅ API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -35,31 +33,41 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/product', productRoutes);
 app.use('/api/orders', orderRoutes);
 
-// ✅ Logging middleware
+// ✅ Logging Middleware
 app.use((req, res, next) => {
   console.log(`Incoming Request: ${req.method} ${req.url}`);
   next();
 });
 
-// ✅ 404 Not Found
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// ✅ Serve React Frontend (for SEO, client-side routing support)
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
 });
 
-// ✅ Global error handler
+// ✅ 404 Not Found (API routes only — this won't hit frontend routes anymore)
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/api/')) {
+    return res.status(404).json({ message: 'API Route not found' });
+  }
+  next();
+});
+
+// ✅ Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Server error' });
 });
 
-// ✅ Start server only after Redis connects
+// ✅ Start server after Redis connects
 const PORT = process.env.PORT || 5000;
 
 (async () => {
-  try { 
+  try {
     await redisClient.connect({
-  url: process.env.REDIS_URL,
-});
+      url: process.env.REDIS_URL,
+    });
     console.log('✅ Redis connected');
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
