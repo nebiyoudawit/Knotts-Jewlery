@@ -8,24 +8,13 @@ import {
   Grid,
 } from "@mui/material";
 import Footer from "../../components/Footer";
-import { Helmet } from "react-helmet-async";
+
 
 const ContactUs = () => {
   return (
     <>
-      <Helmet>
-        <title>Contact Us | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Get in touch with Knott's Jewelry for questions, support, or custom orders."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/contact"
-        />
-      </Helmet>
 
-      <div className="contact-page">
+      <main className="contact-page">
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Typography
             variant="h2"
@@ -74,7 +63,7 @@ const ContactUs = () => {
           </Grid>
         </Container>
         <Footer />
-      </div>
+      </main>
     </>
   );
 };

@@ -4,7 +4,6 @@ import { FaFilter, FaStar, FaRegStar } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { Drawer } from "@mui/material";
 import { useShop } from "../../context/ShopContext";
-import { Helmet } from "react-helmet-async";
 import ProductItem from "../../components/ProductItem";
 const apiUrl = import.meta.env.VITE_API_URL;
 const ProductListing = () => {
@@ -128,23 +127,10 @@ const ProductListing = () => {
   }
 
   return (
-    <>
-      <Helmet>
-        <title>Shop All Jewelry | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Browse our full collection of high-quality rings, bracelets, earrings, and more."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/product"
-        />
-      </Helmet>
-
-      <div className="bg-gray-50 min-h-screen">
+      <main className="bg-gray-50 min-h-screen">
         <div className="container mx-auto px-4 py-8">
           {/* Mobile Filter/Sort */}
-          <div className="flex md:hidden justify-between items-center gap-4 mb-6">
+          <section className="flex md:hidden justify-between items-center gap-4 mb-6">
             <button
               className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm w-full sm:w-auto"
               onClick={() => setMobileFiltersOpen(true)}
@@ -161,7 +147,7 @@ const ProductListing = () => {
               <option value="highToLow">Price: High to Low</option>
               <option value="newest">Newest</option>
             </select>
-          </div>
+          </section>
 
           {/* Mobile Filter Drawer */}
           <Drawer
@@ -293,7 +279,7 @@ const ProductListing = () => {
 
           <div className="flex flex-col md:flex-row gap-6">
             {/* Desktop Filters */}
-            <div className="hidden md:block w-full md:w-64 bg-white p-6 rounded-lg shadow-sm h-fit sticky top-20">
+            <section className="hidden md:block w-full md:w-64 bg-white p-6 rounded-lg shadow-sm h-fit sticky top-20">
               <h2 className="text-lg font-bold mb-4">Filters</h2>
 
               {selectedCategory && (
@@ -388,10 +374,10 @@ const ProductListing = () => {
               >
                 Clear All Filters
               </button>
-            </div>
+            </section>
 
             {/* Products Grid */}
-            <div className="flex-1">
+            <section className="flex-1">
               <div className="hidden md:flex justify-between items-center mb-10">
                 <h1 className="text-2xl font-bold">
                   {filteredProducts.length}{" "}
@@ -444,11 +430,10 @@ const ProductListing = () => {
                   </p>
                 </div>
               )}
-            </div>
+            </section>
           </div>
         </div>
-      </div>
-    </>
+      </main>
   );
 };
 

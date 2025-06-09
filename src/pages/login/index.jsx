@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShop } from "../../context/ShopContext";
 import { toast } from "react-toastify";
-import { Helmet } from "react-helmet-async";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -34,20 +33,7 @@ const Login = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Login | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Log in to your Knott's Jewelry account to track orders, wishlist items, and more."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/login"
-        />
-      </Helmet>
-
-      <div className="min-h-[100%] flex items-start justify-center bg-gray-50 pt-10 pb-10 overflow-hidden">
+      <main className="min-h-[100%] flex items-start justify-center bg-gray-50 pt-10 pb-10 overflow-hidden">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
           <img src="/logo.png" alt="Logo" className="w-40 mx-auto mb-8" />
           <h2 className="text-2xl font-bold mb-6 text-center">
@@ -136,8 +122,7 @@ const Login = () => {
             )}
           </div>
         </div>
-      </div>
-    </>
+      </main>
   );
 };
 

@@ -10,7 +10,6 @@ import {
 } from "react-icons/fa";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { useShop } from "../../context/ShopContext";
-import { Helmet } from "react-helmet-async";
 import ProductItem from "../../components/ProductItem";
 const apiUrl = import.meta.env.VITE_API_URL;
 const ProductPage = () => {
@@ -207,7 +206,7 @@ const ProductPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
         {/* Navigation breadcrumbs */}
         <nav className="flex mb-6 text-sm text-gray-600">
           <Link to="/" className="hover:text-[#05B171]">
@@ -499,7 +498,7 @@ const ProductPage = () => {
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

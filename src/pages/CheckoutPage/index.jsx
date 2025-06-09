@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { FaMapMarkerAlt, FaMoneyBillWave, FaCreditCard } from "react-icons/fa";
 import { FiMapPin } from "react-icons/fi";
 import { useShop } from "../../context/ShopContext";
-import { Helmet } from "react-helmet-async";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -115,18 +114,6 @@ const CheckoutPage = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Checkout | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Securely checkout and complete your purchase at Knott's Jewelry."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/checkout"
-        />
-      </Helmet>
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
@@ -509,7 +496,6 @@ const CheckoutPage = () => {
           </div>
         </div>
       </main>
-    </>
   );
 };
 

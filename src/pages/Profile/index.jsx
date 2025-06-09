@@ -10,7 +10,6 @@ import {
 } from "react-icons/fi";
 import { useShop } from "../../context/ShopContext";
 import { toast } from "react-toastify";
-import { Helmet } from "react-helmet-async";
 const apiUrl = import.meta.env.VITE_API_URL;
 const Profile = () => {
   const { currentUser, updateUserProfile } = useShop();
@@ -95,18 +94,6 @@ const Profile = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Your Profile | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Manage your Knott's Jewelry account, view order history and saved items."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/profile"
-        />
-      </Helmet>
 
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-6xl mx-auto mb-10">
@@ -322,7 +309,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
-    </>
+    
   );
 };
 

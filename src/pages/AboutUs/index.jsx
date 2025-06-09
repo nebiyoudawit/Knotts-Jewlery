@@ -1,23 +1,10 @@
 import React from "react";
 import { Container, Typography, Box } from "@mui/material";
 import Footer from "../../components/Footer";
-import { Helmet } from "react-helmet-async";
 const AboutUs = () => {
   return (
     <>
-      <Helmet>
-        <title>About Us | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Learn more about Knott's Jewelry, our mission, and our commitment to quality craftsmanship."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/about"
-        />
-      </Helmet>
-
-      <div className="about-page">
+      <main className="about-page">
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Typography
             variant="h2"
@@ -81,7 +68,7 @@ const AboutUs = () => {
         </Container>
 
         <Footer />
-      </div>
+      </main>
     </>
   );
 };

@@ -35,16 +35,7 @@ const Home = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Knott's Jewelry | Fine Jewelry for Every Occasion</title>
-        <meta
-          name="description"
-          content="Discover rings, necklaces, bracelets, and more at Knott's Jewelry. Elegance that fits every style and budget."
-        />
-        <link rel="canonical" href="https://knotts-jewlery-xjku.vercel.app/" />
-      </Helmet>
-      <div className="home-page pb-16 md:pb-0">
+      <main className="home-page pb-16 md:pb-0">
         {/* Hero Section */}
         <section className="relative w-full h-[80vh] max-h-[800px] overflow-hidden">
           <div className="absolute inset-0">
@@ -202,8 +193,7 @@ const Home = () => {
 
         {/* Footer Section */}
         <Footer />
-      </div>
-    </>
+      </main>
   );
 };
 

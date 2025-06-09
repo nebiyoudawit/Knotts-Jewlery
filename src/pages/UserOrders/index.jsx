@@ -12,7 +12,6 @@ import {
   FiCreditCard,
 } from "react-icons/fi";
 import { useShop } from "../../context/ShopContext";
-import { Helmet } from "react-helmet-async";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -184,18 +183,6 @@ const UserOrders = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Your Orders | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Track your past and current orders with Knott's Jewelry."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/orders"
-        />
-      </Helmet>
 
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-6xl mx-auto">
@@ -471,7 +458,7 @@ const UserOrders = () => {
           </div>
         )}
       </div>
-    </>
+  
   );
 };
 

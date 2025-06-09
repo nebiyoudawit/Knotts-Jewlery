@@ -3,7 +3,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FaTimes, FaHeart, FaRegHeart, FaShoppingBag } from "react-icons/fa";
 import { useShop } from "../../context/ShopContext";
-import { Helmet } from "react-helmet-async";
 const CartPage = () => {
   const {
     cart,
@@ -28,20 +27,7 @@ const CartPage = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Your Shopping Cart | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="View and manage items in your Knott's Jewelry shopping cart."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/cart"
-        />
-      </Helmet>
-
-      <div className="container mx-auto px-4 py-8 min-h-screen">
+      <main className="container mx-auto px-4 py-8 min-h-screen">
         <h1 className="text-3xl font-bold mb-8">Your Cart ({cartCount})</h1>
 
         {cart.length === 0 ? (
@@ -239,8 +225,7 @@ const CartPage = () => {
             </div>
           </div>
         )}
-      </div>
-    </>
+      </main>
   );
 };
 

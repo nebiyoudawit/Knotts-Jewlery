@@ -11,23 +11,10 @@ import {
 } from "react-icons/fa";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
-import { Helmet } from "react-helmet-async";
 const WishlistPage = () => {
   const { wishlist, toggleWishlist, addToCart, wishlistCount } = useShop();
   console.log("Wishlist in WishlistPage:", wishlist);
   return (
-    <>
-      <Helmet>
-        <title>Your Wishlist | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="View and manage your saved jewelry items at Knott's Jewelry."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/wishlist"
-        />
-      </Helmet>
 
       <div className="container mx-auto px-4 py-8 min-h-screen">
         <h1 className="text-3xl font-bold mb-8">
@@ -64,7 +51,7 @@ const WishlistPage = () => {
           </div>
         )}
       </div>
-    </>
+
   );
 };
 

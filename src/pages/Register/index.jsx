@@ -4,7 +4,6 @@ import { FiUser, FiMail, FiLock, FiPhone, FiMapPin } from "react-icons/fi";
 import Lottie from "lottie-react";
 import successAnimation from "../../success-animation.json";
 import { useShop } from "../../context/ShopContext"; // Adjust path if needed
-import { Helmet } from "react-helmet-async";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 
@@ -118,18 +117,6 @@ const Register = () => {
   });
 
   return (
-    <>
-      <Helmet>
-        <title>Register | Knott's Jewelry</title>
-        <meta
-          name="description"
-          content="Create a Knott's Jewelry account to enjoy personalized shopping and exclusive offers."
-        />
-        <link
-          rel="canonical"
-          href="https://knotts-jewlery-xjku.vercel.app/register"
-        />
-      </Helmet>
 
       <div className="min-h-[100%] bg-gray-50 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
         {showSuccess && <SuccessModal />}
@@ -359,7 +346,7 @@ const Register = () => {
           </div>
         </div>
       </div>
-    </>
+    
   );
 };
 
