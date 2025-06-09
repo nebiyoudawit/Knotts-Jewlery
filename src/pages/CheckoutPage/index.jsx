@@ -378,15 +378,6 @@ const CheckoutPage = () => {
                     className="flex items-center justify-between"
                   >
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-12 w-12 rounded-md overflow-hidden bg-gray-100">
-                        {item.image && (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                      </div>
                       <div className="ml-4">
                         <h3 className="text-sm font-medium text-gray-900">
                           {item.name}
