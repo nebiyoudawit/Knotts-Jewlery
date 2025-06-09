@@ -25,7 +25,6 @@ import OrderConfirmation from './components/OrderConformation'
 import ContactUs from './pages/ContactUs/index.jsx'
 import AboutUs from './pages/AboutUs/index.jsx'
 import { useEffect } from 'react';
-import { HelmetProvider } from 'react-helmet-async';
 
 // 👇 Move Routes into a child component so we can use `useLocation`
 const AppRoutes = () => {
@@ -80,13 +79,11 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <HelmetProvider>
       <BrowserRouter>
         <ShopProvider>
           <AppRoutes />
         </ShopProvider>
       </BrowserRouter>
-    </HelmetProvider>
   );
 }
 
