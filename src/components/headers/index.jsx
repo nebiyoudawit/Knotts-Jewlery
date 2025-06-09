@@ -170,8 +170,7 @@ const Header = () => {
           <div className="flex items-center justify-between">
             <div className="col1 w-[50%]">
               <p className="text-[14px]">
-                Free delivery at summit, 4 kilo, megenagna, figa,gerji (Unity
-                University)🚛📦
+                Free delivery at summit, 4 kilo, megenagna, figa 🚛📦
               </p>
             </div>
           </div>
