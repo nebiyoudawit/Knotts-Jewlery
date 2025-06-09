@@ -38,22 +38,6 @@ app.use((req, res, next) => {
   console.log(`Incoming Request: ${req.method} ${req.url}`);
   next();
 });
-
-// ✅ Serve React Frontend (for SEO, client-side routing support)
-app.use(express.static(path.join(__dirname, 'client/build')));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-});
-
-// ✅ 404 Not Found (API routes only — this won't hit frontend routes anymore)
-app.use((req, res, next) => {
-  if (req.originalUrl.startsWith('/api/')) {
-    return res.status(404).json({ message: 'API Route not found' });
-  }
-  next();
-});
-
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
