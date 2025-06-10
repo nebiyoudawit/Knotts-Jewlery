@@ -21,9 +21,9 @@ const CheckoutPage = () => {
   );
 
   const pickupLocations = [
-    { id: 1, name: "Figa", address: "Bole, Addis Ababa" },
-    { id: 2, name: "Gerji", address: "Near Gerji Mebrat Hail" },
-    { id: 3, name: "Megenagna", address: "Megenagna Square" },
+    { id: 1, name: "Figa", address: "" },
+    { id: 2, name: "Gerji", address: "" },
+    { id: 3, name: "Megenagna", address: "" },
   ];
 
   useEffect(() => {
