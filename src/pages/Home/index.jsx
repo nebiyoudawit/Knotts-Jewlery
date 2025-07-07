@@ -49,7 +49,7 @@ const Home = () => {
           <div className="container relative h-full flex items-center">
             <div className="max-w-2xl text-white">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-                Discover Our Exquisite Collection
+                Discover Our Exquisite Collections
               </h1>
               <p className="text-lg md:text-xl mb-8">
                 Handcrafted jewelry that tells your unique story. Perfect pieces
