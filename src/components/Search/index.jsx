@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Button from '@mui/material/Button';
-import { CiSearch } from "react-icons/ci";
+import { Search as SearchIcon } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Search = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,36 +35,71 @@ const Search = () => {
     }
   };
 
+  const handleClear = () => {
+    setSearchTerm('');
+    navigate('/products');
+  };
+
   return (
-    <div className="w-full sm:w-[500px] md:w-[600px] bg-[#e5e5e5] rounded-md relative px-3 py-2 mx-auto h-[50px]">
-      <input
-        type="text"
-        placeholder="Search for products..."
-        className="w-full h-[35px] focus:outline-none bg-inherit text-[15px] pr-12 rounded-md"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onKeyDown={handleKeyDown}
-      />
+    <div className="w-full sm:w-[500px] md:w-[600px] mx-auto">
+      <motion.div 
+        className={`relative flex items-center bg-gray-50 rounded-xl border-2 transition-all duration-300 ${
+          isFocused 
+            ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' 
+            : 'border-gray-100 hover:border-gray-200'
+        }`}
+        whileTap={{ scale: 0.99 }}
+      >
+        {/* Search Icon */}
+        <div className="pl-4 pr-3">
+          <SearchIcon className={`w-5 h-5 transition-colors duration-300 ${
+            isFocused ? 'text-emerald-600' : 'text-gray-400'
+          }`} />
+        </div>
 
-      {/* Search button - hidden on mobile */}
-      <div className="hidden sm:block absolute top-1/2 -translate-y-1/2 right-2">
-        <Button
-          className="!w-[36px] !min-w-[36px] h-[36px] !rounded-full !text-black !p-0"
-          onClick={handleSearch}
-        >
-          <CiSearch className="text-[22px]" />
-        </Button>
-      </div>
+        {/* Input */}
+        <input
+          type="text"
+          placeholder="Search for jewelry..."
+          className="flex-1 h-12 focus:outline-none bg-transparent text-[15px] text-gray-900 placeholder:text-gray-400 pr-2"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+        />
 
-      {/* Mobile search button - visible only on mobile */}
-      <div className="sm:hidden absolute top-1/2 -translate-y-1/2 right-2">
-        <Button
-          className="!w-[36px] !min-w-[36px] h-[36px] !rounded-full !text-black !p-0"
+        {/* Clear Button (shows when there's text) */}
+        {searchTerm && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={handleClear}
+            className="mr-2 w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors duration-200"
+            type="button"
+          >
+            <svg 
+              className="w-3 h-3 text-gray-600" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </motion.button>
+        )}
+
+        {/* Search Button */}
+        <button
           onClick={handleSearch}
+          className="mr-2 h-9 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg active:scale-95 hidden sm:flex"
         >
-          <CiSearch className="text-[22px]" />
-        </Button>
-      </div>
+          <span className="text-sm">Search</span>
+        </button>
+
+
+      </motion.div>
     </div>
   );
 };

@@ -1,11 +1,10 @@
 import React from "react";
 import { Button } from "@mui/material";
 import { Link } from "react-router-dom";
-import CollectionSlider from "../../components/CollectionSlider";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
 import ProductSlider from "../../components/ProductSlider";
 import Footer from "../../components/Footer";
+import { Sparkles, Award, Shield, Truck, Heart } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Home = () => {
   const categories = [
@@ -33,28 +32,76 @@ const Home = () => {
     setLatestCategory(categories[newValue]);
   };
 
-  return (
-      <main className="home-page pb-16 md:pb-0">
-        {/* Hero Section */}
-        <section className="relative w-full h-[80vh] max-h-[800px] overflow-hidden">
-          <div className="absolute inset-0">
-            <img
-              src="/hero-img1.jpg"
-              alt="Beautiful Jewelry Collection"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/30"></div>
-          </div>
+  const features = [
+    {
+      icon: <Sparkles className="w-8 h-8" />,
+      title: "Handcrafted Excellence",
+      description:
+        "Each piece is meticulously crafted by skilled artisans with attention to every detail",
+      color: "from-amber-400 to-amber-600",
+    },
+    {
+      icon: <Award className="w-8 h-8" />,
+      title: "Premium Quality",
+      description:
+        "We use only the finest materials to ensure lasting beauty and durability",
+      color: "from-emerald-400 to-emerald-600",
+    },
+    {
+      icon: <Shield className="w-8 h-8" />,
+      title: "Authentic & Genuine",
+      description:
+        "Every piece comes with a certificate of authenticity and quality guarantee",
+      color: "from-blue-400 to-blue-600",
+    },
+    {
+      icon: <Truck className="w-8 h-8" />,
+      title: "Free Local Delivery",
+      description:
+        "Enjoy free delivery to Summit, 4 Kilo, Megenagna, and Figa areas",
+      color: "from-purple-400 to-purple-600",
+    },
+  ];
 
-          <div className="container relative h-full flex items-center">
-            <div className="max-w-2xl text-white">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-                Discover Our Exquisite Collections
-              </h1>
-              <p className="text-lg md:text-xl mb-8">
-                Handcrafted jewelry that tells your unique story. Perfect pieces
-                for every occasion.
-              </p>
+  return (
+    <main className="home-page pb-16 md:pb-0">
+      {/* Hero Section */}
+      <section className="relative w-full h-[80vh] max-h-[800px] overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="/hero-img1.jpg"
+            alt="Beautiful Jewelry Collection"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
+        </div>
+
+        <div className="container relative h-full flex items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-2xl text-white"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="inline-block mb-4 px-4 py-2 bg-emerald-500/20 backdrop-blur-sm rounded-full border border-emerald-400/30"
+            >
+              <span className="text-emerald-300 text-sm font-medium">
+                ✨ Handcrafted with Love
+              </span>
+            </motion.div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+              Discover Our Exquisite Collections
+            </h1>
+            <p className="text-lg md:text-xl mb-8 text-gray-200">
+              Handcrafted jewelry that tells your unique story. Perfect pieces
+              for every occasion.
+            </p>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 component={Link}
                 to="/product"
@@ -66,133 +113,219 @@ const Home = () => {
                   px: 6,
                   py: 1.5,
                   fontSize: "1rem",
+                  borderRadius: "50px",
+                  boxShadow: "0 4px 20px rgba(5, 177, 113, 0.4)",
                 }}
               >
                 Shop Now
               </Button>
-            </div>
-          </div>
-        </section>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Featured Categories Section */}
-        <section className="py-16 container">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Featured Collections
-          </h2>
-          <CollectionSlider />
-        </section>
+      {/* Why Choose Us Section - Replaces Featured Categories */}
+      <section className="py-20 bg-gradient-to-b from-white to-emerald-50/30">
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
+              Why Choose Knotts Jewelry
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Experience the perfect blend of craftsmanship, quality, and care
+              in every piece we create
+            </p>
+          </motion.div>
 
-        {/* Best Sellers Section */}
-        <section id="best" className="py-12 bg-gray-50">
-          <div className="container">
-            <div className="flex items-center justify-between flex-col lg:flex-row mb-8">
-              <div className="leftSec w-full lg:w-[40%] mb-6 lg:mb-0">
-                <h2 className="text-2xl font-bold">Our Best Sellers</h2>
-                <p className="text-gray-600">
-                  Discover our most popular pieces loved by our customers.
-                </p>
-              </div>
-              <div className="rightSec w-full lg:w-[60%]">
-                <Tabs
-                  value={bestTab}
-                  onChange={handleBestChange}
-                  variant="scrollable"
-                  scrollButtons="auto"
-                  aria-label="Best seller categories"
-                  sx={{
-                    "& .MuiTabs-indicator": { backgroundColor: "#05B171" },
-                  }}
-                >
-                  {categories.map((cat, index) => (
-                    <Tab
-                      key={index}
-                      label={cat}
-                      sx={{ "&.Mui-selected": { color: "#05B171" } }}
-                    />
-                  ))}
-                </Tabs>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ y: -10 }}
+                className="relative group"
+              >
+                <div className="relative p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 h-full">
+                  {/* Icon with gradient background */}
+                  <div
+                    className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} mb-6 group-hover:scale-110 transition-transform duration-300`}
+                  >
+                    <div className="text-white">{feature.icon}</div>
+                  </div>
 
-            <ProductSlider
-              category={bestCategory}
-              sortBy="bestsellers"
-              items={5}
-            />
-          </div>
-        </section>
+                  <h3 className="text-xl font-bold mb-3 text-gray-900">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {feature.description}
+                  </p>
 
-        {/* Decorative Section Separator */}
-        <div className="w-full py-8 bg-gray-50 flex justify-center">
-          <div className="relative w-full max-w-2xl">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-gray-50 px-4 text-[#05B171]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-            </div>
+                  {/* Decorative corner accent */}
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-100/50 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* New Arrivals Section */}
-        <section id="latest" className="py-12 bg-gray-50">
-          <div className="container">
-            <div className="flex items-center justify-between flex-col lg:flex-row mb-8">
-              <div className="leftSec w-full lg:w-[40%] mb-6 lg:mb-0">
-                <h2 className="text-2xl font-bold">New Arrivals</h2>
-                <p className="text-gray-600">
-                  Elevate your style with our newest arrivals - each piece
-                  crafted to make a statement.
-                </p>
-              </div>
-              <div className="rightSec w-full lg:w-[60%]">
-                <Tabs
-                  value={latestTab}
-                  onChange={handleLatestChange}
-                  variant="scrollable"
-                  scrollButtons="auto"
-                  aria-label="New arrivals categories"
-                  sx={{
-                    "& .MuiTabs-indicator": { backgroundColor: "#05B171" },
-                  }}
-                >
-                  {categories.map((cat, index) => (
-                    <Tab
-                      key={index}
-                      label={cat}
-                      sx={{ "&.Mui-selected": { color: "#05B171" } }}
-                    />
-                  ))}
-                </Tabs>
-              </div>
+      {/* Best Sellers Section */}
+      <section
+        id="best"
+        className="py-20 bg-gradient-to-b from-white via-emerald-50/20 to-white"
+      >
+        <div className="container">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-4">
+              <Award className="w-4 h-4 text-emerald-600" />
+              <span className="text-emerald-700 text-sm font-semibold uppercase tracking-wide">
+                Customer Favorites
+              </span>
             </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              Our Best Sellers
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Discover the pieces our customers can't get enough of - timeless
+              designs that elevate every moment
+            </p>
+          </motion.div>
 
-            <ProductSlider
-              category={latestCategory}
-              sortBy="latest"
-              items={5}
-            />
+          {/* Category Tabs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex justify-center mb-12"
+          >
+            <div className="inline-flex flex-wrap justify-center gap-3 p-2 bg-white rounded-2xl shadow-lg border border-gray-100 w-full md:w-auto">
+              {categories.map((cat, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleBestChange(null, index)}
+                  className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                    bestTab === index
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                      : "bg-transparent text-gray-600 hover:bg-gray-50 hover:text-emerald-600"
+                  }`}
+                >
+                  {cat}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+          {/* Product Slider */}
+          <ProductSlider
+            category={bestCategory}
+            sortBy="bestsellers"
+            items={5}
+          />
+        </div>
+      </section>
+
+      {/* Decorative Section Separator */}
+      <div className="w-full py-16 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 flex justify-center">
+        <div className="relative w-full max-w-4xl">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t-2 border-dashed border-emerald-200"></div>
           </div>
-        </section>
+          <div className="relative flex justify-center">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              whileInView={{ scale: 1, rotate: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, type: "spring" }}
+              className="bg-white px-8 py-4 rounded-full shadow-xl border-2 border-emerald-100"
+            >
+              <Heart className="w-6 h-6 text-emerald-600 fill-emerald-600" />
+            </motion.div>
+          </div>
+        </div>
+      </div>
 
-        <hr />
+      {/* New Arrivals Section */}
+      <section
+        id="latest"
+        className="py-20 bg-gradient-to-b from-white via-purple-50/20 to-white"
+      >
+        <div className="container">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full mb-4">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <span className="text-purple-700 text-sm font-semibold uppercase tracking-wide">
+                Fresh & New
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              New Arrivals
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Be the first to discover our latest creations - designed to
+              inspire and captivate
+            </p>
+          </motion.div>
 
-        {/* Footer Section */}
-        <Footer />
-      </main>
+          {/* Category Tabs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex justify-center mb-12"
+          >
+            <div className="inline-flex flex-wrap justify-center gap-3 p-2 bg-white rounded-2xl shadow-lg border border-gray-100 w-full md:w-auto">
+              {categories.map((cat, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleLatestChange(null, index)}
+                  className={`px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 ${
+                    latestTab === index
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                      : "bg-transparent text-gray-600 hover:bg-gray-50 hover:text-emerald-600"
+                  }`}
+                >
+                  {cat}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Product Slider */}
+          <ProductSlider category={latestCategory} sortBy="latest" items={5} />
+        </div>
+      </section>
+
+      {/* Footer Section */}
+      <Footer />
+    </main>
   );
 };
 
