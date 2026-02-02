@@ -81,7 +81,7 @@ const Home = () => {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="max-w-2xl text-white"
+            className="max-w-2xl text-white mt-[-100px] md:mt-[-80px]"
           >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
