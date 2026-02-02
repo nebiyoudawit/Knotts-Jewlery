@@ -323,10 +323,10 @@ const ProductPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-xl border border-white/20"
+              className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl border border-white/20"
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
+              {/* Header - Stacked on mobile */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-4">
                 <div className="flex-1">
                   <motion.span
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -335,17 +335,17 @@ const ProductPage = () => {
                   >
                     {product.category}
                   </motion.span>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
                     {product.name}
                   </h1>
-                  {/* Rating */}
-                  <div className="flex items-center gap-2 mb-4">
+                  {/* Rating - Responsive */}
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
                     <div className="flex">
                       {[...Array(5)].map((_, i) =>
                         i < product.rating ? (
-                          <FaStar key={i} className="h-4 w-4 text-yellow-400" />
+                          <FaStar key={i} className="h-4 w-4 sm:h-4 sm:w-4 text-yellow-400" />
                         ) : (
-                          <FaRegStar key={i} className="h-4 w-4 text-gray-300" />
+                          <FaRegStar key={i} className="h-4 w-4 sm:h-4 sm:w-4 text-gray-300" />
                         )
                       )}
                     </div>
@@ -361,29 +361,30 @@ const ProductPage = () => {
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={handleToggleWishlist}
-                  className={`p-3 rounded-full transition-all shadow-sm ${
+                  className={`p-3 rounded-full transition-all shadow-sm self-start sm:self-auto ${
                     isWishlisted
                       ? "bg-gradient-to-r from-red-50 to-pink-50 text-red-500 shadow-red-200/50"
                       : "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-400 hover:from-red-50 hover:to-pink-50 hover:text-red-500"
                   }`}
+                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 >
                   {isWishlisted ? (
-                    <FaHeart className="h-5 w-5" />
+                    <FaHeart className="h-5 w-5 sm:h-5 sm:w-5" />
                   ) : (
-                    <FaRegHeart className="h-5 w-5" />
+                    <FaRegHeart className="h-5 w-5 sm:h-5 sm:w-5" />
                   )}
                 </motion.button>
               </div>
 
-              {/* Price */}
+              {/* Price - Responsive */}
               <div className="mb-6 pb-6 border-b border-gray-200/50">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-gray-900">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {product.price.toFixed(2)}
                   </span>
-                  <span className="text-lg text-gray-600">birr</span>
+                  <span className="text-base sm:text-lg text-gray-600">birr</span>
                   {product.originalPrice && (
-                    <span className="text-xl text-gray-400 line-through ml-2">
+                    <span className="text-lg sm:text-xl text-gray-400 line-through ml-2">
                       {product.originalPrice.toFixed(2)}
                     </span>
                   )}
@@ -399,13 +400,13 @@ const ProductPage = () => {
                 </div>
               </div>
 
-              {/* Tabs */}
+              {/* Tabs - Responsive */}
               <div className="mb-6">
-                <div className="flex border-b border-gray-200/50 mb-4">
+                <div className="flex overflow-x-auto border-b border-gray-200/50 mb-4 scrollbar-hide">
                   <motion.button
                     whileHover={{ y: -2 }}
                     onClick={() => setActiveTab("description")}
-                    className={`px-4 py-2 font-medium text-sm transition-all ${
+                    className={`px-3 sm:px-4 py-2 font-medium text-sm transition-all whitespace-nowrap ${
                       activeTab === "description"
                         ? "text-[#05B171] border-b-2 border-[#05B171]"
                         : "text-gray-600 hover:text-gray-900"
@@ -416,7 +417,7 @@ const ProductPage = () => {
                   <motion.button
                     whileHover={{ y: -2 }}
                     onClick={() => setActiveTab("details")}
-                    className={`px-4 py-2 font-medium text-sm transition-all ${
+                    className={`px-3 sm:px-4 py-2 font-medium text-sm transition-all whitespace-nowrap ${
                       activeTab === "details"
                         ? "text-[#05B171] border-b-2 border-[#05B171]"
                         : "text-gray-600 hover:text-gray-900"
@@ -427,7 +428,7 @@ const ProductPage = () => {
                   <motion.button
                     whileHover={{ y: -2 }}
                     onClick={() => setActiveTab("shipping")}
-                    className={`px-4 py-2 font-medium text-sm transition-all ${
+                    className={`px-3 sm:px-4 py-2 font-medium text-sm transition-all whitespace-nowrap ${
                       activeTab === "shipping"
                         ? "text-[#05B171] border-b-2 border-[#05B171]"
                         : "text-gray-600 hover:text-gray-900"
@@ -485,23 +486,23 @@ const ProductPage = () => {
                       className="space-y-3 text-sm"
                     >
                       <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-emerald-50 to-cyan-50 rounded-lg border border-emerald-100/50">
-                        <FaTruck className="h-5 w-5 text-[#05B171] mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">Free Delivery</p>
-                          <p className="text-gray-600 text-xs">Available at Summit, 4 Kilo, Megenagna, Figa, Gerji</p>
+                        <FaTruck className="h-5 w-5 text-[#05B171] mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">Free Delivery</p>
+                          <p className="text-gray-600 text-xs break-words">Available at Summit, 4 Kilo, Megenagna, Figa, Gerji</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100/50">
-                        <FaUndo className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">Easy Returns</p>
+                        <FaUndo className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">Easy Returns</p>
                           <p className="text-gray-600 text-xs">30-day return policy on all items</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100/50">
-                        <FaShieldAlt className="h-5 w-5 text-purple-600 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900">Authenticity Guaranteed</p>
+                        <FaShieldAlt className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate">Authenticity Guaranteed</p>
                           <p className="text-gray-600 text-xs">Certified handcrafted jewelry</p>
                         </div>
                       </div>
@@ -510,39 +511,45 @@ const ProductPage = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Quantity & Add to Cart */}
+              {/* Quantity & Add to Cart - Responsive Fixed Section */}
               <div className="pt-6 border-t border-gray-200/50">
-                <div className="flex flex-wrap gap-3">
-                  {/* Quantity */}
-                  <div className="flex items-center bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200/50 shadow-sm">
-                    <button
-                      onClick={() => handleQuantityChange(-1)}
-                      disabled={quantity <= 1}
-                      className="px-4 py-2.5 hover:bg-gray-200/50 rounded-l-lg transition-colors disabled:opacity-30"
-                    >
-                      <span className="text-lg font-medium">−</span>
-                    </button>
-                    <span className="px-6 py-2.5 font-semibold text-gray-900 min-w-[60px] text-center">
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={() => handleQuantityChange(1)}
-                      disabled={quantity >= 10}
-                      className="px-4 py-2.5 hover:bg-gray-200/50 rounded-r-lg transition-colors disabled:opacity-30"
-                    >
-                      <span className="text-lg font-medium">+</span>
-                    </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Quantity Selector */}
+                  <div className="w-full sm:w-auto">
+                    <div className="flex items-center bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200/50 shadow-sm max-w-[160px] mx-auto sm:mx-0">
+                      <button
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        className="px-4 py-3 sm:py-2.5 hover:bg-gray-200/50 rounded-l-lg transition-colors disabled:opacity-30 flex-1 min-w-[44px]"
+                        aria-label="Decrease quantity"
+                      >
+                        <span className="text-lg font-medium">−</span>
+                      </button>
+                      <span className="px-4 sm:px-6 py-2.5 sm:py-2.5 font-semibold text-gray-900 min-w-[60px] text-center flex-1">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={quantity >= 10}
+                        className="px-4 py-3 sm:py-2.5 hover:bg-gray-200/50 rounded-r-lg transition-colors disabled:opacity-30 flex-1 min-w-[44px]"
+                        aria-label="Increase quantity"
+                      >
+                        <span className="text-lg font-medium">+</span>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Add to Cart */}
+                  {/* Add to Cart Button - Now takes full width on mobile */}
                   <motion.button
                     whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(5, 177, 113, 0.3)" }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleAddToCart}
-                    className="flex-1 bg-gradient-to-r from-[#05B171] to-emerald-600 text-white py-2.5 px-6 rounded-lg hover:from-[#048a5b] hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/40 flex items-center justify-center gap-2 font-semibold"
+                    className="w-full sm:flex-1 bg-gradient-to-r from-[#05B171] to-emerald-600 text-white py-3 sm:py-2.5 px-4 sm:px-6 rounded-lg hover:from-[#048a5b] hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/40 flex items-center justify-center gap-2 font-semibold text-sm sm:text-base"
                   >
-                    <FaShoppingBag className="h-4 w-4" />
-                    Add to Cart · {(product.price * quantity).toFixed(2)} birr
+                    <FaShoppingBag className="h-4 w-4 sm:h-4 sm:w-4" />
+                    <span className="truncate">
+                      Add to Cart · {(product.price * quantity).toFixed(2)} birr
+                    </span>
                   </motion.button>
                 </div>
               </div>
@@ -557,24 +564,24 @@ const ProductPage = () => {
           transition={{ delay: 0.3 }}
           className="mb-12"
         >
-          <div className="bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Customer Reviews</h2>
-                <p className="text-gray-600">See what our customers are saying</p>
+          <div className="bg-gradient-to-br from-white/90 to-emerald-50/50 backdrop-blur-sm rounded-2xl p-4 sm:p-8 shadow-xl border border-white/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+              <div className="flex-1">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Customer Reviews</h2>
+                <p className="text-gray-600 text-sm sm:text-base">See what our customers are saying</p>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex">
                     {[...Array(5)].map((_, i) =>
                       i < product.rating ? (
-                        <FaStar key={i} className="h-5 w-5 text-yellow-400" />
+                        <FaStar key={i} className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" />
                       ) : (
-                        <FaRegStar key={i} className="h-5 w-5 text-gray-300" />
+                        <FaRegStar key={i} className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
                       )
                     )}
                   </div>
-                  <span className="text-2xl font-bold text-gray-900">
+                  <span className="text-xl sm:text-2xl font-bold text-gray-900">
                     {product.rating.toFixed(1)}
                   </span>
                 </div>
@@ -584,7 +591,7 @@ const ProductPage = () => {
 
             {/* Write Review */}
             {currentUser ? (
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-6 shadow-sm border border-white/50">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 mb-6 shadow-sm border border-white/50">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <FaUser className="h-4 w-4 text-[#05B171]" />
                   Write Your Review
@@ -602,11 +609,12 @@ const ProductPage = () => {
                           whileHover={{ scale: 1.2 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleRatingChange(star)}
+                          className="p-1"
                         >
                           {star <= newReview.rating ? (
-                            <FaStar className="h-7 w-7 text-yellow-400" />
+                            <FaStar className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-400" />
                           ) : (
-                            <FaRegStar className="h-7 w-7 text-gray-300" />
+                            <FaRegStar className="h-6 w-6 sm:h-7 sm:w-7 text-gray-300" />
                           )}
                         </motion.button>
                       ))}
@@ -618,8 +626,8 @@ const ProductPage = () => {
                     </label>
                     <textarea
                       id="review"
-                      rows="4"
-                      className="w-full px-4 py-3 bg-white/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05B171] focus:border-transparent resize-none transition-all"
+                      rows="3"
+                      className="w-full px-4 py-3 bg-white/50 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05B171] focus:border-transparent resize-none transition-all text-sm sm:text-base"
                       value={newReview.comment}
                       onChange={handleReviewChange}
                       placeholder="Share your experience with this product..."
@@ -629,7 +637,7 @@ const ProductPage = () => {
                     whileHover={{ scale: 1.02, boxShadow: "0 10px 20px rgba(5, 177, 113, 0.2)" }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    className="bg-gradient-to-r from-[#05B171] to-emerald-600 text-white px-6 py-2.5 rounded-lg hover:from-[#048a5b] hover:to-emerald-700 transition-all shadow-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto bg-gradient-to-r from-[#05B171] to-emerald-600 text-white px-6 py-3 sm:py-2.5 rounded-lg hover:from-[#048a5b] hover:to-emerald-700 transition-all shadow-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                     disabled={
                       !newReview.rating ||
                       !newReview.comment.trim() ||
@@ -641,11 +649,11 @@ const ProductPage = () => {
                 </form>
               </div>
             ) : (
-              <div className="bg-gradient-to-r from-emerald-50/50 to-cyan-50/50 rounded-xl p-6 text-center mb-6 shadow-sm border border-white/50">
-                <p className="text-gray-700 mb-3">Sign in to leave a review</p>
+              <div className="bg-gradient-to-r from-emerald-50/50 to-cyan-50/50 rounded-xl p-4 sm:p-6 text-center mb-6 shadow-sm border border-white/50">
+                <p className="text-gray-700 mb-3 text-sm sm:text-base">Sign in to leave a review</p>
                 <Link
                   to="/login"
-                  className="inline-block bg-gradient-to-r from-[#05B171] to-emerald-600 text-white px-6 py-2.5 rounded-lg hover:from-[#048a5b] hover:to-emerald-700 transition-all shadow-md font-semibold"
+                  className="inline-block w-full sm:w-auto bg-gradient-to-r from-[#05B171] to-emerald-600 text-white px-6 py-3 sm:py-2.5 rounded-lg hover:from-[#048a5b] hover:to-emerald-700 transition-all shadow-md font-semibold text-sm sm:text-base"
                 >
                   Sign In
                 </Link>
@@ -661,38 +669,38 @@ const ProductPage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm border border-white/50"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-sm border border-white/50"
                   >
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 gap-2">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#05B171] to-emerald-600 flex items-center justify-center text-white font-semibold shadow-md">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-[#05B171] to-emerald-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base shadow-md flex-shrink-0">
                           {(review.user?.name || review.name || "A")[0].toUpperCase()}
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                             {review.user?.name || review.name || "Anonymous"}
                           </h4>
                           <div className="flex gap-0.5 mt-1">
                             {[...Array(5)].map((_, i) =>
                               i < review.rating ? (
-                                <FaStar key={i} className="h-3.5 w-3.5 text-yellow-400" />
+                                <FaStar key={i} className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-400" />
                               ) : (
-                                <FaRegStar key={i} className="h-3.5 w-3.5 text-gray-300" />
+                                <FaRegStar key={i} className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-300" />
                               )
                             )}
                           </div>
                         </div>
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 sm:self-start">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed mt-2 sm:mt-0">{review.comment}</p>
                   </motion.div>
                 ))
               ) : (
-                <div className="bg-gradient-to-r from-gray-50/50 to-gray-100/50 rounded-xl p-12 text-center shadow-sm border border-white/50">
-                  <p className="text-gray-500">No reviews yet. Be the first to review!</p>
+                <div className="bg-gradient-to-r from-gray-50/50 to-gray-100/50 rounded-xl p-8 sm:p-12 text-center shadow-sm border border-white/50">
+                  <p className="text-gray-500 text-sm sm:text-base">No reviews yet. Be the first to review!</p>
                 </div>
               )}
             </div>
@@ -707,21 +715,21 @@ const ProductPage = () => {
             transition={{ delay: 0.4 }}
             className="relative"
           >
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">You May Also Like</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+              <div className="flex-1">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">You May Also Like</h2>
                 <p className="text-gray-600 text-sm">Curated selections just for you</p>
               </div>
               <Link 
                 to="/product" 
-                className="text-[#05B171] hover:text-[#048a5b] font-medium text-sm flex items-center gap-2 group"
+                className="text-[#05B171] hover:text-[#048a5b] font-medium text-sm flex items-center gap-2 group self-start sm:self-auto"
               >
                 View All
                 <FaChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
             
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-15">
               {relatedProducts.map((relatedProduct, index) => (
                 <motion.div
                   key={relatedProduct._id}
@@ -730,7 +738,7 @@ const ProductPage = () => {
                   transition={{ delay: index * 0.1 }}
                   className="group"
                 >
-                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:border-emerald-200/50">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-white/20 hover:border-emerald-200/50">
                     <ProductItem product={relatedProduct} />
                   </div>
                 </motion.div>
