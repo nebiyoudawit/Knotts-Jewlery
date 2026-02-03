@@ -113,7 +113,7 @@ const WishlistPage = () => {
             className="flex flex-col items-center justify-center py-20 sm:py-32"
           >
             {/* Animated Empty State */}
-            <div className="relative mb-8">
+            <div className="relative mb-8 lg:mt-[-100px]">
               {/* Pulsing rings */}
               <motion.div
                 animate={{ 
