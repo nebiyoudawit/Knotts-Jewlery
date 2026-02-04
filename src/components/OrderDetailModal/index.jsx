@@ -197,7 +197,7 @@ const OrderDetailModal = ({ order, isOpen, onClose, onCancelOrder }) => {
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-xl p-4 md:col-span-1 sm:col-span-2 md:col-span-1">
+              <div className="bg-gray-50 rounded-xl p-4 md:col-span-1 sm:col-span-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0">
                     <FiCreditCard className="text-white h-5 w-5" />
