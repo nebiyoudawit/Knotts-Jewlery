@@ -526,7 +526,7 @@ const CheckoutPage = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="lg:col-span-1"
+              className="lg:col-span-1 mb-15 lg:mb-0"
             >
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden sticky top-24">
                 <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
