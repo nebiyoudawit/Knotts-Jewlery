@@ -29,6 +29,7 @@
     "react-router-dom": "^7.4.1",
     "react-spinners": "^0.17.0",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.7.0",
     "request": "^2.88.2",
     "styled-components": "^6.1.16",
     "swiper": "^11.2.6"

@@ -163,7 +163,7 @@ const AdminLayout = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative z-[1]">
         {/* Top Header Bar */}
-        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm pb-[8px] pt-[6px]">
           <div className="flex items-center justify-between p-4 lg:px-8">
             <div className="flex items-center gap-4">
               <button
@@ -192,7 +192,7 @@ const AdminLayout = () => {
 
         {/* Page Content */}
         <div className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-8">
+          <div className="p-2 lg:p-4">
             <Outlet />
           </div>
         </div>
