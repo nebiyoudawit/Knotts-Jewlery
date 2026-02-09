@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiUser, FiMail, FiLock, FiPhone, FiMapPin } from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiArrowLeft } from "react-icons/fi";
 import Lottie from "lottie-react";
 import successAnimation from "../../success-animation.json";
-import { useShop } from "../../context/ShopContext"; // Adjust path if needed
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import L from "leaflet";
+import { useShop } from "../../context/ShopContext";
+import { Sparkles, MapPin, Check } from "lucide-react";
 
 const Register = () => {
   const { register } = useShop();
@@ -20,15 +19,8 @@ const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [userLocation, setUserLocation] = useState(null); // For map display
-  const [pulseLocation, setPulseLocation] = useState(true);
   const [locationLoading, setLocationLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setPulseLocation(false), 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,33 +32,35 @@ const Register = () => {
 
   const getCurrentLocation = () => {
     setError("");
-    setLocationLoading(true); // Start loading
+    setLocationLoading(true);
+    
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
+      setLocationLoading(false);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation([latitude, longitude]);
-
+        
         try {
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
           );
           const data = await response.json();
           const address = data.display_name || `${latitude}, ${longitude}`;
-          setLocationLoading(false); // Stop loading
+          setLocationLoading(false);
           setFormData((prev) => ({ ...prev, address }));
         } catch (err) {
           setError("Failed to get address from location.");
+          setLocationLoading(false);
         }
       },
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
           setError(
-            "Location access denied. Please enable location permissions in your browser settings and try again."
+            "Location access denied. Please enable location permissions."
           );
         } else {
           setError("Unable to retrieve your location.");
@@ -84,20 +78,18 @@ const Register = () => {
     const success = await register(formData);
     if (success) {
       setShowSuccess(true);
-
       setTimeout(() => {
         setShowSuccess(false);
         navigate("/");
       }, 2000);
     } else {
-      setError("Registration failed. Please check your inputs and try again.");
+      setError("Registration failed. Please check your inputs.");
     }
-
     setLoading(false);
   };
 
   const SuccessModal = () => (
-    <div className="fixed inset-0 z-150 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="p-6 bg-white rounded-xl shadow-2xl border border-gray-100 animate-pop-in">
         <Lottie
           animationData={successAnimation}
@@ -109,242 +101,262 @@ const Register = () => {
     </div>
   );
 
-  // Leaflet marker icon setup
-  const markerIcon = L.icon({
-    iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-  });
-
   return (
-    <div className="min-h-[100%] bg-gray-50 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex bg-white">
+      {/* Success Modal */}
       {showSuccess && <SuccessModal />}
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-[-10px] text-center text-3xl font-extrabold text-gray-900">
-          Create your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-medium text-[#05B171] hover:text-[#048a5b]"
-          >
-            Sign in
-          </Link>
-        </p>
+      {/* Left side - Brand & Features */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-emerald-50 via-white to-purple-50">
+        {/* Home button */}
+        <Link to="/" className="absolute top-8 left-8 z-10">
+          <div className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
+              <FiArrowLeft className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">Back Home</span>
+          </div>
+        </Link>
+
+        <div className="relative flex-1 flex flex-col justify-center p-16">
+          <div className="max-w-md">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-emerald-100 mb-8">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span className="text-emerald-700 font-medium">Join Our Community</span>
+            </div>
+            
+            <h1 className="text-5xl font-bold text-gray-900 mb-6">
+              Create Your<br />Knotts Account
+            </h1>
+            
+            <p className="text-gray-600 text-lg mb-10 leading-relaxed">
+              Join our community of jewelry lovers and unlock exclusive benefits for your handcrafted collections.
+            </p>
+
+            {/* Benefits */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Order Tracking</h3>
+                  <p className="text-gray-600 text-sm">Follow your jewelry from workshop to delivery</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Wishlist Feature</h3>
+                  <p className="text-gray-600 text-sm">Save your favorite pieces for later</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Exclusive Access</h3>
+                  <p className="text-gray-600 text-sm">Early access to new collections and sales</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-6 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-center">
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name Field */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Full Name
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiUser className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
-                />
+      {/* Right side - Registration Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          {/* Mobile header */}
+          <div className="lg:hidden mb-8">
+            <Link to="/" className="inline-flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+                <FiArrowLeft className="w-5 h-5 text-white" />
               </div>
-            </div>
+              <span className="text-xl font-bold text-gray-900">Back Home</span>
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Create Account
+            </h1>
+            <p className="text-gray-600">
+              Join Knotts Jewelry and start your collection
+            </p>
+          </div>
 
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiMail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
-                />
+          {/* Desktop header */}
+          <div className="hidden lg:block mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Register Account
+            </h1>
+            <p className="text-gray-600">
+              Fill in your details to create your account
+            </p>
+          </div>
+
+          {/* Form Card */}
+          <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-center border border-red-100">
+                {error}
               </div>
-            </div>
+            )}
 
-            {/* Address Field with location button */}
-            <div>
-              <label
-                htmlFor="address"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Address
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiMapPin className="h-5 w-5 text-gray-400" />
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <FiUser className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition"
+                    placeholder="John Doe"
+                  />
                 </div>
-                <input
-                  id="address"
-                  name="address"
-                  type="text"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                  className="py-2 pl-10 pr-12 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
-                />
-                {/* Location Button */}
-                <button
-                  type="button"
-                  onClick={getCurrentLocation}
-                  disabled={locationLoading}
-                  className={`absolute inset-y-0 right-0 px-3 flex items-center ${
-                    locationLoading
-                      ? "text-gray-400"
-                      : "text-[#05B171] hover:text-[#048a5b]"
-                  } ${pulseLocation ? "animate-pulse" : ""}`}
-                  title="Use my current location"
-                >
-                  {locationLoading ? (
-                    <svg
-                      className="animate-spin h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    <FiMapPin className="h-5 w-5" />
-                  )}
-                </button>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Tap the icon to get your current location.
-              </p>
-            </div>
 
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiLock className="h-5 w-5 text-gray-400" />
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <FiMail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition"
+                    placeholder="you@example.com"
+                  />
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  minLength="6"
-                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
-                />
               </div>
-            </div>
 
-            {/* Phone Field */}
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Phone Number
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiPhone className="h-5 w-5 text-gray-400" />
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <FiPhone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition"
+                    placeholder="+1 (555) 123-4567"
+                  />
                 </div>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="py-2 pl-10 block w-full border border-gray-300 rounded-md focus:outline-none focus:ring-[#05B171] focus:border-[#05B171]"
-                />
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <div>
+              {/* Address with Location */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Delivery Address
+                  </label>
+                  <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    disabled={locationLoading}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    {locationLoading ? "Locating..." : "Use my location"}
+                  </button>
+                </div>
+                <div className="relative">
+                  <FiMapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    name="address"
+                    type="text"
+                    value={formData.address}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition"
+                    placeholder="Your delivery address"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength="6"
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none transition"
+                    placeholder="••••••••"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Must be at least 6 characters
+                </p>
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#05B171] hover:bg-[#048a5b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#05B171] transition-colors ${
-                  loading ? "opacity-70 cursor-not-allowed" : ""
+                className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 mt-6 ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-emerald-600 hover:bg-emerald-700 hover:shadow-lg active:scale-[0.98]"
                 }`}
               >
                 {loading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Processing...
-                  </>
+                    Creating Account...
+                  </span>
                 ) : (
-                  "Sign Up"
+                  <span className="flex items-center justify-center gap-2">
+                    Create Account
+                    <Sparkles className="w-5 h-5" />
+                  </span>
                 )}
               </button>
+            </form>
+
+            {/* Login link */}
+            <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+              <p className="text-gray-600">
+                Already have an account?{" "}
+                <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                  Sign in here
+                </Link>
+              </p>
             </div>
-          </form>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-8 text-center text-sm text-gray-500">
+            <p>By creating an account, you agree to our Terms and Privacy Policy</p>
+          </div>
         </div>
       </div>
     </div>
