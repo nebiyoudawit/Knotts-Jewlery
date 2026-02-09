@@ -26,10 +26,12 @@ import ContactUs from './pages/ContactUs/index.jsx'
 import AboutUs from './pages/AboutUs/index.jsx'
 import { useEffect } from 'react';
 
-// 👇 Move Routes into a child component so we can use `useLocation`
 const AppRoutes = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  const hideHeader = isAdmin || 
+                    location.pathname === '/login' || 
+                    location.pathname === '/register';
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,7 +39,7 @@ const AppRoutes = () => {
 
   return (
     <>
-      {!isAdmin && <Header />}
+      {!hideHeader && <Header />}
       <ScrollToTop />
       <ToastContainer
         position="bottom-right"
