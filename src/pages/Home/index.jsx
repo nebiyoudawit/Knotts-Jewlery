@@ -83,14 +83,14 @@ const Home = () => {
             transition={{ duration: 0.8 }}
             className="max-w-2xl text-white mt-[-100px] md:mt-[-80px]"
           >
-            <motion.div
+             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
               className="inline-block mb-4 px-4 py-2 bg-emerald-500/20 backdrop-blur-sm rounded-full border border-emerald-400/30"
             >
               <span className="text-emerald-300 text-sm font-medium">
-                ✨ Handcrafted with Love
+                Handcrafted with Love
               </span>
             </motion.div>
 
