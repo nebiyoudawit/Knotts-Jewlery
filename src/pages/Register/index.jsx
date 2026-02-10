@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiArrowRight, FiEye, FiEyeOff, FiChevronLeft, FiStar, FiTruck } from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiArrowRight, FiEye, FiEyeOff, FiChevronLeft, FiStar, FiTruck, FiHome } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import successAnimation from "../../success-animation.json";
@@ -116,11 +116,13 @@ const Register = () => {
         {/* Mobile Header - Clean Design with glass morphism */}
         <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-300/50 shadow-sm">
           <div className="px-5 py-4 flex items-center justify-between">
+            {/* Back Button */}
             <button
               onClick={() => navigate(-1)}
-              className="p-2 -ml-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-transform"
+              className="p-2 -ml-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-transform flex items-center gap-2"
             >
               <FiChevronLeft className="w-6 h-6" />
+              <span className="text-sm font-medium">Back</span>
             </button>
 
             <div className="flex items-center gap-3">
@@ -128,7 +130,14 @@ const Register = () => {
               <span className="text-lg font-bold text-gray-900">Knotts Jewelry</span>
             </div>
 
-            <div className="w-10"></div>
+            {/* Home Button */}
+            <button
+              onClick={() => navigate("/")}
+              className="p-2 -mr-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-transform flex items-center gap-2"
+            >
+              <FiHome className="w-6 h-6" />
+              <span className="text-sm font-medium hidden sm:inline">Home</span>
+            </button>
           </div>
         </div>
 
@@ -557,19 +566,33 @@ const Register = () => {
           </div>
 
           <div className="relative z-10 flex flex-col justify-center p-8 text-white w-full h-full">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="absolute top-8 left-8"
-            >
+            {/* Desktop Header with Back and Home buttons */}
+            <div className="absolute top-8 left-8 right-8 flex items-center justify-between">
               <Link to="/" className="flex items-center gap-3 group">
                 <img src="/icons1.png" alt="Knotts Jewelry Logo" className="h-12 transition-transform group-hover:scale-105" />
                 <div>
                   <h2 className="text-xl font-bold tracking-tight text-white">Knotts Jewelry</h2>
                 </div>
               </Link>
-            </motion.div>
+              
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                >
+                  <FiChevronLeft className="w-5 h-5" />
+                  <span>Back</span>
+                </button>
+                
+                <button
+                  onClick={() => navigate("/")}
+                  className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                >
+                  <FiHome className="w-5 h-5" />
+                  <span>Home</span>
+                </button>
+              </div>
+            </div>
 
             <div className="max-w-xl px-4">
               <motion.div
