@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiArrowRight, FiEye, FiEyeOff, FiChevronLeft, FiStar, FiShield, FiTruck, FiGift } from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiArrowRight, FiEye, FiEyeOff, FiChevronLeft, FiStar, FiTruck } from "react-icons/fi";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import successAnimation from "../../success-animation.json";
@@ -111,26 +111,316 @@ const Register = () => {
     <main className="min-h-screen bg-white overflow-hidden">
       {showSuccess && <SuccessModal />}
 
-      {/* MOBILE HEADER - Clean Design */}
-      <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
-        <div className="px-5 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/")}
-            className="p-2 -ml-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-transform"
-          >
-            <FiChevronLeft className="w-6 h-6" />
-          </button>
+      {/* MOBILE VERSION - Updated to match login page styling */}
+      <div className="lg:hidden min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Mobile Header - Clean Design with glass morphism */}
+        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-300/50 shadow-sm">
+          <div className="px-5 py-4 flex items-center justify-between">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 -ml-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-transform"
+            >
+              <FiChevronLeft className="w-6 h-6" />
+            </button>
 
-          <div className="flex items-center gap-3">
-            <img src="/icons1.png" alt="Knotts Jewelry Logo" className="h-10 w-10" />
-            <span className="text-lg font-bold text-gray-900">Knotts Jewelry</span>
+            <div className="flex items-center gap-3">
+              <img src="/icons1.png" alt="Knotts Jewelry Logo" className="h-10 w-10" />
+              <span className="text-lg font-bold text-gray-900">Knotts Jewelry</span>
+            </div>
+
+            <div className="w-10"></div>
           </div>
+        </div>
 
-          <div className="w-10"></div>
+        {/* Modern Background with Depth for Mobile */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Gradient Mesh Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
+          
+          {/* Subtle Grid Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `linear-gradient(to right, #05B171 1px, transparent 1px),
+                                linear-gradient(to bottom, #05B171 1px, transparent 1px)`,
+              backgroundSize: '40px 40px'
+            }}></div>
+          </div>
+          
+          {/* Floating Elements with Depth */}
+          <motion.div
+            animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-emerald-100/30 to-teal-100/20 rounded-full blur-3xl"
+          ></motion.div>
+          
+          <motion.div
+            animate={{ y: [0, 20, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            className="absolute bottom-20 left-20 w-72 h-72 bg-gradient-to-tr from-green-100/20 to-emerald-100/10 rounded-full blur-3xl"
+          ></motion.div>
+        </div>
+
+        {/* Mobile Welcome Section */}
+        <div className="px-6 pt-8 pb-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="text-center"
+          >
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Join Knotts Jewelry
+            </h1>
+            <p className="text-gray-600 text-sm leading-relaxed max-w-xs mx-auto">
+              Create your account to discover exquisite handcrafted pieces for every occasion
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Mobile Form Container with Glass Morphism */}
+        <div className="flex-1 px-5 pb-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6"
+          >
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mb-5 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Name Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
+                    <FiUser className="text-base" />
+                  </div>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    className="w-full pl-10 pr-3 py-3.5 bg-white/80 border border-gray-300/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base backdrop-blur-sm"
+                    placeholder="Nebiyou Dawit"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Email Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
+                    <FiMail className="text-base" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    className="w-full pl-10 pr-3 py-3.5 bg-white/80 border border-gray-300/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base backdrop-blur-sm"
+                    placeholder="aberakeb21@gmail.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="password">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
+                    <FiLock className="text-base" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    className="w-full pl-10 pr-10 py-3.5 bg-white/80 border border-gray-300/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base backdrop-blur-sm"
+                    placeholder="Minimum 6 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 active:scale-95"
+                  >
+                    {showPassword ? <FiEyeOff className="text-base" /> : <FiEye className="text-base" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Phone Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="phone">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
+                    <FiPhone className="text-base" />
+                  </div>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    className="w-full pl-10 pr-3 py-3.5 bg-white/80 border border-gray-300/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base backdrop-blur-sm"
+                    placeholder="0979968808"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Address Field */}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="address">
+                    Delivery Address
+                  </label>
+                  <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    disabled={locationLoading}
+                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
+                  >
+                    {locationLoading ? (
+                      <>
+                        <svg
+                          className="animate-spin h-3.5 w-3.5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        <span>Locating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiMapPin className="h-4 w-4" />
+                        <span>Use Current Location</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="relative">
+                  <div className="absolute left-3 top-3 z-500 text-gray-400">
+                    <FiMapPin className="text-base" />
+                  </div>
+                  <textarea
+                    id="address"
+                    name="address"
+                    rows="3"
+                    className="w-full pl-10 pr-3 py-3.5 bg-white/80 border border-gray-300/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base backdrop-blur-sm resize-none"
+                    placeholder="akaki kality addis ababa ethiopia"
+                    value={formData.address}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl font-semibold text-base shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-200 active:shadow-lg ${loading ? "opacity-90 cursor-not-allowed" : ""
+                    }`}
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Creating Account...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3">
+                      <span>Create Account</span>
+                      <FiArrowRight className="w-5 h-5" />
+                    </div>
+                  )}
+                </motion.button>
+              </div>
+            </form>
+
+            {/* Divider */}
+            <div className="relative my-7">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300/50"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-4 bg-white/80 backdrop-blur-sm text-gray-500 text-sm font-medium">Already have an account?</span>
+              </div>
+            </div>
+
+            {/* Login Link */}
+            <Link
+              to="/login"
+              className="block w-full py-3.5 border-2 border-gray-300/50 text-gray-800 rounded-xl font-semibold text-center text-base hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-200 active:scale-[0.98] backdrop-blur-sm"
+            >
+              Sign In Instead
+            </Link>
+          </motion.div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:h-screen">
+      {/* DESKTOP VERSION */}
+      <div className="hidden lg:flex flex-col lg:flex-row lg:h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* LEFT SIDE - Desktop only with Floating Jewelry */}
         <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-[#05B171] via-emerald-600 to-teal-700 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
@@ -326,273 +616,53 @@ const Register = () => {
 
         {/* RIGHT SIDE - Form */}
         <div className="w-full lg:w-[45%]">
-          {/* Mobile Welcome Section */}
-          <div className="lg:hidden px-6 pt-8 pb-6 bg-gradient-to-b from-white to-emerald-50/50">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="text-center"
-            >
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Join Knotts Jewelry
-              </h1>
-              <p className="text-gray-600 text-sm leading-relaxed max-w-xs mx-auto">
-                Create your account to discover exquisite handcrafted pieces for every occasion
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Scrollable Form Container - Mobile */}
-          <div className="lg:hidden px-5 pb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
-            >
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="mb-5 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm"
-                >
-                  {error}
-                </motion.div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Name Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2" htmlFor="name">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <FiUser className="w-5 h-5" />
-                    </div>
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base"
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Email Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2" htmlFor="email">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <FiMail className="w-5 h-5" />
-                    </div>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base"
-                      placeholder="you@example.com"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Password Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2" htmlFor="password">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <FiLock className="w-5 h-5" />
-                    </div>
-                    <input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base"
-                      placeholder="Minimum 6 characters"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 active:scale-95"
-                    >
-                      {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Phone Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2" htmlFor="phone">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <FiPhone className="w-5 h-5" />
-                    </div>
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base"
-                      placeholder="+1 (555) 000-0000"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Address Field */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-semibold text-gray-800" htmlFor="address">
-                      Delivery Address
-                    </label>
-                    <button
-                      type="button"
-                      onClick={getCurrentLocation}
-                      disabled={locationLoading}
-                      className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
-                    >
-                      {locationLoading ? (
-                        <>
-                          <svg
-                            className="animate-spin h-3.5 w-3.5"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          <span>Locating...</span>
-                        </>
-                      ) : (
-                        <>
-                          <FiMapPin className="h-4 w-4" />
-                          <span>Use Current Location</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <div className="absolute left-4 top-4 text-gray-400">
-                      <FiMapPin className="w-5 h-5" />
-                    </div>
-                    <textarea
-                      id="address"
-                      name="address"
-                      rows="3"
-                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-500 text-base resize-none"
-                      placeholder="123 Main St, City, Country"
-                      value={formData.address}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <div className="pt-2">
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-200 active:shadow-lg ${loading ? "opacity-90 cursor-not-allowed" : ""
-                      }`}
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center gap-3">
-                        <svg
-                          className="animate-spin h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        <span>Creating Account...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-3">
-                        <span>Create Account</span>
-                        <FiArrowRight className="w-5 h-5" />
-                      </div>
-                    )}
-                  </motion.button>
-                </div>
-              </form>
-
-              {/* Divider */}
-              <div className="relative my-7">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="px-4 bg-white text-gray-500 text-sm font-medium">Already have an account?</span>
-                </div>
+          {/* Desktop Form - Background styling only */}
+          <div className="hidden overflow-hidden lg:flex items-center justify-center p-8 relative lg:mt-[-15px] ">
+            {/* Modern Background with Depth for Desktop */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Gradient Mesh Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
+              
+              {/* Subtle Grid Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `linear-gradient(to right, #05B171 1px, transparent 1px),
+                                    linear-gradient(to bottom, #05B171 1px, transparent 1px)`,
+                  backgroundSize: '40px 40px'
+                }}></div>
               </div>
+              
+              {/* Floating Elements with Depth */}
+              <motion.div
+                animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-emerald-100/30 to-teal-100/20 rounded-full blur-3xl"
+              ></motion.div>
+              
+              <motion.div
+                animate={{ y: [0, 20, 0], rotate: [0, -8, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                className="absolute bottom-20 left-20 w-72 h-72 bg-gradient-to-tr from-green-100/20 to-emerald-100/10 rounded-full blur-3xl"
+              ></motion.div>
+              
+              {/* Decorative Corner Accents */}
+              <div className="absolute top-0 right-0 w-48 h-48">
+                <div className="absolute top-8 right-8 w-32 h-32 border-t-2 border-r-2 border-emerald-200/30 rounded-tr-3xl"></div>
+              </div>
+              
+              <div className="absolute bottom-0 left-0 w-48 h-48">
+                <div className="absolute bottom-8 left-8 w-32 h-32 border-b-2 border-l-2 border-emerald-200/30 rounded-bl-3xl"></div>
+              </div>
+            </div>
 
-              {/* Login Link */}
-              <Link
-                to="/login"
-                className="block w-full py-3.5 border-2 border-gray-200 text-gray-800 rounded-xl font-semibold text-center text-base hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200 active:scale-[0.98]"
-              >
-                Sign In Instead
-              </Link>
-            </motion.div>
-          </div>
-
-          {/* Desktop Form */}
-          <div className="hidden overflow-hidden lg:flex items-center justify-center p-8">
+            {/* Keep the original desktop form layout */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               className="w-full max-w-lg lg:max-w-3xl relative z-10"
             >
-              <div className="bg-white rounded-2xl lg:rounded-3xl shadow-lg border border-gray-100 p-4 sm:p-6 lg:p-8">
+              <div className="bg-white/80 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/20 p-4 sm:p-6 lg:p-8">
                 <div className="hidden lg:block mb-8">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
@@ -625,14 +695,14 @@ const Register = () => {
                           Full Name
                         </label>
                         <div className="relative">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
                             <FiUser className="text-sm lg:text-base" />
                           </div>
                           <input
                             id="name"
                             name="name"
                             type="text"
-                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base"
+                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-white/80 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base backdrop-blur-sm"
                             placeholder="Nebiyou Dawit"
                             value={formData.name}
                             onChange={handleChange}
@@ -646,7 +716,7 @@ const Register = () => {
                           Email Address
                         </label>
                         <div className="relative">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
                             <FiMail className="text-sm lg:text-base" />
                           </div>
                           <input
@@ -654,7 +724,7 @@ const Register = () => {
                             name="email"
                             type="email"
                             autoComplete="email"
-                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base"
+                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-white/80 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base backdrop-blur-sm"
                             placeholder="aberakeb23@gmail.com"
                             value={formData.email}
                             onChange={handleChange}
@@ -668,14 +738,14 @@ const Register = () => {
                           Phone Number
                         </label>
                         <div className="relative">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
                             <FiPhone className="text-sm lg:text-base" />
                           </div>
                           <input
                             id="phone"
                             name="phone"
                             type="tel"
-                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base"
+                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-white/80 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base backdrop-blur-sm"
                             placeholder="0912345678"
                             value={formData.phone}
                             onChange={handleChange}
@@ -691,7 +761,7 @@ const Register = () => {
                           Password
                         </label>
                         <div className="relative">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-500 text-gray-400">
                             <FiLock className="text-sm lg:text-base" />
                           </div>
                           <input
@@ -699,7 +769,7 @@ const Register = () => {
                             name="password"
                             type={showPassword ? "text" : "password"}
                             autoComplete="new-password"
-                            className="w-full pl-9 lg:pl-10 pr-9 lg:pr-10 py-2.5 lg:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base"
+                            className="w-full pl-9 lg:pl-10 pr-9 lg:pr-10 py-2.5 lg:py-3 bg-white/80 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base backdrop-blur-sm"
                             placeholder="Min. 6 characters"
                             value={formData.password}
                             onChange={handleChange}
@@ -723,14 +793,14 @@ const Register = () => {
                           </label>
                         </div>
                         <div className="relative">
-                          <div className="absolute left-3 top-2.5 lg:top-3 text-gray-400">
-                            <FiMapPin className="text-sm lg:text-base" />
+                          <div className="absolute left-3 top-2.5 lg:top-3 z-500 text-gray-400">
+                            <FiMapPin className="text-sm z-500 lg:text-base" />
                           </div>
                           <textarea
                             id="address"
                             name="address"
                             rows="3"
-                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base resize-none"
+                            className="w-full pl-9 lg:pl-10 pr-3 py-2.5 lg:py-3 bg-white/80 border border-gray-300/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 placeholder-gray-400 text-sm lg:text-base backdrop-blur-sm resize-none"
                             placeholder="akaki kality around kality hospital"
                             value={formData.address}
                             onChange={handleChange}
@@ -825,16 +895,16 @@ const Register = () => {
 
                 <div className="relative my-4 lg:my-6">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
+                    <div className="w-full border-t border-gray-300/50"></div>
                   </div>
                   <div className="relative flex justify-center text-xs lg:text-sm">
-                    <span className="px-2 lg:px-3 bg-white text-gray-500 font-medium">Already have an account?</span>
+                    <span className="px-2 lg:px-3 bg-white/80 backdrop-blur-sm text-gray-500 font-medium">Already have an account?</span>
                   </div>
                 </div>
 
                 <Link
                   to="/login"
-                  className="block text-center w-full py-2.5 lg:py-3 border border-gray-200 text-gray-700 rounded-lg font-medium text-sm lg:text-base hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-200 group"
+                  className="block text-center w-full py-2.5 lg:py-3 border border-gray-300/50 text-gray-700 rounded-lg font-medium text-sm lg:text-base hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-200 group backdrop-blur-sm"
                 >
                   <span className="inline-flex items-center gap-2">
                     Sign In Instead
