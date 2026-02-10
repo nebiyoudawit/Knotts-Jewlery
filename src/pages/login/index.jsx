@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useShop } from "../../context/ShopContext";
 import { toast } from "react-toastify";
-import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiChevronLeft, FiHome } from "react-icons/fi";
 import { motion } from "framer-motion";
 
 const Login = () => {
@@ -156,19 +156,33 @@ const Login = () => {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-10 text-white w-full">
-          {/* Logo/Brand - Same image logo as Header */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Link to="/" className="flex items-center gap-3 mb-12 group">
+          {/* Desktop Header with Back and Home buttons */}
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 group">
               <img src="/icons1.png" alt="Knotts Jewelry Logo" className="h-12 transition-transform group-hover:scale-105" />
               <div>
                 <h2 className="text-xl font-bold tracking-tight text-white">Knotts Jewelry</h2>
               </div>
             </Link>
-          </motion.div>
+            
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+              >
+                <FiChevronLeft className="w-5 h-5" />
+                <span>Back</span>
+              </button>
+              
+              <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+              >
+                <FiHome className="w-5 h-5" />
+                <span>Home</span>
+              </button>
+            </div>
+          </div>
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col justify-center max-w-lg">
@@ -242,15 +256,42 @@ const Login = () => {
         >
           {/* Glass Container */}
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-6 sm:p-8">
-            {/* Mobile Logo - Same image logo as Header */}
-            <div className="lg:hidden text-center mb-6">
-              <Link to="/" className="inline-flex items-center gap-3 mb-3 group">
-                <img src="/logo.png" alt="Knotts Jewelry Logo" className="h-12 transition-transform group-hover:scale-105" />
-              </Link>
+            {/* Mobile Header with Back and Home buttons */}
+            <div className="lg:hidden mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="p-2 -ml-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-transform flex items-center gap-2"
+                >
+                  <FiChevronLeft className="w-6 h-6" />
+                  <span className="text-sm font-medium">Back</span>
+                </button>
+
+                <Link to="/" className="inline-flex items-center gap-3 group">
+                  <img src="/logo.png" alt="Knotts Jewelry Logo" className="h-10 transition-transform group-hover:scale-105" />
+                </Link>
+
+                <button
+                  onClick={() => navigate("/")}
+                  className="p-2 -mr-2 text-gray-600 hover:text-gray-900 active:scale-95 transition-transform flex items-center gap-2"
+                >
+                  <FiHome className="w-6 h-6" />
+                  <span className="text-sm font-medium hidden sm:inline">Home</span>
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  Welcome Back
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Sign in to continue your shopping journey
+                </p>
+              </div>
             </div>
 
-            {/* Header */}
-            <div className="mb-6 text-center">
+            {/* Desktop Header */}
+            <div className="hidden lg:block mb-6 text-center">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                 Welcome Back
               </h1>
