@@ -1,25 +1,38 @@
 import express from 'express';
+
+// Import from separate admin controller files
 import {
   getDashboardStats,
   getEnhancedDashboardStats,
   getMonthlyAnalytics,
-  getRealTimeUpdates,
+  getRealTimeUpdates
+} from '../controllers/adminController/dashboardController.js';
+
+import {
   getAdminProducts,
   getAdminProductById,
   addAdminProduct,
   updateAdminProduct,
-  deleteAdminProduct,
-  getAdminOrders, 
-  getAdminOrderById, 
-  updateAdminOrderStatus, 
-  deleteAdminOrder, 
+  deleteAdminProduct
+} from '../controllers/adminController/productController.js';
+
+import {
+  getAdminOrders,
+  getAdminOrderById,
+  updateAdminOrderStatus,
+  deleteAdminOrder,
+  updateOrderPaymentStatus
+} from '../controllers/adminController/orderController.js';
+
+import {
   getUsers,
   addUser,
   updateUser,
-  deleteUser,
-  updateOrderPaymentStatus,
-  updateProductSales
-} from '../controllers/adminController.js';
+  deleteUser
+} from '../controllers/adminController/userController.js';
+
+// This one is in productController.js
+import { updateProductSales } from '../controllers/adminController/productController.js';
 
 import { authMiddleware, adminMiddleware } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploads.js';
@@ -41,6 +54,7 @@ router.get('/products/:id', getAdminProductById);
 router.post('/products', upload.array('images'), addAdminProduct);
 router.put('/products/:id', upload.array('images'), updateAdminProduct);
 router.delete('/products/:id', deleteAdminProduct);
+router.put('/products/:id/sales', updateProductSales); // Moved here from orders
 
 // ---------------- USER ROUTES ----------------
 router.get('/users', getUsers);
@@ -53,7 +67,6 @@ router.get('/orders', getAdminOrders);
 router.get('/orders/:id', getAdminOrderById);
 router.put('/orders/:id/status', updateAdminOrderStatus); 
 router.put('/orders/:id/payment', updateOrderPaymentStatus); 
-router.put('/products/:id/sales', updateProductSales); 
 router.delete('/orders/:id', deleteAdminOrder);
 
 export default router;

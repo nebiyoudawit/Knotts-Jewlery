@@ -1,24 +1,19 @@
-import Product from '../models/products.js';
-import User from '../models/users.js';
-import Order from '../models/order.js';
-import redisClient from '../utils/redisClient.js';
-import bcrypt from 'bcryptjs';
-import path from 'path';
-import fs from 'fs';
-import { invalidateDashboardCache, invalidateAdminOrderList, invalidateAdminProductList, invalidateAdminUserList } from '../utils/cacheUtils.js';
-/* Admin Dashboard Controller */
+import Product from '../../models/products.js';
+import User from '../../models/users.js';
+import Order from '../../models/order.js';
+import redisClient from '../../utils/redisClient.js';
 
 // Helper function to calculate percentage change
 const calculatePercentageChange = (current, previous) => {
-  if (previous === 0) return 100; // Avoid division by zero
+  if (previous === 0) return 100;
   return ((current - previous) / previous) * 100;
 };
 
+// Get enhanced dashboard stats with all metrics
 export const getEnhancedDashboardStats = async (req, res) => {
   try {
     const cacheKey = 'dashboard:enhanced:stats';
 
-    // Check Redis cache first
     const cached = await redisClient.get(cacheKey);
     if (cached) {
       return res.status(200).json({
@@ -28,14 +23,12 @@ export const getEnhancedDashboardStats = async (req, res) => {
       });
     }
 
-    // 1. Get basic stats (from existing function)
     const currentDate = new Date();
     const previousMonthDate = new Date();
     previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    // Calculate basic stats
     const totalRevenueResult = await Order.aggregate([
       { $match: { paymentStatus: 'Paid' } },
       { $group: { _id: null, total: { $sum: '$total' } } }
@@ -82,7 +75,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
     const prevSales = prevMonthSales[0]?.total || 0;
     const salesGrowth = calculatePercentageChange(totalSales, prevSales);
 
-    // 2. Today's metrics
     const today = new Date();
     const startOfToday = new Date(today.setHours(0, 0, 0, 0));
     const startOfYesterday = new Date(new Date().setDate(today.getDate() - 1));
@@ -110,7 +102,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       }
     });
 
-    // 3. Sales chart data (last 6 months)
     const salesChartData = await Order.aggregate([
       {
         $match: {
@@ -132,7 +123,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       { $limit: 6 }
     ]);
 
-    // Format sales chart data
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const formattedSalesData = salesChartData.map(item => ({
       month: monthNames[item._id.month - 1],
@@ -140,7 +130,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       orders: item.orders
     }));
 
-    // 4. Category distribution
     const categoryDistribution = await Order.aggregate([
       { $match: { paymentStatus: 'Paid' } },
       { $unwind: '$items' },
@@ -179,7 +168,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       color: categoryColors[item._id] || '#6b7280'
     }));
 
-    // 5. Recent orders with details (last 5 orders)
     const recentOrdersDetailed = await Order.find()
       .sort({ createdAt: -1 })
       .limit(5)
@@ -195,7 +183,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       paymentStatus: order.paymentStatus
     }));
 
-    // 6. Top selling products
     const topProducts = await Product.find()
       .sort({ sales: -1 })
       .limit(5)
@@ -209,7 +196,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       image: product.images?.[0] || null
     }));
 
-    // 7. Order status summary
     const orderStatusSummary = await Order.aggregate([
       {
         $group: {
@@ -225,7 +211,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       cancelled: orderStatusSummary.find(s => s._id === 'cancelled')?.count || 0
     };
 
-    // 8. Recent activities
     const recentOrders = await Order.find()
       .sort({ createdAt: -1 })
       .limit(3)
@@ -252,7 +237,6 @@ export const getEnhancedDashboardStats = async (req, res) => {
       }))
     ].sort((a, b) => b.date - a.date).slice(0, 5);
 
-    // Build the complete response
     const response = {
       success: true,
       stats: {
@@ -291,9 +275,7 @@ export const getEnhancedDashboardStats = async (req, res) => {
       }
     };
 
-    // Cache the result for 5 minutes
     await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
-
     res.json(response);
 
   } catch (err) {
@@ -313,7 +295,6 @@ export const getMonthlyAnalytics = async (req, res) => {
     
     const cacheKey = `dashboard:analytics:${year}`;
     
-    // Check Redis cache
     const cached = await redisClient.get(cacheKey);
     if (cached) {
       return res.json(JSON.parse(cached));
@@ -348,7 +329,6 @@ export const getMonthlyAnalytics = async (req, res) => {
       { $sort: { month: 1 } }
     ]);
 
-    // Fill in missing months
     const completeMonthlyData = Array.from({ length: 12 }, (_, i) => {
       const monthData = monthlyData.find(m => m.month === i + 1);
       return {
@@ -389,23 +369,19 @@ export const getRealTimeUpdates = async (req, res) => {
   try {
     const lastHour = new Date(Date.now() - 60 * 60 * 1000);
     
-    // Get recent orders in the last hour
     const recentOrders = await Order.countDocuments({
       createdAt: { $gte: lastHour }
     });
 
-    // Get recent customers in the last hour
     const recentCustomers = await User.countDocuments({
       role: 'customer',
       createdAt: { $gte: lastHour }
     });
 
-    // Get pending orders count
     const pendingOrders = await Order.countDocuments({
       status: 'pending'
     });
 
-    // Get low stock products
     const lowStockProducts = await Product.countDocuments({
       stock: { $gt: 0, $lt: 10 }
     });
@@ -430,12 +406,11 @@ export const getRealTimeUpdates = async (req, res) => {
   }
 };
 
-// Get dashboard statistics (legacy endpoint)
+// Get basic dashboard statistics (legacy)
 export const getDashboardStats = async (req, res) => {
   try {
     const cacheKey = 'dashboard:stats';
 
-    // 1. Check Redis cache first
     const cached = await redisClient.get(cacheKey);
     if (cached) {
       return res.status(200).json({
@@ -445,7 +420,6 @@ export const getDashboardStats = async (req, res) => {
       });
     }
 
-    // 2. Proceed with MongoDB queries if not cached
     const currentDate = new Date();
     const previousMonthDate = new Date();
     previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
@@ -545,479 +519,13 @@ export const getDashboardStats = async (req, res) => {
       recentActivities
     };
 
-    // 3. Cache the result
     await redisClient.setEx(cacheKey, 300, JSON.stringify(response));
-
     res.json(response);
 
   } catch (err) {
     res.status(500).json({ 
       success: false, 
       message: 'Failed to fetch dashboard stats', 
-      error: err.message 
-    });
-  }
-};
-
-/* -------------------- ADMIN PRODUCT ROUTES -------------------- */
-const deleteProductSearchCache = async () => {
-  const keys = await redisClient.keys('products:search:*');
-  if (keys.length > 0) {
-    await redisClient.del(keys);
-    console.log(`Deleted Redis cache keys: ${keys.join(', ')}`);
-  }
-};
-
-// GET ALL PRODUCTS
-export const getAdminProducts = async (req, res) => {
-  const cacheKey = 'admin:products';
-  try {
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      return res.json(JSON.parse(cached));
-    }
-
-    const products = await Product.find();
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(products));
-
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch products',
-      error: err.message,
-    });
-  }
-};
-
-// GET PRODUCT BY ID
-export const getAdminProductById = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-    res.json({ success: true, product });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
-  }
-};
-
-// ADD NEW PRODUCT WITH IMAGE
-export const addAdminProduct = async (req, res) => {
-  try {
-    const { name, price, originalPrice, stock, category, onSale, description } = req.body;
-    const imageFiles = req.files;
-
-    if (!name || !price || !stock || !category || !description) {
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
-    }
-
-    const imageUrls = imageFiles ? imageFiles.map(file => file.path) : [];
-
-    const product = await Product.create({
-      name,
-      price: parseFloat(price),
-      originalPrice: onSale === 'true' ? parseFloat(originalPrice) : null,
-      stock: parseInt(stock),
-      category,
-      onSale: onSale === 'true',
-      images: imageUrls,
-      description,
-      sales: 0,
-    });
-
-    await deleteProductSearchCache();
-    await invalidateAdminProductList();
-    await invalidateDashboardCache(); // ADDED: Invalidate dashboard cache
-    
-    res.status(201).json({ success: true, product });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to create product', error: err.message });
-  }
-};
-
-export const updateAdminProduct = async (req, res) => {
-  try {
-    const { name, price, originalPrice, stock, category, onSale, description } = req.body;
-    const imageFiles = req.files;
-
-    // Parse existing images
-    let existingImages = [];
-    if (req.body.existingImages) {
-      if (typeof req.body.existingImages === 'string') {
-        try {
-          existingImages = JSON.parse(req.body.existingImages);
-        } catch {
-          existingImages = [req.body.existingImages];
-        }
-      } else if (Array.isArray(req.body.existingImages)) {
-        existingImages = req.body.existingImages;
-      }
-    }
-
-    const newImageUrls = imageFiles ? imageFiles.map(file => file.path) : [];
-
-    const updateData = {
-      name,
-      price: parseFloat(price),
-      stock: parseInt(stock),
-      category,
-      onSale: onSale === 'true' || onSale === true,
-      description,
-      originalPrice: (onSale === 'true' || onSale === true) ? parseFloat(originalPrice) : null,
-      images: [...existingImages, ...newImageUrls],
-    };
-
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    await deleteProductSearchCache();
-    await invalidateAdminProductList();
-    await invalidateDashboardCache(); // ADDED: Invalidate dashboard cache
-    
-    if (!updatedProduct) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    res.json({ success: true, product: updatedProduct });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to update product', error: err.message });
-  }
-};
-
-export const deleteAdminProduct = async (req, res) => {
-  try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-
-    if (!deletedProduct) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    await deleteProductSearchCache();
-    await invalidateAdminProductList();
-    await invalidateDashboardCache(); // ADDED: Invalidate dashboard cache
-    
-    res.json({
-      success: true,
-      message: 'Product deleted successfully',
-    });
-  } catch (err) {
-    console.error("Error deleting product:", err);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete product',
-      error: err.message,
-    });
-  }
-};
-
-/* -------------------- USER ROUTES  -------------------- */
-
-export const getUsers = async (req, res) => {
-  const cacheKey = 'admin:users';
-  try {
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      return res.json(JSON.parse(cached));
-    }
-
-    const users = await User.find().select('-password');
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(users));
-
-    res.json(users);
-  } catch (err) {
-    console.error("Error fetching users:", err);
-    res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: err.message,
-    });
-  }
-};
-
-export const addUser = async (req, res) => {
-  try {
-    const { name, email, password, role, address, phone } = req.body;
-
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ success: false, message: 'User already exists' });
-
-    const newUser = await User.create({ name, email, password, role, address, phone });
-
-    await invalidateDashboardCache(); 
-    await invalidateAdminUserList();
-
-    const { password: _, ...userData } = newUser.toObject();
-    res.status(201).json({ success: true, user: userData });
-  } catch (err) {
-    console.error("Error adding user:", err);
-    res.status(400).json({ success: false, message: 'Invalid user data', error: err.message });
-  }
-};
-
-export const deleteUser = async (req, res) => {
-  try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
-    if (!deletedUser) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-    await invalidateDashboardCache();
-    await invalidateAdminUserList();
-    
-    res.json({ 
-      success: true,
-      message: 'User deleted successfully' 
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ 
-      success: false,
-      message: 'Failed to delete user',
-      error: err.message 
-    });
-  }
-};
-
-export const updateUser = async (req, res) => {
-  try {
-    const { name, email, role, address, phone } = req.body;
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-
-    user.name = name;
-    user.email = email;
-    user.role = role;
-    user.address = address;
-    user.phone = phone;
-    await user.save();
-    
-    await invalidateAdminUserList();
-    await invalidateAdminOrderList();
-    await invalidateDashboardCache(); // ADDED: Invalidate dashboard cache
-    
-    const { password: _, ...userData } = user.toObject();
-    res.json({ success: true, user: userData });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to update user', error: err.message });
-  }
-};
-
-/* -------------------- ADMIN ORDER ROUTES -------------------- */
-
-// GET ALL ORDERS
-export const getAdminOrders = async (req, res) => {
-  const cacheKey = 'admin:orders';
-  try {
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      return res.json(JSON.parse(cached));
-    }
-
-    const orders = await Order.find().populate('user', 'name phone');
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(orders));
-
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch orders',
-      error: err.message,
-    });
-  }
-};
-
-// GET ORDER BY ID
-export const getAdminOrderById = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id)
-      .populate('user', 'name email phone')
-      .populate('items.product', 'name price images');
-
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
-    res.json({ success: true, order });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Server error', error: err.message });
-  }
-};
-
-export const updateAdminOrderStatus = async (req, res) => {
-  const { status } = req.body;
-  const validStatuses = ['pending', 'delivered', 'cancelled'];
-
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ success: false, message: 'Invalid status' });
-  }
-
-  try {
-    const order = await Order.findById(req.params.id)
-    .populate('items.product')
-    .populate('user', 'name phone');
-    
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    const previousStatus = order.status;
-
-    // Handle reverting from 'delivered'
-    if (previousStatus === 'delivered' && status !== 'delivered') {
-      order.paymentStatus = 'Pending';
-
-      for (let item of order.items) {
-        if (!item.product || !item.product._id) continue;
-
-        const product = await Product.findById(item.product._id);
-        if (!product) continue;
-
-        product.sales = (product.sales || 0) - item.quantity;
-        product.stock = (product.stock || 0) + item.quantity;
-        await product.save();
-      }
-
-      order.deliveryDate = null;
-    }
-
-    // Handle transition to 'delivered'
-    if (status === 'delivered' && previousStatus !== 'delivered') {
-      order.paymentStatus = 'Paid';
-
-      for (let item of order.items) {
-        if (!item.product || !item.product._id) continue;
-
-        const product = await Product.findById(item.product._id);
-        if (!product) continue;
-
-        product.sales = (product.sales || 0) + item.quantity;
-        product.stock = (product.stock || 0) - item.quantity;
-        await product.save();
-      }
-
-      if (!order.deliveryDate) {
-        order.deliveryDate = new Date();
-      }
-    }
-
-    order.status = status;
-    order.updatedAt = Date.now();
-
-    await order.save();
-    
-    // CRITICAL: Invalidate BOTH dashboard cache keys
-    await invalidateDashboardCache();
-    await invalidateAdminOrderList();
-    
-    res.json({
-      success: true,
-      order,
-      message: `Order status updated to ${status}`
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update order status', 
-      error: err.message 
-    });
-  }
-};
-
-// UPDATE PAYMENT STATUS
-export const updateOrderPaymentStatus = async (req, res) => {
-  const { paymentStatus } = req.body;
-  const validStatuses = ['Pending', 'Paid'];
-
-  if (!validStatuses.includes(paymentStatus)) {
-    return res.status(400).json({ success: false, message: 'Invalid payment status' });
-  }
-
-  try {
-    const order = await Order.findById(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    order.paymentStatus = paymentStatus;
-    await order.save();
-    
-    // CRITICAL: Invalidate BOTH dashboard cache keys
-    await invalidateDashboardCache();
-    await invalidateAdminOrderList();
-    
-    res.json({
-      success: true,
-      order,
-      message: `Payment status updated to ${paymentStatus}`
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update payment status', 
-      error: err.message 
-    });
-  }
-};
-
-// UPDATE PRODUCT SALES
-export const updateProductSales = async (req, res) => {
-  const { quantity } = req.body;
-
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
-    product.sales += parseInt(quantity) || 1;
-    product.stock -= parseInt(quantity) || 1;
-    await product.save();
-    
-    // CRITICAL: Invalidate dashboard cache
-    await invalidateDashboardCache();
-    await invalidateAdminProductList();
-    await invalidateAdminOrderList();
-    
-    res.json({
-      success: true,
-      product,
-      message: `Product sales updated`
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update product sales', 
-      error: err.message 
-    });
-  }
-};
-
-// DELETE ORDER
-export const deleteAdminOrder = async (req, res) => {
-  try {
-    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
-    
-    if (!deletedOrder) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    // CRITICAL: Invalidate dashboard cache
-    await invalidateDashboardCache();
-    await invalidateAdminOrderList();
-    
-    res.json({ 
-      success: true, 
-      message: 'Order deleted successfully' 
-    });
-  } catch (err) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to delete order', 
       error: err.message 
     });
   }
