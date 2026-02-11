@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { toast } from "react-toastify";
+import { toast } from "sonner"; // CHANGED: Import from sonner, not react-toastify
+
 const apiUrl = import.meta.env.VITE_API_URL;
 const defaultContextValue = {
   cart: [],
@@ -85,7 +86,6 @@ export const ShopProvider = ({ children }) => {
   };
 
   // Verify token validity
-  // Verify token validity
   const verifyToken = async (token) => {
     setIsLoading(true);
     try {
@@ -132,28 +132,28 @@ export const ShopProvider = ({ children }) => {
     }
   };
 
-const login = async (email, password) => {
-  setIsLoading(true);
-  setError(null);
-  try {
-    const data = await makeRequest(`${apiUrl}/auth/login`, "POST", {
-      email,
-      password,
-    });
+  const login = async (email, password) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await makeRequest(`${apiUrl}/auth/login`, "POST", {
+        email,
+        password,
+      });
 
-    localStorage.setItem("token", data.token);
-    setCurrentUser(data.user);
-    setIsAdmin(data.user?.role === "admin");
-    toast.success("Login successful!");
-    return true;
-  } catch (err) {
-    setError(err.message);
-    toast.error(err.message);
-    return false;
-  } finally {
-    setIsLoading(false);
-  }
-};
+      localStorage.setItem("token", data.token);
+      setCurrentUser(data.user);
+      setIsAdmin(data.user?.role === "admin");
+      toast.success("Login successful!");
+      return true;
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const adminLogin = async (email, password) => {
     setIsLoading(true);
@@ -212,7 +212,7 @@ const login = async (email, password) => {
     add: false,
     remove: false,
     update: false,
-    itemId: null, // Track which specific item is being processed
+    itemId: null,
   });
 
   const addToCart = async (product, quantity = 1) => {
@@ -226,7 +226,6 @@ const login = async (email, password) => {
     const previousCart = [...cart];
 
     try {
-      // Optimistic update: increase quantity if product exists, else add new
       const existingItem = cart.find(
         (item) => item?.product?._id === product._id
       );
@@ -242,13 +241,11 @@ const login = async (email, password) => {
       setCart(optimisticCart);
       toast.success(`${product.name} added to cart`);
 
-      // API call
       const data = await makeRequest(`${apiUrl}/user/cart`, "POST", {
         productId: product._id,
         quantity,
       });
 
-      // Replace cart with API response (assumed to be correct format)
       setCart(data);
     } catch (err) {
       setCart(previousCart);
@@ -264,7 +261,6 @@ const login = async (email, password) => {
     setLoading((prev) => ({ ...prev, remove: true, itemId: productId }));
     const previousCart = [...cart];
 
-    // ✅ Optimistic update before API call
     const optimisticCart = cart.filter(
       (item) => item?.product?._id !== productId && item?._id !== productId
     );
@@ -276,9 +272,9 @@ const login = async (email, password) => {
         `${apiUrl}/user/cart/${productId}`,
         "DELETE"
       );
-      setCart(data); // ✅ Replace with server cart
+      setCart(data);
     } catch (err) {
-      setCart(previousCart); // ⛔ Revert on failure
+      setCart(previousCart);
       toast.error(err.message || "Failed to remove from cart");
     } finally {
       setLoading((prev) => ({ ...prev, remove: false, itemId: null }));
@@ -297,17 +293,15 @@ const login = async (email, password) => {
     const previousCart = [...cart];
 
     try {
-      // ✅ Optimistic update: update quantity locally
       const optimisticCart = cart.map((item) =>
         item?.product?._id === productId || item?._id === productId
           ? { ...item, quantity }
           : item
       );
 
-      setCart(optimisticCart); // Instant UI update
+      setCart(optimisticCart);
       toast.success("Quantity updated");
 
-      // ✅ API call
       const data = await makeRequest(
         `${apiUrl}/user/cart/${productId}`,
         "PUT",
@@ -316,9 +310,9 @@ const login = async (email, password) => {
         }
       );
 
-      setCart(data); // Replace with server-validated cart
+      setCart(data);
     } catch (err) {
-      setCart(previousCart); // Revert on error
+      setCart(previousCart);
       toast.error(err.message || "Failed to update quantity");
     } finally {
       setLoading((prev) => ({ ...prev, update: false, itemId: null }));
@@ -347,31 +341,26 @@ const login = async (email, password) => {
     setLoadingWishlist(true);
 
     const alreadyInWishlist = wishlist.some((item) => item._id === product._id);
-    const previousWishlist = [...wishlist]; // for rollback
+    const previousWishlist = [...wishlist];
     const optimisticWishlist = alreadyInWishlist
       ? wishlist.filter((item) => item._id !== product._id)
       : [...wishlist, product];
 
-    // 🔄 Optimistically update UI
     setWishlist(optimisticWishlist);
 
-    // ⚡ Instant toast feedback
-    toast[alreadyInWishlist ? "info" : "success"](
-      alreadyInWishlist
-        ? `${product.name} removed from wishlist`
-        : `${product.name} added to wishlist`
-    );
+    if (alreadyInWishlist) {
+      toast.info(`${product.name} removed from wishlist`);
+    } else {
+      toast.success(`${product.name} added to wishlist`);
+    }
 
     try {
       const { wishlist: updatedWishlist } = await makeRequest(
         `${apiUrl}/user/wishlist/${product._id}`,
         "POST"
       );
-
-      // ✅ Sync with backend
       setWishlist(updatedWishlist);
     } catch (err) {
-      // ⛔ Rollback on error
       setWishlist(previousWishlist);
       toast.error(err.message || "Failed to update wishlist");
     }

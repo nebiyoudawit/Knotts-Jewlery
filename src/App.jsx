@@ -11,8 +11,7 @@ import WishlistPage from './pages/WishlistPage/index.jsx'
 import { ShopProvider } from './context/ShopContext.jsx'
 import ScrollToTop from './components/ScrollTop/index.jsx'
 import Register from './pages/Register/index.jsx'
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'sonner';  // Only Sonner
 import CheckoutPage from './pages/CheckoutPage/index.jsx'
 import Profile from './pages/Profile/index.jsx'
 import UserOrders from './pages/UserOrders/index.jsx'
@@ -41,14 +40,7 @@ const AppRoutes = () => {
     <>
       {!hideHeader && <Header />}
       <ScrollToTop />
-      <ToastContainer
-        position="bottom-right"
-        autoClose={2000}
-        hideProgressBar={false}
-        closeOnClick={true}
-        pauseOnHover={true}
-        draggable={true}
-      />
+      {/* REMOVED: Old ToastContainer */}
       <Routes>
         {/* Public Routes */}
         <Route path="/" exact element={<Home />} />
@@ -81,11 +73,30 @@ const AppRoutes = () => {
 
 function App() {
   return (
-      <BrowserRouter>
-        <ShopProvider>
-          <AppRoutes />
-        </ShopProvider>
-      </BrowserRouter>
+    <BrowserRouter>
+      <ShopProvider>
+        <Toaster 
+          position="bottom-left"
+          expand={true}
+          richColors
+          closeButton
+          theme="light"
+          duration={2000}
+          toastOptions={{
+            classNames: {
+              toast: '!rounded-xl !border !border-gray-200 !shadow-xl',
+              title: '!font-medium',
+              description: '!text-gray-600',
+              success: '!bg-gradient-to-r !from-emerald-50 !to-green-50 !border-emerald-200',
+              error: '!bg-gradient-to-r !from-rose-50 !to-pink-50 !border-rose-200',
+              info: '!bg-gradient-to-r !from-blue-50 !to-cyan-50 !border-blue-200',
+              warning: '!bg-gradient-to-r !from-amber-50 !to-orange-50 !border-amber-200',
+            },
+          }}
+        />
+        <AppRoutes />
+      </ShopProvider>
+    </BrowserRouter>
   );
 }
 

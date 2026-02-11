@@ -22,7 +22,6 @@ const Login = () => {
       const success = await login(email, password);
 
       if (success) {
-        toast.success("Welcome back!");
         navigate("/");
       } else {
         toast.error(error || "Invalid email or password");
