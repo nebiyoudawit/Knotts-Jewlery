@@ -1,6 +1,9 @@
 import express from 'express';
 import {
   getDashboardStats,
+  getEnhancedDashboardStats,
+  getMonthlyAnalytics,
+  getRealTimeUpdates,
   getAdminProducts,
   getAdminProductById,
   addAdminProduct,
@@ -18,16 +21,20 @@ import {
   updateProductSales
 } from '../controllers/adminController.js';
 
-import { authMiddleware,adminMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware, adminMiddleware } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploads.js';
 
 const router = express.Router();
 
 // Apply authentication to all routes
-router.use(authMiddleware,adminMiddleware);
+router.use(authMiddleware, adminMiddleware);
 
-// ---------------- DASHBOARD ROUTE ----------------
-router.get('/', getDashboardStats);
+// ---------------- DASHBOARD ROUTES ----------------
+router.get('/', getDashboardStats);  // Legacy endpoint
+router.get('/enhanced', getEnhancedDashboardStats);  // New enhanced dashboard
+router.get('/analytics', getMonthlyAnalytics);
+router.get('/updates', getRealTimeUpdates);
+
 // ---------------- PRODUCT ROUTES ----------------
 router.get('/products', getAdminProducts);
 router.get('/products/:id', getAdminProductById);

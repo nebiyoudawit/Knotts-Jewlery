@@ -2,7 +2,12 @@ import redisClient from './redisClient.js';
 
 export const invalidateDashboardCache = async () => {
   try {
-    await redisClient.del('dashboard:stats');
+    // Delete ALL dashboard-related cache keys
+    const keys = await redisClient.keys('dashboard:*');
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+      console.log(`Invalidated dashboard cache keys: ${keys.join(', ')}`);
+    }
   } catch (err) {
     console.error('Failed to invalidate dashboard cache:', err);
   }
