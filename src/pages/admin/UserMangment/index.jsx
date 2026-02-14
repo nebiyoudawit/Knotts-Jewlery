@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   FiUsers, FiPlus, FiSearch, FiX, FiFilter, FiRefreshCw,
-  FiCheckCircle, FiAlertCircle
+  FiCheckCircle, FiAlertCircle, FiChevronLeft, FiChevronRight
 } from "react-icons/fi";
 
 import { EmptyState } from "./EmptyState";
@@ -25,22 +25,46 @@ const UserManagement = () => {
   const [selectedRole, setSelectedRole] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage, selectedRole]); // Removed searchTerm from dependencies - we'll handle search differently
 
   const fetchUsers = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      // Build query params
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: itemsPerPage,
+        ...(selectedRole !== 'all' && { role: selectedRole })
+      });
+
+      // Add search param if exists
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/users?${params}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+      
       if (response.ok) {
         const data = await response.json();
+        // Your backend returns array of users directly
         setUsers(data);
+        // Calculate total pages based on response length
+        // Since your backend doesn't return pagination metadata yet,
+        // we'll assume all users are returned and do client-side pagination
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
       } else {
         console.error("Error fetching users:", response.statusText);
       }
@@ -50,6 +74,21 @@ const UserManagement = () => {
       setIsLoading(false);
     }
   };
+
+  // Client-side pagination since your backend returns all users
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Filter users client-side based on search and role
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = 
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = selectedRole === "all" || user.role === selectedRole;
+    return matchesSearch && matchesRole;
+  });
 
   const showNotification = (type, message) => {
     setNotification({ show: true, type, message });
@@ -76,51 +115,42 @@ const UserManagement = () => {
         },
       });
 
-      if (response.ok) {
-        setUsers(users.filter((u) => u._id !== userToDelete));
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Refresh users list
+        await fetchUsers();
         showNotification('success', 'User deleted successfully');
+        setShowDeleteConfirm(false);
+        setUserToDelete(null);
       } else {
-        console.error("Error deleting user:", response.statusText);
-        showNotification('error', 'Failed to delete user');
+        showNotification('error', data.message || 'Failed to delete user');
       }
     } catch (error) {
       console.error("Error deleting user:", error);
       showNotification('error', 'Failed to delete user');
     } finally {
       setDeleting(false);
-      setShowDeleteConfirm(false);
-      setUserToDelete(null);
     }
   };
 
   const handleSave = async (userData) => {
     setSaving(true);
     try {
+      let response;
       if (currentUser) {
-        const response = await fetch(
-          `${API_BASE_URL}/users/${currentUser._id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify(userData),
-          }
-        );
-
-        if (response.ok) {
-          const resData = await response.json();
-          setUsers(
-            users.map((u) => (u._id === currentUser._id ? resData.user : u))
-          );
-          showNotification('success', 'User updated successfully');
-        } else {
-          console.error("Error updating user:", response.statusText);
-          showNotification('error', 'Failed to update user');
-        }
+        // Update existing user
+        response = await fetch(`${API_BASE_URL}/users/${currentUser._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(userData),
+        });
       } else {
-        const response = await fetch(`${API_BASE_URL}/users`, {
+        // Add new user
+        response = await fetch(`${API_BASE_URL}/users`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -128,19 +158,19 @@ const UserManagement = () => {
           },
           body: JSON.stringify(userData),
         });
-
-        if (response.ok) {
-          const resData = await response.json();
-          setUsers([...users, resData.user]);
-          showNotification('success', 'User added successfully');
-        } else {
-          console.error("Error adding user:", response.statusText);
-          showNotification('error', 'Failed to add user');
-        }
       }
 
-      setIsModalOpen(false);
-      setCurrentUser(null);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Refresh users list
+        await fetchUsers();
+        showNotification('success', currentUser ? 'User updated successfully' : 'User added successfully');
+        setIsModalOpen(false);
+        setCurrentUser(null);
+      } else {
+        showNotification('error', data.message || 'Failed to save user');
+      }
     } catch (error) {
       console.error("Error saving user:", error);
       showNotification('error', 'Failed to save user');
@@ -149,13 +179,97 @@ const UserManagement = () => {
     }
   };
 
-  const filteredUsers = users
-    .filter(
-      (user) =>
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter((user) => selectedRole === "all" || user.role === selectedRole);
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  const handleRoleFilter = (role) => {
+    setSelectedRole(role);
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+
+  const handleClearFilters = () => {
+    setSelectedRole("all");
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Pagination component
+  const Pagination = () => {
+    const totalFilteredUsers = filteredUsers.length;
+    const totalPages = Math.ceil(totalFilteredUsers / itemsPerPage);
+    
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-between px-4 py-4 bg-white border-t-2 border-gray-100 sm:px-6">
+        <div className="flex items-center text-sm text-gray-500">
+          Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalFilteredUsers)} of {totalFilteredUsers} users
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`p-2 rounded-xl border-2 transition-all ${
+              currentPage === 1
+                ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                : 'border-gray-200 text-gray-600 hover:border-emerald-500 hover:bg-emerald-50'
+            }`}
+          >
+            <FiChevronLeft className="text-xl" />
+          </button>
+          <div className="flex gap-1">
+            {[...Array(totalPages)].map((_, i) => {
+              const pageNum = i + 1;
+              // Show current page, first, last, and pages around current
+              if (
+                pageNum === 1 ||
+                pageNum === totalPages ||
+                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+              ) {
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-xl font-medium transition-all ${
+                      currentPage === pageNum
+                        ? 'bg-gradient-to-r from-[#05B171] to-emerald-600 text-white shadow-md'
+                        : 'text-gray-600 hover:bg-emerald-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              } else if (
+                pageNum === currentPage - 2 ||
+                pageNum === currentPage + 2
+              ) {
+                return <span key={pageNum} className="w-10 h-10 flex items-center justify-center text-gray-400">...</span>;
+              }
+              return null;
+            })}
+          </div>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`p-2 rounded-xl border-2 transition-all ${
+              currentPage === totalPages
+                ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                : 'border-gray-200 text-gray-600 hover:border-emerald-500 hover:bg-emerald-50'
+            }`}
+          >
+            <FiChevronRight className="text-xl" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50/20 p-4 md:p-8">
@@ -231,7 +345,7 @@ const UserManagement = () => {
                 </h1>
               </div>
               <p className="text-base text-gray-500 ml-16">
-                Manage and organize all system users
+                Manage and organize all system users • {users.length} total users
               </p>
             </div>
             
@@ -269,12 +383,12 @@ const UserManagement = () => {
               type="text"
               placeholder="Search by name or email..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-14 pr-12 py-4 w-full border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all bg-white shadow-sm text-base"
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm("")}
+                onClick={() => handleSearchChange({ target: { value: '' } })}
                 className="absolute inset-y-0 right-0 pr-5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <FiX className="text-xl" />
@@ -291,7 +405,7 @@ const UserManagement = () => {
                 <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Role Filter</span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setSelectedRole("all")}
+                    onClick={() => handleRoleFilter("all")}
                     className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
                       selectedRole === "all" 
                         ? 'bg-gradient-to-r from-[#05B171] to-emerald-600 text-white shadow-lg' 
@@ -301,7 +415,7 @@ const UserManagement = () => {
                     All Users
                   </button>
                   <button
-                    onClick={() => setSelectedRole("admin")}
+                    onClick={() => handleRoleFilter("admin")}
                     className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
                       selectedRole === "admin" 
                         ? 'bg-purple-600 text-white shadow-lg' 
@@ -311,7 +425,7 @@ const UserManagement = () => {
                     Admins
                   </button>
                   <button
-                    onClick={() => setSelectedRole("customer")}
+                    onClick={() => handleRoleFilter("customer")}
                     className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
                       selectedRole === "customer" 
                         ? 'bg-teal-600 text-white shadow-lg' 
@@ -323,10 +437,7 @@ const UserManagement = () => {
                 </div>
               </div>
               <button 
-                onClick={() => {
-                  setSelectedRole("all");
-                  setSearchTerm("");
-                }}
+                onClick={handleClearFilters}
                 className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-2 font-medium transition-colors"
               >
                 <FiRefreshCw className="text-base" /> Clear All
@@ -351,7 +462,7 @@ const UserManagement = () => {
               {filteredUsers.length === 0 ? (
                 <EmptyState />
               ) : (
-                filteredUsers.map((user, index) => (
+                paginatedUsers.map((user, index) => (
                   <div key={user._id} style={{animationDelay: `${index * 50}ms`}}>
                     <UserCard
                       user={user}
@@ -397,7 +508,7 @@ const UserManagement = () => {
                         </td>
                       </tr>
                     ) : (
-                      filteredUsers.map((user, index) => (
+                      paginatedUsers.map((user, index) => (
                         <TableRow 
                           key={user._id} 
                           user={user} 
@@ -410,6 +521,9 @@ const UserManagement = () => {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Pagination */}
+              {filteredUsers.length > 0 && <Pagination />}
             </div>
           </>
         )}
