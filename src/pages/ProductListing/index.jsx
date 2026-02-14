@@ -25,7 +25,7 @@ const ProductListing = () => {
 
   // State
   const [allProducts, setAllProducts] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 1000]); // Changed from 500 to 1000
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [ratingsFilter, setRatingsFilter] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -129,23 +129,16 @@ const ProductListing = () => {
     setRatingsFilter(null);
     setSortOption("featured");
     setCurrentPage(1);
-    if (allProducts.length > 0) {
-      const prices = allProducts.map((p) => p.price);
-      setPriceRange([Math.min(...prices), Math.max(...prices)]);
-    }
+    setPriceRange([0, 1000]); // Reset to 1000 instead of calculating from products
   };
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (selectedCategory) count++;
     if (ratingsFilter) count++;
-    if (allProducts.length > 0) {
-      const prices = allProducts.map((p) => p.price);
-      const maxPrice = Math.max(...prices);
-      if (priceRange[1] < maxPrice) count++;
-    }
+    if (priceRange[1] < 1000) count++; // Check if price filter is active (below 1000)
     return count;
-  }, [selectedCategory, ratingsFilter, priceRange, allProducts]);
+  }, [selectedCategory, ratingsFilter, priceRange]);
 
   // Handle page change
   const handlePageChange = (pageNumber) => {
@@ -370,7 +363,7 @@ const ProductListing = () => {
                 <input
                   type="range"
                   min="0"
-                  max="500"
+                  max="1000" // Changed from 500 to 1000
                   value={priceRange[1]}
                   onChange={(e) => {
                     setPriceRange([priceRange[0], parseInt(e.target.value)]);
@@ -504,7 +497,7 @@ const ProductListing = () => {
                     <input
                       type="range"
                       min="0"
-                      max="500"
+                      max="1000"
                       value={priceRange[1]}
                       onChange={(e) => {
                         setPriceRange([priceRange[0], parseInt(e.target.value)]);
