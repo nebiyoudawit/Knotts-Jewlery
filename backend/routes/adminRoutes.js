@@ -2,9 +2,7 @@ import express from 'express';
 
 // Import from separate admin controller files
 import {
-  getDashboardStats,
   getEnhancedDashboardStats,
-  getMonthlyAnalytics,
   getRealTimeUpdates
 } from '../controllers/adminController/dashboardController.js';
 
@@ -43,9 +41,7 @@ const router = express.Router();
 router.use(authMiddleware, adminMiddleware);
 
 // ---------------- DASHBOARD ROUTES ----------------
-router.get('/', getDashboardStats);  // Legacy endpoint
 router.get('/enhanced', getEnhancedDashboardStats);  // New enhanced dashboard
-router.get('/analytics', getMonthlyAnalytics);
 router.get('/updates', getRealTimeUpdates);
 
 // ---------------- PRODUCT ROUTES ----------------
