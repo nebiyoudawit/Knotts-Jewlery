@@ -5,6 +5,11 @@ const { Schema, model } = mongoose;
 
 const productSchema = new Schema(
   {
+    productId: {
+      type: String,
+      unique: true,
+      sparse: true, // Allow existing documents without this field
+    },
     name: {
       type: String,
       required: [true, 'Product name is required'],
@@ -20,7 +25,6 @@ const productSchema = new Schema(
     originalPrice: {
       type: Number,
       min: [0, 'Original price cannot be negative'],
-
     },
     stock: {
       type: Number,
@@ -53,10 +57,10 @@ const productSchema = new Schema(
       maxlength: [1000, 'Description cannot exceed 1000 characters'],
     },
     sales: {
-    type: Number,
-    default: 0,
-    min: [0, 'Sales count cannot be negative']
-  },
+      type: Number,
+      default: 0,
+      min: [0, 'Sales count cannot be negative']
+    },
     reviewCount: {
       type: Number,
       default: 0,
@@ -80,8 +84,16 @@ const productSchema = new Schema(
   }
 );
 
-productSchema.pre('save', function (next) {
+// Generate unique product ID before saving
+productSchema.pre('save', async function (next) {
   this.updatedAt = Date.now();
+  
+  // Generate productId if it doesn't exist
+  if (!this.productId && this.isNew) {
+    const count = await this.constructor.countDocuments();
+    this.productId = `PROD-${String(count + 1).padStart(4, '0')}`;
+  }
+  
   next();
 });
 
