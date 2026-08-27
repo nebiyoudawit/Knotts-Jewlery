@@ -40,8 +40,10 @@ app.use((req, res, next) => {
 });
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Server error' });
+  console.error('FULL ERROR:', err);
+  console.error('ERROR MESSAGE:', err?.message);
+  console.error('ERROR NAME:', err?.name);
+  res.status(500).json({ message: 'Server error', error: err?.message || String(err) });
 });
 
 // ✅ Start server after Redis connects
