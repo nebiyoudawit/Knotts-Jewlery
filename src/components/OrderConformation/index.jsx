@@ -3,10 +3,12 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaShoppingBag, FaExclamationTriangle, FaTimes } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPackage, FiMapPin, FiCreditCard, FiCalendar, FiX } from 'react-icons/fi';
+import useSeo from '../../hooks/useSeo';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const OrderConfirmation = () => {
+  useSeo({ title: "Order Confirmed", noindex: true });
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);

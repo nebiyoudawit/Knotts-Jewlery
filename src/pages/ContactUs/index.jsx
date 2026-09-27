@@ -8,9 +8,14 @@ import {
   Grid,
 } from "@mui/material";
 import Footer from "../../components/Footer";
+import useSeo from "../../hooks/useSeo";
 
 
 const ContactUs = () => {
+  useSeo({
+    title: "Contact Us",
+    description: "Get in touch with Knotts Jewelry in Addis Ababa for orders, custom pieces, delivery and pickup questions.",
+  });
   return (
     <>
 

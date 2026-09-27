@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
+import useSeo from "../../hooks/useSeo";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -30,6 +31,21 @@ const ProductPage = () => {
   const [activeTab, setActiveTab] = useState("description");
 
   const { addToCart, toggleWishlist, wishlist, currentUser } = useShop();
+
+  useSeo({
+    title: product
+      ? `${product.name} – ${product.price.toLocaleString()} Birr`
+      : error
+      ? "Product Not Found"
+      : undefined,
+    description: product
+      ? `${product.description} Handcrafted ${product.category?.toLowerCase() || "jewelry"} from Knotts Jewelry, Addis Ababa.`
+      : undefined,
+    image: product?.images?.find((img) => img?.startsWith("http")),
+    path: `/product/${id}`,
+    type: product ? "product" : "website",
+    noindex: Boolean(error),
+  });
 
   useEffect(() => {
     const fetchProductData = async () => {

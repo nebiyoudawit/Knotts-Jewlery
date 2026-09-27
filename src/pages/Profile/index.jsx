@@ -15,10 +15,12 @@ import {
 import { motion } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import { toast } from "react-toastify";
+import useSeo from "../../hooks/useSeo";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const Profile = () => {
+  useSeo({ title: "My Profile", noindex: true });
   const { currentUser, updateUserProfile } = useShop();
   const [savingProfile, setSavingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);

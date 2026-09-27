@@ -5,8 +5,10 @@ import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import successAnimation from "../../success-animation.json";
 import { useShop } from "../../context/ShopContext";
+import useSeo from "../../hooks/useSeo";
 
 const Register = () => {
+  useSeo({ title: "Create Account", noindex: true });
   const { register } = useShop();
   const [formData, setFormData] = useState({
     name: "",

@@ -5,8 +5,10 @@ import ProductSlider from "../../components/ProductSlider";
 import Footer from "../../components/Footer";
 import { Sparkles, Award, Shield, Truck, Heart } from "lucide-react";
 import { motion } from "framer-motion";
+import useSeo from "../../hooks/useSeo";
 
 const Home = () => {
+  useSeo({});
   const categories = [
     "All",
     "Bracelets",

@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { FaTimes, FaHeart, FaRegHeart, FaShoppingBag, FaArrowRight, FaLock, FaTruck, FaChevronLeft } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
+import useSeo from "../../hooks/useSeo";
 
 const CartPage = () => {
+  useSeo({ title: "Your Cart", noindex: true });
   const {
     cart,
     removeFromCart,

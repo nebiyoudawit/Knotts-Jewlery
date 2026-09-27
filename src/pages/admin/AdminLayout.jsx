@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop } from '../../context/ShopContext';
+import useSeo from '../../hooks/useSeo';
 
 const navItems = [
   { to: '/admin', icon: FiGrid, label: 'Dashboard', end: true },
@@ -16,6 +17,7 @@ const navItems = [
 ];
 
 const AdminLayout = () => {
+  useSeo({ title: "Admin", noindex: true });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [searchQuery, setSearchQuery] = useState('');

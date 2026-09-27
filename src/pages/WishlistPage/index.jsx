@@ -4,10 +4,12 @@ import { FaHeart, FaArrowRight, FaGem, FaChevronLeft, FaChevronRight } from "rea
 import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
+import useSeo from "../../hooks/useSeo";
 
 const ITEMS_PER_PAGE = 4;
 
 const WishlistPage = () => {
+  useSeo({ title: "Your Wishlist", noindex: true });
   const { wishlist, toggleWishlist, addToCart, wishlistCount } = useShop();
   const [currentPage, setCurrentPage] = useState(1);
   const [paginatedItems, setPaginatedItems] = useState([]);
