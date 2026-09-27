@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://knotts-jewlery-1.onrender.com/sitemap.xml" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }

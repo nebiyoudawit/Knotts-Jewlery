@@ -21,6 +21,14 @@ export const invalidateAdminProductList = async () => {
   }
 };
 
+export const invalidateSitemap = async () => {
+  try {
+    await redisClient.del('sitemap:xml');
+  } catch (err) {
+    console.error('Failed to invalidate sitemap cache:', err);
+  }
+};
+
 export const invalidateAdminUserList = async () => {
   try {
     await redisClient.del('admin:users');
