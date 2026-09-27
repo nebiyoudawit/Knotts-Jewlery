@@ -33,6 +33,23 @@ const upsertCanonical = (href) => {
   el.setAttribute("href", href);
 };
 
+const JSON_LD_ID = "seo-jsonld";
+
+const setJsonLd = (json) => {
+  let el = document.getElementById(JSON_LD_ID);
+  if (!json) {
+    el?.remove();
+    return;
+  }
+  if (!el) {
+    el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.id = JSON_LD_ID;
+    document.head.appendChild(el);
+  }
+  el.textContent = json;
+};
+
 const toAbsolute = (url) => {
   if (!url) return DEFAULT_IMAGE;
   if (/^https?:\/\//.test(url)) return url;
@@ -46,6 +63,7 @@ const toAbsolute = (url) => {
  * - title: page-specific part; the brand is appended automatically. Omit for the home page.
  * - path: canonical path; defaults to the current pathname (query strings are never canonical).
  * - noindex: keep the page out of search results (account, cart, admin pages, search results).
+ * - jsonLd: schema.org object (or array of them) from src/hooks/seoSchemas.js.
  */
 const useSeo = ({
   title,
@@ -54,8 +72,18 @@ const useSeo = ({
   path,
   type = "website",
   noindex = false,
+  jsonLd,
 } = {}) => {
   const { pathname } = useLocation();
+
+  // Serialized so a new-but-equal object each render doesn't re-run the effect.
+  const jsonLdString = jsonLd ? JSON.stringify(jsonLd) : null;
+
+  useEffect(() => {
+    setJsonLd(jsonLdString);
+  }, [jsonLdString]);
+
+  useEffect(() => () => setJsonLd(null), []);
 
   useEffect(() => {
     const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;

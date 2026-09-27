@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
 import useSeo from "../../hooks/useSeo";
+import { breadcrumbSchema } from "../../hooks/seoSchemas";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -60,6 +61,13 @@ const ProductListing = () => {
       : "Browse the full Knotts Jewelry collection: rings, necklaces, bracelets, earrings and charms. Pay on delivery in Addis Ababa.",
     path: seoCategory ? `/products/${urlCategory.toLowerCase()}` : "/products",
     noindex: Boolean(urlSearchTerm) || (Boolean(urlCategory) && !seoCategory),
+    jsonLd: seoCategory
+      ? breadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Shop", path: "/products" },
+          { name: seoCategory, path: `/products/${urlCategory.toLowerCase()}` },
+        ])
+      : undefined,
   });
 
   // Fetch products from backend

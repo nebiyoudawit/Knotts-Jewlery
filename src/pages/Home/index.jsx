@@ -6,9 +6,10 @@ import Footer from "../../components/Footer";
 import { Sparkles, Award, Shield, Truck, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import useSeo from "../../hooks/useSeo";
+import { storeSchema } from "../../hooks/seoSchemas";
 
 const Home = () => {
-  useSeo({});
+  useSeo({ jsonLd: storeSchema() });
   const categories = [
     "All",
     "Bracelets",

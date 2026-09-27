@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
 import useSeo from "../../hooks/useSeo";
+import { productSchema, breadcrumbSchema } from "../../hooks/seoSchemas";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -45,6 +46,18 @@ const ProductPage = () => {
     path: `/product/${id}`,
     type: product ? "product" : "website",
     noindex: Boolean(error),
+    jsonLd: product
+      ? [
+          productSchema(product),
+          breadcrumbSchema([
+            { name: "Home", path: "/" },
+            ...(product.category && product.category !== "Uncategorized"
+              ? [{ name: product.category, path: `/products/${product.category.toLowerCase()}` }]
+              : [{ name: "Shop", path: "/products" }]),
+            { name: product.name, path: `/product/${product._id}` },
+          ]),
+        ]
+      : undefined,
   });
 
   useEffect(() => {
