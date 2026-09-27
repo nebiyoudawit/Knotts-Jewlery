@@ -9,7 +9,7 @@ const serverEnv = globalThis.process?.env || {};
 export const SITE_URL = (
   viteEnv.VITE_SITE_URL ||
   serverEnv.VITE_SITE_URL ||
-  "https://knotts-jewlery-xjku.vercel.app"
+  "https://knottsjewelry.store"
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "Knotts Jewelry";

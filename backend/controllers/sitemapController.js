@@ -2,7 +2,7 @@ import Product from '../models/products.js';
 import redisClient from '../utils/redisClient.js';
 
 // Public storefront domain (the Vercel frontend), not this API's host.
-const SITE_URL = (process.env.SITE_URL || 'https://knotts-jewlery-xjku.vercel.app').replace(/\/$/, '');
+const SITE_URL = (process.env.SITE_URL || 'https://knottsjewelry.store').replace(/\/$/, '');
 
 export const SITEMAP_CACHE_KEY = 'sitemap:xml';
 

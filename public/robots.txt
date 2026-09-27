@@ -10,4 +10,4 @@ Disallow: /login
 Disallow: /register
 Disallow: /order-confirmation
 
-Sitemap: https://knotts-jewlery-xjku.vercel.app/sitemap.xml
+Sitemap: https://knottsjewelry.store/sitemap.xml
