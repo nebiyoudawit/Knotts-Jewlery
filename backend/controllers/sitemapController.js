@@ -16,6 +16,23 @@ const STATIC_PAGES = [
   { path: '/contact', changefreq: 'monthly', priority: '0.5' },
 ];
 
+// Keep in sync with slugify()/productPath() in src/seo/site.js - these must produce the
+// same URL the storefront treats as canonical.
+const slugify = (text) =>
+  String(text || '')
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+    .replace(/-+$/, '');
+
+const productPath = (product) => {
+  const slug = slugify(product.name);
+  return `/product/${slug ? `${slug}-` : ''}${product._id}`;
+};
+
 const escapeXml = (value) =>
   String(value)
     .replace(/&/g, '&amp;')
@@ -52,7 +69,7 @@ const buildSitemap = async () => {
     ...STATIC_PAGES.map((page) => urlEntry({ loc: `${SITE_URL}${page.path}`, ...page })),
     ...products.map((product) =>
       urlEntry({
-        loc: `${SITE_URL}/product/${product._id}`,
+        loc: `${SITE_URL}${productPath(product)}`,
         lastmod: product.updatedAt ? new Date(product.updatedAt).toISOString().slice(0, 10) : undefined,
         changefreq: 'weekly',
         priority: '0.7',

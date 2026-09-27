@@ -6,10 +6,10 @@ import Footer from "../../components/Footer";
 import { Sparkles, Award, Shield, Truck, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import useSeo from "../../hooks/useSeo";
-import { storeSchema } from "../../hooks/seoSchemas";
+import { homeSeo } from "../../seo/pages";
 
 const Home = () => {
-  useSeo({ jsonLd: storeSchema() });
+  useSeo(homeSeo());
   const categories = [
     "All",
     "Bracelets",
@@ -73,7 +73,8 @@ const Home = () => {
         <div className="absolute inset-0">
           <img
             src="/hero-img2.jpg"
-            alt="Beautiful Jewelry Collection"
+            alt="Knotts Jewelry handcrafted jewelry collection"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
           {/* Darker overlay for better text readability */}
@@ -99,6 +100,9 @@ const Home = () => {
             </motion.div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
+              <span className="block text-emerald-300 text-xl md:text-2xl font-semibold tracking-wide mb-2">
+                Knotts Jewelry
+              </span>{" "}
               Discover Our Exquisite Collections
             </h1>
             <p className="text-lg md:text-xl mb-8 text-gray-200">

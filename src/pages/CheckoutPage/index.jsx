@@ -13,11 +13,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import useSeo from "../../hooks/useSeo";
+import { privateSeo } from "../../seo/pages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const CheckoutPage = () => {
-  useSeo({ title: "Checkout", noindex: true });
+  useSeo(privateSeo("Checkout"));
   const { cart, currentUser } = useShop();
   const [selectedLocation, setSelectedLocation] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");

@@ -1,14 +1,17 @@
-// schema.org structured data (JSON-LD) passed to useSeo({ jsonLd }).
+// schema.org structured data (JSON-LD). Used by src/seo/pages.js.
 // Validate changes at https://search.google.com/test/rich-results
-import { SITE_URL, SITE_NAME } from "./useSeo";
+import {
+  SITE_URL,
+  SITE_NAME,
+  PHONE,
+  EMAIL,
+  DELIVERY_AREAS,
+  SOCIAL_PROFILES,
+  productPath,
+} from "./site.js";
 
 const STORE_ID = `${SITE_URL}/#store`;
-
-const SOCIAL_PROFILES = [
-  "https://www.instagram.com/knotts_jewelry",
-  "https://t.me/knotts_jewelry",
-  "https://www.tiktok.com/@knotts_jewelry",
-];
+const WEBSITE_ID = `${SITE_URL}/#website`;
 
 // Home page: the business itself, plus a site search box for Google.
 export const storeSchema = () => [
@@ -17,20 +20,21 @@ export const storeSchema = () => [
     "@type": "JewelryStore",
     "@id": STORE_ID,
     name: SITE_NAME,
+    alternateName: ["Knotts", "Knotts Jewellery", "Knotts Jewelry Addis Ababa"],
     url: `${SITE_URL}/`,
     logo: `${SITE_URL}/logo.png`,
     image: `${SITE_URL}/hero-img1.jpg`,
     description:
       "Handcrafted rings, necklaces, bracelets, earrings and charms in Addis Ababa, with pay on delivery.",
-    telephone: "+251961599628",
-    email: "knottsjewelry@gmail.com",
+    telephone: PHONE,
+    email: EMAIL,
     currenciesAccepted: "ETB",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Addis Ababa",
       addressCountry: "ET",
     },
-    areaServed: ["Summit", "4 Kilo", "Megenagna", "Figa"].map((name) => ({
+    areaServed: DELIVERY_AREAS.map((name) => ({
       "@type": "Place",
       name: `${name}, Addis Ababa`,
     })),
@@ -39,8 +43,11 @@ export const storeSchema = () => [
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": WEBSITE_ID,
     name: SITE_NAME,
+    alternateName: "Knotts",
     url: `${SITE_URL}/`,
+    publisher: { "@id": STORE_ID },
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/products?search={search_term_string}`,
@@ -61,9 +68,21 @@ export const breadcrumbSchema = (crumbs) => ({
   })),
 });
 
+// Category / shop pages: the products shown, in order.
+export const itemListSchema = (products) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  itemListElement: products.map((product, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: `${SITE_URL}${productPath(product)}`,
+    name: product.name,
+  })),
+});
+
 // Product page: enables price, availability and star ratings in search results.
 export const productSchema = (product) => {
-  const url = `${SITE_URL}/product/${product._id}`;
+  const url = `${SITE_URL}${productPath(product)}`;
   const images = (product.images || []).filter((img) => img?.startsWith("http"));
   const reviews = (product.reviews || []).filter((r) => r && typeof r === "object" && r.rating);
 
@@ -107,7 +126,7 @@ export const productSchema = (product) => {
       author: { "@type": "Person", name: r.name || r.user?.name || "Customer" },
       reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
       reviewBody: r.comment || undefined,
-      datePublished: r.createdAt ? r.createdAt.slice(0, 10) : undefined,
+      datePublished: r.createdAt ? String(r.createdAt).slice(0, 10) : undefined,
     }));
   }
 

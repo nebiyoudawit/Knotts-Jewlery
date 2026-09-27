@@ -1,17 +1,14 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import {
+  SITE_NAME,
+  SITE_URL,
+  absoluteUrl,
+  cleanDescription,
+  formatTitle,
+} from "../seo/site";
 
-// Set VITE_SITE_URL to the production domain; every canonical and og:url is built from it.
-export const SITE_URL = (
-  import.meta.env.VITE_SITE_URL || "https://knotts-jewlery-xjku.vercel.app"
-).replace(/\/$/, "");
-
-export const SITE_NAME = "Knotts Jewelry";
-
-const DEFAULT_TITLE = `${SITE_NAME} – Handcrafted Jewelry in Addis Ababa`;
-const DEFAULT_DESCRIPTION =
-  "Shop handcrafted rings, necklaces, bracelets, earrings and charms from Knotts Jewelry in Addis Ababa. Pay on delivery, or pick up in Figa, Gerji or Megenagna.";
-const DEFAULT_IMAGE = `${SITE_URL}/hero-img1.jpg`;
+const JSON_LD_ID = "seo-jsonld";
 
 const upsertMeta = (attr, key, content) => {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);
@@ -33,8 +30,6 @@ const upsertCanonical = (href) => {
   el.setAttribute("href", href);
 };
 
-const JSON_LD_ID = "seo-jsonld";
-
 const setJsonLd = (json) => {
   let el = document.getElementById(JSON_LD_ID);
   if (!json) {
@@ -50,20 +45,18 @@ const setJsonLd = (json) => {
   el.textContent = json;
 };
 
-const toAbsolute = (url) => {
-  if (!url) return DEFAULT_IMAGE;
-  if (/^https?:\/\//.test(url)) return url;
-  return `${SITE_URL}/${url.replace(/^\//, "")}`;
-};
-
 /**
  * Sets the document title and the SEO/social meta tags for the current page.
- * Call it once near the top of a page component, before any early return.
+ * Pass a builder from src/seo/pages.js, e.g. useSeo(aboutSeo()).
+ * Call it near the top of a page component, before any early return.
+ *
+ * The same tags are pre-rendered on the server by api/render.js; this hook keeps
+ * them correct as the user navigates inside the app.
  *
  * - title: page-specific part; the brand is appended automatically. Omit for the home page.
  * - path: canonical path; defaults to the current pathname (query strings are never canonical).
  * - noindex: keep the page out of search results (account, cart, admin pages, search results).
- * - jsonLd: schema.org object (or array of them) from src/hooks/seoSchemas.js.
+ * - jsonLd: schema.org object (or array of them) from src/seo/schemas.js.
  */
 const useSeo = ({
   title,
@@ -86,10 +79,10 @@ const useSeo = ({
   useEffect(() => () => setJsonLd(null), []);
 
   useEffect(() => {
-    const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
-    const desc = (description || DEFAULT_DESCRIPTION).replace(/\s+/g, " ").trim().slice(0, 160);
+    const fullTitle = formatTitle(title);
+    const desc = cleanDescription(description);
     const url = `${SITE_URL}${path ?? pathname}`;
-    const img = toAbsolute(image);
+    const img = absoluteUrl(image);
 
     document.title = fullTitle;
     upsertMeta("name", "description", desc);

@@ -9,13 +9,11 @@ import {
 } from "@mui/material";
 import Footer from "../../components/Footer";
 import useSeo from "../../hooks/useSeo";
+import { contactSeo } from "../../seo/pages";
 
 
 const ContactUs = () => {
-  useSeo({
-    title: "Contact Us",
-    description: "Get in touch with Knotts Jewelry in Addis Ababa for orders, custom pieces, delivery and pickup questions.",
-  });
+  useSeo(contactSeo());
   return (
     <>
 

@@ -24,13 +24,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import OrderDetailModal from "../../components/OrderDetailModal";
 import useSeo from "../../hooks/useSeo";
+import { privateSeo } from "../../seo/pages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const ITEMS_PER_PAGE = 5;
 
 const UserOrders = () => {
-  useSeo({ title: "My Orders", noindex: true });
+  useSeo(privateSeo("My Orders"));
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);

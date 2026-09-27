@@ -4,11 +4,12 @@ import { FaCheckCircle, FaShoppingBag, FaExclamationTriangle, FaTimes } from 're
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPackage, FiMapPin, FiCreditCard, FiCalendar, FiX } from 'react-icons/fi';
 import useSeo from '../../hooks/useSeo';
+import { privateSeo } from '../../seo/pages';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const OrderConfirmation = () => {
-  useSeo({ title: "Order Confirmed", noindex: true });
+  useSeo(privateSeo("Order Confirmed"));
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);

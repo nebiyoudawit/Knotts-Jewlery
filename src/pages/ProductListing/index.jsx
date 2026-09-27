@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
 import useSeo from "../../hooks/useSeo";
-import { breadcrumbSchema } from "../../hooks/seoSchemas";
+import { categorySeo, notFoundSeo, shopSeo } from "../../seo/pages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -49,26 +49,15 @@ const ProductListing = () => {
 
   // /product and /products are the same page; /products is the canonical one.
   // Search results and unknown categories stay out of the index.
-  const seoCategory = urlCategory ? categoryMap[urlCategory.toLowerCase()] : null;
-  useSeo({
-    title: seoCategory
-      ? `Handcrafted ${seoCategory} in Addis Ababa`
-      : urlSearchTerm
-      ? `Search results for "${urlSearchTerm}"`
-      : "Shop All Jewelry",
-    description: seoCategory
-      ? `Browse handcrafted ${seoCategory.toLowerCase()} from Knotts Jewelry. Prices in birr, pay on delivery in Addis Ababa, or pick up in Figa, Gerji or Megenagna.`
-      : "Browse the full Knotts Jewelry collection: rings, necklaces, bracelets, earrings and charms. Pay on delivery in Addis Ababa.",
-    path: seoCategory ? `/products/${urlCategory.toLowerCase()}` : "/products",
-    noindex: Boolean(urlSearchTerm) || (Boolean(urlCategory) && !seoCategory),
-    jsonLd: seoCategory
-      ? breadcrumbSchema([
-          { name: "Home", path: "/" },
-          { name: "Shop", path: "/products" },
-          { name: seoCategory, path: `/products/${urlCategory.toLowerCase()}` },
-        ])
-      : undefined,
-  });
+  const seoProducts = useMemo(() => {
+    const name = urlCategory ? categoryMap[urlCategory.toLowerCase()] : null;
+    return allProducts.filter((p) => !name || p.category === name).slice(0, 30);
+  }, [allProducts, urlCategory]);
+  useSeo(
+    urlCategory
+      ? categorySeo(urlCategory, { products: seoProducts }) ?? notFoundSeo()
+      : shopSeo({ search: urlSearchTerm, products: seoProducts })
+  );
 
   // Fetch products from backend
   useEffect(() => {

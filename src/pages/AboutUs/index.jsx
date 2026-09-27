@@ -2,11 +2,9 @@ import React from "react";
 import { Container, Typography, Box } from "@mui/material";
 import Footer from "../../components/Footer";
 import useSeo from "../../hooks/useSeo";
+import { aboutSeo } from "../../seo/pages";
 const AboutUs = () => {
-  useSeo({
-    title: "About Us",
-    description: "Learn about Knotts Jewelry, an Addis Ababa jewelry store handcrafting rings, necklaces, bracelets, earrings and charms with quality materials.",
-  });
+  useSeo(aboutSeo());
   return (
     <>
       <main className="about-page">

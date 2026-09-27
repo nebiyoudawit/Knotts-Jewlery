@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaStar,
   FaRegStar,
@@ -16,12 +16,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
 import useSeo from "../../hooks/useSeo";
-import { productSchema, breadcrumbSchema } from "../../hooks/seoSchemas";
+import { notFoundSeo, productSeo } from "../../seo/pages";
+import { productIdFromParam, productPath } from "../../seo/site";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const ProductPage = () => {
-  const { id } = useParams();
+  const { id: productParam } = useParams();
+  const id = productIdFromParam(productParam);
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -33,32 +37,14 @@ const ProductPage = () => {
 
   const { addToCart, toggleWishlist, wishlist, currentUser } = useShop();
 
-  useSeo({
-    title: product
-      ? `${product.name} – ${product.price.toLocaleString()} Birr`
-      : error
-      ? "Product Not Found"
-      : undefined,
-    description: product
-      ? `${product.description} Handcrafted ${product.category?.toLowerCase() || "jewelry"} from Knotts Jewelry, Addis Ababa.`
-      : undefined,
-    image: product?.images?.find((img) => img?.startsWith("http")),
-    path: `/product/${id}`,
-    type: product ? "product" : "website",
-    noindex: Boolean(error),
-    jsonLd: product
-      ? [
-          productSchema(product),
-          breadcrumbSchema([
-            { name: "Home", path: "/" },
-            ...(product.category && product.category !== "Uncategorized"
-              ? [{ name: product.category, path: `/products/${product.category.toLowerCase()}` }]
-              : [{ name: "Shop", path: "/products" }]),
-            { name: product.name, path: `/product/${product._id}` },
-          ]),
-        ]
-      : undefined,
-  });
+  useSeo(product ? productSeo(product) : error ? notFoundSeo() : {});
+
+  // Old links (/product/<id>) and renamed products land on the canonical slug URL.
+  useEffect(() => {
+    if (product && product._id === id && location.pathname !== productPath(product)) {
+      navigate(productPath(product) + location.search, { replace: true });
+    }
+  }, [product, id, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -335,7 +321,7 @@ const ProductPage = () => {
                 >
                   <img
                     src={img}
-                    alt={`View ${index + 1}`}
+                    alt={`${product.name} – view ${index + 1}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.src = "/placeholder.jpg";

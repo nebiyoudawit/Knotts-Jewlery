@@ -1,29 +1,37 @@
-import { useState } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import './App.css'
 import Header from './components/headers/index.jsx'
 import Home from './pages/Home/index.jsx'
 import ProductListing from './pages/ProductListing/index.jsx'
 import ProductPage from './pages/ProductPage/index.jsx'
-import Login from './pages/login/index.jsx'
-import CartPage from './pages/CartPage/index.jsx'
-import WishlistPage from './pages/WishlistPage/index.jsx'
+import NotFound from './pages/NotFound/index.jsx'
 import { ShopProvider } from './context/ShopContext.jsx'
 import ScrollToTop from './components/ScrollTop/index.jsx'
-import Register from './pages/Register/index.jsx'
 import { Toaster } from 'sonner';
-import CheckoutPage from './pages/CheckoutPage/index.jsx'
-import Profile from './pages/Profile/index.jsx'
-import UserOrders from './pages/UserOrders/index.jsx'
-import AdminLayout from './pages/admin/AdminLayout'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import ProductManagment from './pages/admin/ProductManagment.jsx'
-import OrderManagment from './pages/admin/OrderManagment.jsx'
-import UserManagment from './pages/admin/UserMangment/index.jsx'
-import OrderConfirmation from './components/OrderConformation'
-import ContactUs from './pages/ContactUs/index.jsx'
-import AboutUs from './pages/AboutUs/index.jsx'
-import { useEffect } from 'react';
+
+const Login = lazy(() => import('./pages/login/index.jsx'))
+const CartPage = lazy(() => import('./pages/CartPage/index.jsx'))
+const WishlistPage = lazy(() => import('./pages/WishlistPage/index.jsx'))
+const Register = lazy(() => import('./pages/Register/index.jsx'))
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage/index.jsx'))
+const Profile = lazy(() => import('./pages/Profile/index.jsx'))
+const UserOrders = lazy(() => import('./pages/UserOrders/index.jsx'))
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const ProductManagment = lazy(() => import('./pages/admin/ProductManagment.jsx'))
+const OrderManagment = lazy(() => import('./pages/admin/OrderManagment.jsx'))
+const UserManagment = lazy(() => import('./pages/admin/UserMangment/index.jsx'))
+const OrderConfirmation = lazy(() => import('./components/OrderConformation'))
+const ContactUs = lazy(() => import('./pages/ContactUs/index.jsx'))
+const AboutUs = lazy(() => import('./pages/AboutUs/index.jsx'))
+
+// Pages outside the main shopping path load on demand, keeping the first download small.
+const RouteFallback = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#05B171] border-t-transparent" />
+  </div>
+);
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -41,6 +49,7 @@ const AppRoutes = () => {
       {!hideHeader && <Header />}
       <ScrollToTop />
       {/* REMOVED: Old ToastContainer */}
+      <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" exact element={<Home />} />
@@ -66,7 +75,9 @@ const AppRoutes = () => {
           <Route path="order" element={<OrderManagment />} />
           <Route path="user" element={<UserManagment />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </>
   );
 };

@@ -3,6 +3,7 @@ import { FaStar, FaRegStar, FaHeart, FaShoppingBag, FaEye } from "react-icons/fa
 import { Link } from "react-router-dom";
 import { useShop } from "../../context/ShopContext";
 import { motion } from 'framer-motion';
+import { productPath } from '../../seo/site';
 
 const ProductItem = ({ product }) => {
   const { addToCart, toggleWishlist, wishlist } = useShop();
@@ -44,7 +45,7 @@ const ProductItem = ({ product }) => {
     >
       {/* Image Container - Made more compact */}
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-        <Link to={`/product/${product._id}`} className="block pt-[90%] relative">
+        <Link to={productPath(product)} className="block pt-[90%] relative">
           {/* Main Image */}
           <img
             src={getImageUrl()}
@@ -108,7 +109,7 @@ const ProductItem = ({ product }) => {
             className="w-9 h-9 rounded-full bg-white shadow-md backdrop-blur-sm flex items-center justify-center text-gray-700 hover:text-emerald-600 transition-colors duration-200"
             aria-label="Quick View"
             onClick={() => {
-              window.location.href = `/product/${product._id}`;
+              window.location.href = productPath(product);
             }}
           >
             <FaEye className="h-3.5 w-3.5" />
@@ -139,7 +140,7 @@ const ProductItem = ({ product }) => {
           </span>
 
           {/* Product Name - More compact */}
-          <Link to={`/product/${product._id}`}>
+          <Link to={productPath(product)}>
             <h3 className="font-semibold text-gray-900 mb-1.5 line-clamp-2 hover:text-emerald-600 transition-colors duration-200 text-sm leading-tight">
               {product.name}
             </h3>

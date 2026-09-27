@@ -1,6 +1,16 @@
 {
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "https://knotts-jewlery-1.onrender.com/sitemap.xml" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/((?!api/).*)", "destination": "/api/render?__path=$1" }
+  ],
+  "headers": [
+    {
+      "source": "/app.html",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
   ]
 }

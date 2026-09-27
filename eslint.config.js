@@ -30,4 +30,11 @@ export default [
       ],
     },
   },
+  {
+    // Vercel edge functions and build scripts run on the server.
+    files: ['api/**/*.js', 'scripts/**/*.{js,mjs}'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.serviceworker },
+    },
+  },
 ]
