@@ -242,6 +242,17 @@ const Footer = () => {
               <Link to="/" className="hover:text-emerald-600 transition-colors">Shipping Info</Link>
             </motion.div>
           </div>
+          <p className="mt-6 text-center text-xs text-gray-400">
+            Website by{" "}
+            <a
+              href="https://www.linkedin.com/in/nebiyou-dawit-bb60103a5"
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="font-medium text-gray-500 hover:text-emerald-600 transition-colors"
+            >
+              Nebiyou Dawit
+            </a>
+          </p>
         </div>
       </div>
     </footer>
