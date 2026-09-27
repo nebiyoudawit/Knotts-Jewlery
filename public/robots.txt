@@ -1,3 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /profile
+Disallow: /orders
+Disallow: /wishlist
+Disallow: /login
+Disallow: /register
+Disallow: /order-confirmation
+
 Sitemap: https://knotts-jewlery-xjku.vercel.app/sitemap.xml

@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import { getSitemap } from './controllers/sitemapController.js';
 import path from 'path';
 import redisClient from './utils/redisClient.js';
 
@@ -32,6 +33,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/admin', adminRoutes);
 app.use('/api/product', productRoutes);
 app.use('/api/orders', orderRoutes);
+
+// ✅ SEO - served to crawlers through the frontend's /sitemap.xml rewrite (vercel.json)
+app.get('/sitemap.xml', getSitemap);
 
 // ✅ Logging Middleware
 app.use((req, res, next) => {

@@ -7,6 +7,8 @@ import {
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShop } from '../../context/ShopContext';
+import useSeo from '../../hooks/useSeo';
+import { privateSeo } from '../../seo/pages';
 
 const navItems = [
   { to: '/admin', icon: FiGrid, label: 'Dashboard', end: true },
@@ -16,6 +18,7 @@ const navItems = [
 ];
 
 const AdminLayout = () => {
+  useSeo(privateSeo("Admin"));
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,7 +176,7 @@ const AdminLayout = () => {
         {/* Sidebar Header */}
         <div className="flex items-center p-6 border-b border-gray-200">
           <div className="flex items-center m-auto">
-            <img src="/icons1.png" alt="Logo" className="w-12 h-12 object-contain" />
+            <img src="/icons1.png" alt="Knotts Jewelry" className="w-12 h-12 object-contain" />
           </div>
         </div>
 

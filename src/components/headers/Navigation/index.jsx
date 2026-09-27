@@ -129,7 +129,7 @@ const Navigation = ({ mobileOpen, handleDrawerToggle, onCategorySelect }) => {
                     <GiGemNecklace className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h1 className="font-bold text-gray-900 text-lg">Knotts</h1>
+                    <p className="font-bold text-gray-900 text-lg">Knotts</p>
                     <p className="text-xs text-gray-500 font-medium">Jewelry</p>
                   </div>
                 </div>

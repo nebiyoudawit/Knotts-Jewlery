@@ -500,7 +500,7 @@ const Header = () => {
                 </div>
               ) : (
                 <Link to={"/"} className="flex items-center gap-2">
-                  <img src="/logo.png" alt="Logo" className="h-11" />
+                  <img src="/logo.png" alt="Knotts Jewelry" className="h-11" />
                 </Link>
               )}
             </div>
@@ -522,7 +522,7 @@ const Header = () => {
           <div className="hidden md:flex items-center justify-between py-4">
             <div className="col1 w-[20%]">
               <Link to={"/"} className="flex items-center gap-2 group">
-                <img src="/logo.png" alt="Logo" className="h-12 transition-transform group-hover:scale-105" />
+                <img src="/logo.png" alt="Knotts Jewelry" className="h-12 transition-transform group-hover:scale-105" />
               </Link>
             </div>
             

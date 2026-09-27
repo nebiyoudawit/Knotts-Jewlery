@@ -4,8 +4,11 @@ import { useShop } from "../../context/ShopContext";
 import { toast } from "react-toastify";
 import { FiMail, FiLock, FiArrowRight, FiEye, FiEyeOff, FiChevronLeft, FiHome } from "react-icons/fi";
 import { motion } from "framer-motion";
+import useSeo from "../../hooks/useSeo";
+import { privateSeo } from "../../seo/pages";
 
 const Login = () => {
+  useSeo(privateSeo("Sign In"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

@@ -3,8 +3,12 @@ import { Link } from "react-router-dom";
 import { FaTimes, FaHeart, FaRegHeart, FaShoppingBag, FaArrowRight, FaLock, FaTruck, FaChevronLeft } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
+import useSeo from "../../hooks/useSeo";
+import { privateSeo } from "../../seo/pages";
+import { productPath } from "../../seo/site";
 
 const CartPage = () => {
+  useSeo(privateSeo("Your Cart"));
   const {
     cart,
     removeFromCart,
@@ -85,7 +89,7 @@ const CartPage = () => {
                         <div className="p-3 sm:p-4">
                           <div className="flex gap-3 sm:gap-4">
                             {/* Product Image */}
-                            <Link to={`/product/${item._id}`} className="shrink-0">
+                            <Link to={productPath(item)} className="shrink-0">
                               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
                                 <img
                                   src={getImageUrl(item.images?.[0])}
@@ -102,7 +106,7 @@ const CartPage = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between gap-2 mb-1">
                                 <Link
-                                  to={`/product/${item._id}`}
+                                  to={productPath(item)}
                                   className="font-semibold text-sm sm:text-base text-gray-900 hover:text-[#05B171] transition-colors line-clamp-2"
                                 >
                                   {item.name}

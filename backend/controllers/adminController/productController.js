@@ -1,6 +1,6 @@
 import Product from '../../models/products.js';
 import redisClient from '../../utils/redisClient.js';
-import { invalidateDashboardCache, invalidateAdminProductList, invalidateAdminOrderList } from '../../utils/cacheUtils.js';
+import { invalidateDashboardCache, invalidateAdminProductList, invalidateAdminOrderList, invalidateSitemap } from '../../utils/cacheUtils.js';
 
 // Helper function for product search cache deletion
 const deleteProductSearchCache = async () => {
@@ -72,6 +72,7 @@ export const addAdminProduct = async (req, res) => {
     await deleteProductSearchCache();
     await invalidateAdminProductList();
     await invalidateDashboardCache();
+    await invalidateSitemap();
     
     res.status(201).json({ success: true, product });
   } catch (err) {
@@ -120,6 +121,7 @@ export const updateAdminProduct = async (req, res) => {
     await deleteProductSearchCache();
     await invalidateAdminProductList();
     await invalidateDashboardCache();
+    await invalidateSitemap();
     
     if (!updatedProduct) {
       return res.status(404).json({ success: false, message: 'Product not found' });
@@ -143,6 +145,7 @@ export const deleteAdminProduct = async (req, res) => {
     await deleteProductSearchCache();
     await invalidateAdminProductList();
     await invalidateDashboardCache();
+    await invalidateSitemap();
     
     res.json({
       success: true,

@@ -7,6 +7,8 @@ import { Drawer } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 import { useShop } from "../../context/ShopContext";
 import ProductItem from "../../components/ProductItem";
+import useSeo from "../../hooks/useSeo";
+import { categorySeo, notFoundSeo, shopSeo } from "../../seo/pages";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -44,6 +46,18 @@ const ProductListing = () => {
     [location.search]
   );
   const urlSearchTerm = searchParams.get("search") || "";
+
+  // /product and /products are the same page; /products is the canonical one.
+  // Search results and unknown categories stay out of the index.
+  const seoProducts = useMemo(() => {
+    const name = urlCategory ? categoryMap[urlCategory.toLowerCase()] : null;
+    return allProducts.filter((p) => !name || p.category === name).slice(0, 30);
+  }, [allProducts, urlCategory]);
+  useSeo(
+    urlCategory
+      ? categorySeo(urlCategory, { products: seoProducts }) ?? notFoundSeo()
+      : shopSeo({ search: urlSearchTerm, products: seoProducts })
+  );
 
   // Fetch products from backend
   useEffect(() => {

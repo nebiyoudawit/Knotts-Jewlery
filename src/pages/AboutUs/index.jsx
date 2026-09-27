@@ -1,7 +1,10 @@
 import React from "react";
 import { Container, Typography, Box } from "@mui/material";
 import Footer from "../../components/Footer";
+import useSeo from "../../hooks/useSeo";
+import { aboutSeo } from "../../seo/pages";
 const AboutUs = () => {
+  useSeo(aboutSeo());
   return (
     <>
       <main className="about-page">

@@ -8,9 +8,12 @@ import {
   Grid,
 } from "@mui/material";
 import Footer from "../../components/Footer";
+import useSeo from "../../hooks/useSeo";
+import { contactSeo } from "../../seo/pages";
 
 
 const ContactUs = () => {
+  useSeo(contactSeo());
   return (
     <>
 
