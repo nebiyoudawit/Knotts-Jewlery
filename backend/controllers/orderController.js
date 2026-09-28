@@ -33,7 +33,6 @@ export const createOrder = async (req, res) => {
       }
 
       total += product.price * item.quantity;
-      total += deliveryFee;
       orderItems.push({
         product: product._id,
         name: product.name,
@@ -41,6 +40,9 @@ export const createOrder = async (req, res) => {
         price: product.price
       });
     }
+
+    // Delivery is charged once per order, not per line item
+    total += Number(deliveryFee) || 0;
 
     // Create order
     const order = new Order({
@@ -118,11 +120,14 @@ export const getOrderById = async (req, res) => {
       total: order.total,
       deliveryDate: order.deliveryDate,
       // Include additional fields if needed by the frontend
+      // Name and price come from the order snapshot so the receipt shows what was charged
       items: order.items.map(item => ({
         product: {
-          name: item.product?.name,
-          price: item.product?.price,
-          // include other product fields if needed
+          _id: item.product?._id,
+          name: item.name || item.product?.name,
+          price: item.price ?? item.product?.price,
+          image: item.product?.images?.[0],
+          category: item.product?.category,
         },
         quantity: item.quantity
       })),

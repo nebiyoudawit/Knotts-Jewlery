@@ -145,8 +145,9 @@ const ProductSlider = ({ items = 3, sortBy = 'latest', category = 'All' }) => {
           className="productSwiper !pb-2"
         >
           {products.map((product, index) => (
-            <SwiperSlide key={product._id}>
+            <SwiperSlide key={product._id} className="!h-auto">
               <motion.div
+                className="h-full"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}

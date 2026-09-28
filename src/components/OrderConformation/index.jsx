@@ -1,21 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FaCheckCircle, FaShoppingBag, FaExclamationTriangle, FaTimes } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiPackage, FiMapPin, FiCreditCard, FiCalendar, FiX } from 'react-icons/fi';
+import { Link, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  FiCheck,
+  FiAlertTriangle,
+  FiMapPin,
+  FiCreditCard,
+  FiTruck,
+  FiPrinter,
+  FiShoppingBag,
+  FiPackage,
+  FiXCircle,
+} from 'react-icons/fi';
 import useSeo from '../../hooks/useSeo';
 import { privateSeo } from '../../seo/pages';
+import { useShop } from '../../context/ShopContext';
 
 const apiUrl = import.meta.env.VITE_API_URL;
+const BASE_URL = (apiUrl || '').replace('/api', '');
+
+const formatBirr = (value = 0) =>
+  `${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB`;
+
+const imageUrl = (image) => {
+  if (!image) return '/default-product.jpg';
+  if (image.startsWith('http')) return image;
+  return `${BASE_URL}${image}`;
+};
+
+// Paper-receipt torn edge along the bottom of the card
+const zigzag = {
+  backgroundImage:
+    'linear-gradient(135deg, #fff 33.33%, transparent 33.33%), linear-gradient(225deg, #fff 33.33%, transparent 33.33%)',
+  backgroundSize: '16px 16px',
+  backgroundPosition: 'top left',
+};
+
+const Row = ({ label, value, strong }) => (
+  <div className="flex items-center justify-between">
+    <span className={strong ? 'text-base font-semibold text-gray-900' : 'text-sm text-gray-500'}>{label}</span>
+    <span className={strong ? 'text-lg font-bold text-gray-900' : 'text-sm font-medium text-gray-800'}>{value}</span>
+  </div>
+);
 
 const OrderConfirmation = () => {
   useSeo(privateSeo("Order Confirmed"));
   const { orderId } = useParams();
-  const navigate = useNavigate();
+  const { currentUser } = useShop();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -27,7 +61,7 @@ const OrderConfirmation = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch order');
+          throw new Error('We couldn\'t load this order');
         }
 
         const data = await response.json();
@@ -42,221 +76,266 @@ const OrderConfirmation = () => {
     fetchOrder();
   }, [orderId]);
 
-  const handleClose = () => {
-    setIsOpen(false);
-    setTimeout(() => navigate('/'), 300);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-[#05B171] border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-500 text-sm">Loading your receipt…</p>
+      </div>
+    );
+  }
 
-  const isPaid = order?.paymentStatus === 'Paid';
-  const isFailed = order?.paymentStatus === 'Failed';
+  if (error || !order) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <div className="max-w-sm text-center">
+          <div className="w-14 h-14 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+            <FiAlertTriangle className="w-6 h-6 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Order not found</h1>
+          <p className="text-gray-500 text-sm mb-6">{error || 'This order does not exist.'}</p>
+          <Link
+            to="/orders"
+            className="inline-flex px-6 py-3 bg-[#05B171] text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors"
+          >
+            Go to my orders
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  // Calculate total items
-  const totalItems = order?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const items = order.items || [];
+  const subtotal = items.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
+  const deliveryFee = Math.max(0, (order.total || 0) - subtotal);
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const isPickup = order.shippingAddress?.startsWith('PICKUP:');
+  const address = isPickup ? order.shippingAddress.replace('PICKUP:', '').trim() : order.shippingAddress;
+  const isCancelled = order.status === 'cancelled';
+  const isDelivered = order.status === 'delivered';
+  const isPaid = order.paymentStatus === 'Paid';
+  const placedAt = new Date(order.createdAt);
+  const firstName = currentUser?.name?.split(' ')[0];
+
+  const steps = [
+    { label: 'Placed', done: true },
+    { label: isPickup ? 'Ready for pickup' : 'On the way', done: isDelivered },
+    { label: isPickup ? 'Picked up' : 'Delivered', done: isDelivered },
+  ];
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
+    <main className="min-h-screen bg-gradient-to-b from-emerald-50/70 via-gray-50 to-gray-50 px-4 pt-8 pb-28 md:pb-16 print:bg-white print:p-0">
+      <div className="mx-auto w-full max-w-lg">
+        {/* Hero */}
+        <div className="text-center mb-6 print:hidden">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-          />
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 18 }}
+            className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center shadow-lg ${
+              isCancelled ? 'bg-red-500 shadow-red-500/30' : 'bg-[#05B171] shadow-emerald-500/30'
+            }`}
+          >
+            {isCancelled ? <FiXCircle className="w-8 h-8 text-white" /> : <FiCheck className="w-8 h-8 text-white" strokeWidth={3} />}
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              {isCancelled ? 'Order cancelled' : `Thank you${firstName ? `, ${firstName}` : ''}!`}
+            </h1>
+            <p className="text-gray-500 mt-1.5 text-sm md:text-base">
+              {isCancelled
+                ? 'This order was cancelled and will not be delivered.'
+                : isPickup
+                ? 'Your order is placed. We will let you know when it is ready to collect.'
+                : 'Your order is placed. We will call you before we deliver.'}
+            </p>
+          </motion.div>
+        </div>
 
-          {/* Modal */}
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Close Button */}
-                <button
-                  onClick={handleClose}
-                  className="absolute top-6 right-6 z-10 w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <FiX className="h-5 w-5" />
-                </button>
-
-                {loading ? (
-                  <div className="p-16 text-center">
-                    <div className="w-12 h-12 mx-auto mb-4 border-3 border-[#05B171] border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-600">Loading order details...</p>
-                  </div>
-                ) : error ? (
-                  <div className="p-16 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
-                      <FaExclamationTriangle className="text-2xl text-red-500" />
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Order</h2>
-                    <p className="text-gray-600 mb-6">{error}</p>
-                    <button
-                      onClick={handleClose}
-                      className="px-6 py-2.5 bg-[#05B171] text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors"
-                    >
-                      Close
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    {/* Header */}
-                    <div className="p-8 border-b border-gray-100">
-                      <div className="flex items-start gap-4">
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isPaid 
-                            ? 'bg-emerald-50' 
-                            : isFailed 
-                            ? 'bg-red-50'
-                            : 'bg-emerald-50'
-                        }`}>
-                          {isFailed ? (
-                            <FaExclamationTriangle className="text-2xl text-red-500" />
-                          ) : (
-                            <FaCheckCircle className="text-2xl text-[#05B171]" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                            {isPaid ? 'Order Confirmed!' : isFailed ? 'Payment Failed' : 'Order Received'}
-                          </h1>
-                          <p className="text-gray-600 text-sm">
-                            {isPaid 
-                              ? 'Thank you for your purchase. Your order has been confirmed.'
-                              : isFailed
-                              ? 'There was an issue processing your payment.'
-                              : 'Your order has been received and is being processed.'}
-                          </p>
-                          <div className="flex items-center gap-2 mt-3 text-sm">
-                            <span className="text-gray-500">Order ID:</span>
-                            <span className="font-mono font-semibold text-gray-900">{order?._id}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Order Details */}
-                    <div className="p-8 space-y-6">
-                      {/* Compact Order Summary */}
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                          <FiPackage className="h-4 w-4 text-[#05B171]" />
-                          Order Summary
-                        </h3>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm text-gray-600">Items</span>
-                            <span className="text-sm font-medium text-gray-900">
-                              {totalItems} {totalItems === 1 ? 'item' : 'items'}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Total</span>
-                            <span className="text-lg font-bold text-gray-900">
-                              {order?.total?.toFixed(2)} ETB
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Delivery Address */}
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                          <FiMapPin className="h-4 w-4 text-[#05B171]" />
-                          Delivery Address
-                        </h3>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {order?.shippingAddress}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Payment & Status */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                            <FiCreditCard className="h-4 w-4 text-[#05B171]" />
-                            Payment
-                          </h3>
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-sm text-gray-700 mb-1">{order?.paymentMethod}</p>
-                            <span className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
-                              isPaid 
-                                ? 'bg-emerald-50 text-emerald-700' 
-                                : isFailed
-                                ? 'bg-red-50 text-red-700'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}>
-                              {order?.paymentStatus}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                            <FiCalendar className="h-4 w-4 text-[#05B171]" />
-                            Status
-                          </h3>
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-sm text-gray-700 mb-1">{order?.status}</p>
-                            {order?.deliveryDate && (
-                              <p className="text-xs text-gray-500">
-                                Est. delivery: {new Date(order.deliveryDate).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Footer Actions - Responsive */}
-                    <div className="p-4 sm:p-6 bg-gray-50 border-t border-gray-100">
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Continue Shopping Button */}
-                        <Link
-                          to="/products"
-                          onClick={() => setIsOpen(false)}
-                          className="flex-1 py-3 px-4 bg-[#05B171] text-white text-center rounded-lg font-semibold hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 order-2 sm:order-1"
-                        >
-                          <FaShoppingBag className="h-4 w-4 flex-shrink-0" />
-                          <span className="truncate">Continue Shopping</span>
-                        </Link>
-                        
-                        {/* View Orders Button */}
-                        <Link
-                          to="/orders"
-                          onClick={() => setIsOpen(false)}
-                          className="flex-1 py-3 px-4 border border-gray-300 text-gray-700 text-center rounded-lg font-semibold hover:bg-gray-100 transition-colors order-1 sm:order-2"
-                        >
-                          <span className="truncate">View Orders</span>
-                        </Link>
-                      </div>
-                      
-                      {/* Extra Close Button for Mobile */}
-                      <div className="mt-3 sm:hidden">
-                        <button
-                          onClick={handleClose}
-                          className="w-full py-2.5 text-gray-600 text-center rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                        >
-                          Close
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </motion.div>
+        {/* Receipt */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.4 }}
+          className="relative drop-shadow-[0_10px_25px_rgba(0,0,0,0.08)]"
+        >
+          <div className="bg-white rounded-t-2xl">
+            {/* Receipt header */}
+            <div className="px-6 pt-6 pb-5 flex items-start justify-between gap-4">
+              <div>
+                <img src="/logo.png" alt="Knotts Jewelry" className="h-8 mb-3" />
+                <p className="text-[11px] font-semibold tracking-[0.18em] text-gray-400 uppercase">Receipt</p>
+                <p className="font-mono text-base font-bold text-gray-900 mt-0.5">
+                  #{order._id.slice(-8).toUpperCase()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-800">
+                  {placedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {placedAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                </p>
+              </div>
             </div>
+
+            {/* Progress */}
+            {!isCancelled && (
+              <div className="px-6 pb-5">
+                <div className="flex items-center">
+                  {steps.map((step, i) => (
+                    <React.Fragment key={step.label}>
+                      <div className="flex flex-col items-center gap-1.5 w-20 shrink-0">
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                            step.done ? 'bg-[#05B171] text-white' : i === 1 ? 'bg-emerald-50 text-[#05B171] ring-2 ring-[#05B171]' : 'bg-gray-100 text-gray-400'
+                          }`}
+                        >
+                          {step.done ? <FiCheck className="w-3.5 h-3.5" strokeWidth={3} /> : i + 1}
+                        </div>
+                        <span className={`text-[11px] text-center leading-tight ${step.done || i === 1 ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+                          {step.label}
+                        </span>
+                      </div>
+                      {i < steps.length - 1 && (
+                        <div className={`flex-1 h-0.5 -mt-5 rounded ${steps[i + 1].done ? 'bg-[#05B171]' : 'bg-gray-200'}`} />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mx-6 border-t border-dashed border-gray-200" />
+
+            {/* Items */}
+            <div className="px-6 py-5">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                {itemCount} {itemCount === 1 ? 'item' : 'items'}
+              </p>
+              <ul className="space-y-4">
+                {items.map((item, i) => (
+                  <li key={item.product?._id || i} className="flex items-center gap-3">
+                    <img
+                      src={imageUrl(item.product?.image)}
+                      alt={item.product?.name || 'Product'}
+                      className="w-14 h-14 rounded-xl object-cover bg-gray-100 border border-gray-100 shrink-0"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-product.jpg';
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{item.product?.name || 'Removed product'}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {item.quantity} × {formatBirr(item.product?.price)}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                      {formatBirr((item.product?.price || 0) * item.quantity)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mx-6 border-t border-dashed border-gray-200" />
+
+            {/* Totals */}
+            <div className="px-6 py-5 space-y-2.5">
+              <Row label="Subtotal" value={formatBirr(subtotal)} />
+              <Row
+                label={isPickup ? 'Pickup' : 'Delivery'}
+                value={deliveryFee > 0 ? formatBirr(deliveryFee) : <span className="text-[#05B171]">Free</span>}
+              />
+              <div className="pt-2.5 mt-1 border-t border-gray-100">
+                <Row label="Total" value={formatBirr(order.total)} strong />
+              </div>
+            </div>
+
+            <div className="mx-6 border-t border-dashed border-gray-200" />
+
+            {/* Details */}
+            <div className="px-6 py-5 grid gap-4 sm:grid-cols-2">
+              <div className="flex gap-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                  <FiMapPin className="w-4 h-4 text-[#05B171]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-400">{isPickup ? 'Pickup point' : 'Deliver to'}</p>
+                  <p className="text-sm font-medium text-gray-800 break-words">{address}</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                  <FiCreditCard className="w-4 h-4 text-[#05B171]" />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Payment</p>
+                  <p className="text-sm font-medium text-gray-800">{order.paymentMethod}</p>
+                  <span
+                    className={`inline-block mt-1 px-2 py-0.5 text-[11px] font-semibold rounded-full ${
+                      isPaid ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                    }`}
+                  >
+                    {isPaid ? 'Paid' : 'Due on arrival'}
+                  </span>
+                </div>
+              </div>
+              {order.deliveryDate && !isCancelled && (
+                <div className="flex gap-3 sm:col-span-2">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                    <FiTruck className="w-4 h-4 text-[#05B171]" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">{isDelivered ? 'Delivered' : 'Estimated arrival'}</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {new Date(order.deliveryDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <p className="px-6 pb-6 text-center text-xs text-gray-400">
+              Questions about your order? Call <a href="tel:0961599628" className="text-gray-600 font-medium">0961599628</a>
+            </p>
           </div>
-        </>
-      )}
-    </AnimatePresence>
+          <div className="h-4 w-full rotate-180" style={zigzag} />
+        </motion.section>
+
+        {/* Actions */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6 grid grid-cols-2 gap-3 print:hidden"
+        >
+          <Link
+            to="/products"
+            className="col-span-2 py-3.5 bg-[#05B171] text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20"
+          >
+            <FiShoppingBag className="w-4 h-4" />
+            Continue shopping
+          </Link>
+          <Link
+            to="/orders"
+            className="py-3 bg-white border border-gray-200 text-gray-800 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <FiPackage className="w-4 h-4" />
+            My orders
+          </Link>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="py-3 bg-white border border-gray-200 text-gray-800 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <FiPrinter className="w-4 h-4" />
+            Print receipt
+          </button>
+        </motion.div>
+      </div>
+    </main>
   );
 };
 
