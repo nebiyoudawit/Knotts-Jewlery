@@ -1,866 +1,551 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  FiSearch, FiX, FiPackage, FiCalendar, FiMapPin, FiUser,
-  FiClock, FiCheckCircle, FiShoppingBag, FiCheck,
-  FiEdit3, FiEye, FiPhone
+  FiSearch, FiX, FiPackage, FiMapPin, FiPhone, FiMail, FiCopy,
+  FiClock, FiCheckCircle, FiXCircle, FiRotateCcw, FiTruck, FiHome,
+  FiChevronLeft, FiChevronRight, FiCreditCard, FiInbox, FiCalendar,
 } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}/admin`;
+const BASE_URL = (import.meta.env.VITE_API_URL || "").replace("/api", "");
+const PAGE_SIZE = 10;
+
+const birr = (n = 0) => `${Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 })} birr`;
+const shortId = (id) => `#${id.slice(-8).toUpperCase()}`;
+const imageUrl = (img) => (!img ? "/default-product.jpg" : img.startsWith("http") ? img : `${BASE_URL}${img}`);
+const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
+const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+
+const formatDate = (d, opts = { month: "short", day: "numeric", year: "numeric" }) =>
+  d ? new Date(d).toLocaleDateString("en-US", opts) : "—";
+const formatTime = (d) => new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
+const timeAgo = (d) => {
+  const mins = Math.round((Date.now() - new Date(d)) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return formatDate(d, { month: "short", day: "numeric" });
+};
+
+// Everything the UI needs about an order, derived once
+const describe = (order) => {
+  const items = order.items || [];
+  const subtotal = items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0);
+  const isPickup = order.shippingAddress?.startsWith("PICKUP:");
+  const pending = order.status === "pending";
+  const due = order.deliveryDate ? startOfDay(order.deliveryDate) : null;
+  const today = startOfDay(new Date());
+  return {
+    items,
+    itemCount: items.reduce((s, i) => s + i.quantity, 0),
+    subtotal,
+    deliveryFee: Math.max(0, (order.total || 0) - subtotal),
+    isPickup,
+    place: isPickup ? order.shippingAddress.replace("PICKUP:", "").trim() : order.shippingAddress,
+    dueToday: pending && due && sameDay(due, today),
+    overdue: pending && due && due < today,
+  };
+};
+
+const STATUS = {
+  pending: { label: "Pending", cls: "bg-amber-50 text-amber-700 ring-amber-200", dot: "bg-amber-500" },
+  delivered: { label: "Delivered", cls: "bg-emerald-50 text-emerald-700 ring-emerald-200", dot: "bg-emerald-500" },
+  cancelled: { label: "Cancelled", cls: "bg-gray-100 text-gray-600 ring-gray-200", dot: "bg-gray-400" },
+};
+
+const StatusPill = ({ status }) => {
+  const s = STATUS[status] || STATUS.pending;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ${s.cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+};
+
+const Thumbs = ({ items }) => (
+  <div className="flex -space-x-2">
+    {items.slice(0, 3).map((item, i) => (
+      <img
+        key={i}
+        src={imageUrl(item.product?.images?.[0])}
+        alt={item.name}
+        className="w-9 h-9 rounded-lg object-cover ring-2 ring-white bg-gray-100"
+        onError={(e) => { e.target.onerror = null; e.target.src = "/default-product.jpg"; }}
+      />
+    ))}
+    {items.length > 3 && (
+      <span className="w-9 h-9 rounded-lg ring-2 ring-white bg-gray-100 text-gray-600 text-xs font-semibold flex items-center justify-center">
+        +{items.length - 3}
+      </span>
+    )}
+  </div>
+);
 
 const OrderManagement = () => {
-  const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedOrders, setSelectedOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState("all");
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showBulkActionModal, setShowBulkActionModal] = useState(false);
-  const [selectedOrderForStatus, setSelectedOrderForStatus] = useState(null);
-  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState(null);
-  const [bulkAction, setBulkAction] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(7);
   const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("pending");
+  const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState(null);
+  const [checked, setChecked] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
-  const getAuthHeaders = () => {
+  const authHeaders = () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error("You need to log in to access orders");
       navigate("/login");
       return null;
     }
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-  };
-
-  const handleApiError = (error, defaultMessage) => {
-    console.error("API Error:", error);
-    const message = error.response?.data?.message || error.message || defaultMessage;
-    toast.error(message);
-    if (error.response?.status === 401) {
-      navigate("/login");
-    }
-    return message;
-  };
-
-  const fetchOrders = async () => {
-    try {
-      setIsLoading(true);
-      const headers = getAuthHeaders();
-      if (!headers) return;
-
-      const response = await fetch(`${API_BASE_URL}/orders`, { headers });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch orders");
-      }
-
-      const data = await response.json();
-      setOrders(data || []);
-      setFilteredOrders(data || []);
-    } catch (err) {
-      handleApiError(err, "Failed to fetch orders");
-    } finally {
-      setIsLoading(false);
-    }
+    return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
   };
 
   useEffect(() => {
-    fetchOrders();
+    const load = async () => {
+      try {
+        const headers = authHeaders();
+        if (!headers) return;
+        const res = await fetch(`${API_BASE_URL}/orders`, { headers });
+        if (res.status === 401) return navigate("/login");
+        if (!res.ok) throw new Error((await res.json()).message || "Could not load orders");
+        const data = await res.json();
+        setOrders([...(data || [])].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    let results = orders;
-    if (searchTerm) {
-      results = results.filter(order =>
-        order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const counts = useMemo(() => {
+    const c = { pending: 0, today: 0, delivered: 0, cancelled: 0, all: orders.length, revenueMonth: 0 };
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+    for (const o of orders) {
+      c[o.status] = (c[o.status] || 0) + 1;
+      const d = describe(o);
+      if (d.dueToday || d.overdue) c.today += 1;
+      if (o.status === "delivered" && new Date(o.createdAt) >= monthStart) c.revenueMonth += o.total || 0;
     }
-    setFilteredOrders(results);
-    setCurrentPage(1);
-  }, [searchTerm, orders]);
-
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      const headers = getAuthHeaders();
-      if (!headers) return false;
-
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update status");
-      }
-
-      const updatedOrder = await response.json();
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order._id === orderId ? updatedOrder.order : order
-        )
-      );
-      return true;
-    } catch (err) {
-      handleApiError(err, "Failed to update order status");
-      return false;
-    }
-  };
-
-  const handleBulkAction = async () => {
-    if (selectedOrders.length === 0) {
-      toast.error("Please select orders first");
-      return;
-    }
-
-    setIsUpdating(true);
-    try {
-      const promises = selectedOrders.map(orderId =>
-        bulkAction === 'delete' 
-          ? fetch(`${API_BASE_URL}/orders/${orderId}`, {
-              method: "DELETE",
-              headers: getAuthHeaders(),
-            })
-          : updateOrderStatus(orderId, bulkAction)
-      );
-
-      await Promise.all(promises);
-
-      if (bulkAction === 'delete') {
-        setOrders(prevOrders => 
-          prevOrders.filter(order => !selectedOrders.includes(order._id))
-        );
-        toast.success(`${selectedOrders.length} orders deleted successfully`);
-      } else {
-        toast.success(`${selectedOrders.length} orders updated to ${bulkAction}`);
-      }
-
-      setSelectedOrders([]);
-      setShowBulkActionModal(false);
-    } catch (err) {
-      handleApiError(err, "Failed to perform bulk action");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const toggleSelectOrder = (orderId) => {
-    setSelectedOrders(prev =>
-      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
-    );
-  };
-
-  const toggleSelectAll = (ordersList) => {
-    const orderIds = ordersList.map(o => o._id);
-    if (selectedOrders.length === orderIds.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(orderIds);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric'
-    });
-  };
-
-  const isDeliveryToday = (deliveryDate) => {
-    const today = new Date();
-    const delivery = new Date(deliveryDate);
-    return today.toDateString() === delivery.toDateString();
-  };
-
-  const getFilteredOrdersByTab = () => {
-    switch(activeTab) {
-      case "dueToday":
-        return filteredOrders.filter(o => isDeliveryToday(o.deliveryDate) && o.status === 'pending');
-      case "pending":
-        return filteredOrders.filter(o => o.status === 'pending');
-      case "delivered":
-        return filteredOrders.filter(o => o.status === 'delivered');
-      case "cancelled":
-        return filteredOrders.filter(o => o.status === 'cancelled');
-      default:
-        return filteredOrders;
-    }
-  };
-
-  const allOrdersForTab = getFilteredOrdersByTab();
-  
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentOrders = allOrdersForTab.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(allOrdersForTab.length / itemsPerPage);
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  const stats = {
-    all: orders.length,
-    dueToday: orders.filter(o => isDeliveryToday(o.deliveryDate) && o.status === 'pending').length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    delivered: orders.filter(o => o.status === 'delivered').length,
-    cancelled: orders.filter(o => o.status === 'cancelled').length
-  };
+    return c;
+  }, [orders]);
 
   const tabs = [
-    { id: "all", label: "All Orders", count: stats.all, icon: FiShoppingBag },
-    { id: "dueToday", label: "Due Today", count: stats.dueToday, icon: FiClock },
-    { id: "pending", label: "Pending", count: stats.pending, icon: FiClock },
-    { id: "delivered", label: "Delivered", count: stats.delivered, icon: FiCheckCircle },
-    { id: "cancelled", label: "Cancelled", count: stats.cancelled, icon: FiX }
+    { id: "pending", label: "To fulfil", count: counts.pending },
+    { id: "today", label: "Due today", count: counts.today },
+    { id: "delivered", label: "Delivered", count: counts.delivered },
+    { id: "cancelled", label: "Cancelled", count: counts.cancelled },
+    { id: "all", label: "All", count: counts.all },
   ];
 
-  const StatusChangeModal = () => {
-    const [newStatus, setNewStatus] = useState(selectedOrderForStatus?.status || "pending");
-    const [loading, setLoading] = useState(false);
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return orders.filter((o) => {
+      if (tab === "today") { const d = describe(o); if (!(d.dueToday || d.overdue)) return false; }
+      else if (tab !== "all" && o.status !== tab) return false;
+      if (!q) return true;
+      return (
+        o._id.toLowerCase().includes(q) ||
+        o.user?.name?.toLowerCase().includes(q) ||
+        o.user?.phone?.includes(q) ||
+        o.items?.some((i) => i.name?.toLowerCase().includes(q))
+      );
+    });
+  }, [orders, tab, search]);
 
-    const handleSubmit = async () => {
-      setLoading(true);
-      const success = await updateOrderStatus(selectedOrderForStatus._id, newStatus);
-      setLoading(false);
-      if (success) {
-        toast.success(`Order status updated to ${newStatus}`);
-        setShowStatusModal(false);
-      }
-    };
+  const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const pageItems = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const selected = orders.find((o) => o._id === selectedId) || null;
 
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-scale-in">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
-                  <FiEdit3 className="text-emerald-600 text-xl" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Change Order Status</h3>
-                  <p className="text-sm text-gray-500">#{selectedOrderForStatus?._id.slice(-8).toUpperCase()}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowStatusModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all"
-              >
-                <FiX className="text-xl" />
-              </button>
-            </div>
+  useEffect(() => { setPage(1); setChecked([]); }, [tab, search]);
+  useEffect(() => { setConfirmCancel(false); }, [selectedId]);
+  // Keep a useful order open on wide screens
+  useEffect(() => {
+    if (!selectedId && pageItems.length && window.matchMedia("(min-width: 1280px)").matches) setSelectedId(pageItems[0]._id);
+  }, [pageItems, selectedId]);
 
-            <div className="space-y-4">
-              {['pending', 'delivered', 'cancelled'].map(status => (
-                <button
-                  key={status}
-                  onClick={() => setNewStatus(status)}
-                  className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-between ${
-                    newStatus === status ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {status === 'pending' && <FiClock className="text-amber-600 text-xl" />}
-                    {status === 'delivered' && <FiCheckCircle className="text-emerald-600 text-xl" />}
-                    {status === 'cancelled' && <FiX className="text-red-600 text-xl" />}
-                    <span className="font-medium text-gray-900 capitalize">{status}</span>
-                  </div>
-                  {newStatus === status && <FiCheck className="text-emerald-600 text-xl" />}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowStatusModal(false)}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 font-semibold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#05B171] to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 font-semibold transition-all shadow-lg shadow-emerald-200/50 disabled:opacity-50"
-              >
-                {loading ? 'Updating...' : 'Update Status'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const updateStatus = async (ids, status) => {
+    const headers = authHeaders();
+    if (!headers) return;
+    setBusy(true);
+    try {
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          const res = await fetch(`${API_BASE_URL}/orders/${id}/status`, { method: "PUT", headers, body: JSON.stringify({ status }) });
+          if (!res.ok) throw new Error((await res.json()).message || "Could not update the order");
+          return (await res.json()).order;
+        })
+      );
+      const byId = Object.fromEntries(results.map((o) => [o._id, o]));
+      setOrders((prev) => prev.map((o) => (byId[o._id] ? { ...o, ...byId[o._id] } : o)));
+      const what = ids.length === 1 ? `Order ${shortId(ids[0])}` : `${ids.length} orders`;
+      toast.success(`${what} marked ${STATUS[status].label.toLowerCase()}`);
+      setChecked([]);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setBusy(false);
+      setConfirmCancel(false);
+    }
   };
 
-  const OrderDetailsModal = () => {
-    const order = selectedOrderForDetails;
-    if (!order) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl my-8 animate-scale-in">
-          <div className="p-8 border-b-2 border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
-                  <FiPackage className="text-emerald-600 text-2xl" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">Order Details</h3>
-                  <p className="text-sm text-gray-500">#{order._id.slice(-8).toUpperCase()}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-3 rounded-xl hover:bg-gray-100 transition-all"
-              >
-                <FiX className="text-2xl" />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-8 max-h-[70vh] overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
-                  <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FiUser className="text-emerald-600" />
-                    Customer Information
-                  </h4>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Name</p>
-                      <p className="font-medium text-gray-900">{order.user?.name || 'Unknown'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Phone</p>
-                      <p className="font-medium text-gray-900 flex items-center gap-2">
-                        <FiPhone className="text-gray-400 text-sm" />
-                        {order.user?.phone || 'Not provided'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
-                  <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FiMapPin className="text-emerald-600" />
-                    Shipping Address
-                  </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">{order.shippingAddress}</p>
-                </div>
-
-                <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
-                  <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FiCalendar className="text-emerald-600" />
-                    Order Information
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Order Date</span>
-                      <span className="font-medium text-gray-900">{formatDate(order.createdAt)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Delivery Date</span>
-                      <span className="font-medium text-gray-900">{formatDate(order.deliveryDate)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Payment Method</span>
-                      <span className="font-medium text-gray-900">{order.paymentMethod}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Payment Status</span>
-                      <PaymentBadge status={order.paymentStatus} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
-                  <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FiShoppingBag className="text-emerald-600" />
-                    Order Items ({order.items.length})
-                  </h4>
-                  <div className="space-y-3">
-                    {order.items.map((item, index) => (
-                      <div key={index} className="bg-white rounded-xl p-4 border-2 border-gray-100">
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="font-semibold text-gray-900">{item.name}</p>
-                          <p className="font-bold text-gray-900">{item.price * item.quantity} birr</p>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-500">Qty: {item.quantity}</span>
-                          <span className="text-gray-600">{item.price} birr each</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border-2 border-emerald-200">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-bold text-gray-900">Order Total</span>
-                    <span className="text-3xl font-bold text-emerald-600">{order.total} birr</span>
-                  </div>
-                  <div className="pt-4 border-t-2 border-emerald-200/50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Current Status</span>
-                      <StatusBadge status={order.status} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-8 border-t-2 border-gray-100 bg-gray-50">
-            <button
-              onClick={() => setShowDetailsModal(false)}
-              className="w-full px-6 py-3 bg-gradient-to-r from-[#05B171] to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 font-semibold transition-all shadow-lg shadow-emerald-200/50"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const copy = async (text) => {
+    try { await navigator.clipboard.writeText(text); toast.success("Copied"); } catch { /* clipboard blocked */ }
   };
 
-  const BulkActionModal = () => {
-    const [loading, setLoading] = useState(false);
-
-    const actions = [
-      { value: 'pending', label: 'Mark as Pending', icon: FiClock },
-      { value: 'delivered', label: 'Mark as Delivered', icon: FiCheckCircle },
-      { value: 'cancelled', label: 'Mark as Cancelled', icon: FiX }
-    ];
-
-    const handleSubmit = async () => {
-      if (!bulkAction) {
-        toast.error("Please select an action");
-        return;
-      }
-      setLoading(true);
-      await handleBulkAction();
-      setLoading(false);
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-scale-in">
-          <div className="p-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Bulk Actions</h3>
-                <p className="text-sm text-gray-500">{selectedOrders.length} orders selected</p>
-              </div>
-              <button
-                onClick={() => setShowBulkActionModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all"
-              >
-                <FiX className="text-xl" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {actions.map(action => (
-                <button
-                  key={action.value}
-                  onClick={() => setBulkAction(action.value)}
-                  className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-between ${
-                    bulkAction === action.value ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <action.icon className="text-xl text-emerald-600" />
-                    <span className="font-medium text-gray-900">{action.label}</span>
-                  </div>
-                  {bulkAction === action.value && <FiCheck className="text-emerald-600 text-xl" />}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowBulkActionModal(false)}
-                className="flex-1 px-6 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 font-semibold transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !bulkAction}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#05B171] to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 font-semibold transition-all shadow-lg shadow-emerald-200/50 disabled:opacity-50"
-              >
-                {loading ? 'Processing...' : 'Apply Action'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const toggleCheck = (id) => setChecked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50/20 p-4 md:p-8">
-      <style>{`
-        @keyframes fadeInUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes scaleIn {
-          from { transform: scale(0.95); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
-        .animate-scale-in { animation: scaleIn 0.3s ease-out; }
-        .table-row { animation: fadeInUp 0.4s ease-out forwards; }
-      `}</style>
-
-      {showStatusModal && <StatusChangeModal />}
-      {showDetailsModal && <OrderDetailsModal />}
-      {showBulkActionModal && <BulkActionModal />}
-
-      <div className="max-w-[1600px] mx-auto">
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#05B171] to-emerald-600 shadow-lg shadow-emerald-200">
-                  <FiShoppingBag className="text-white text-xl" />
-                </div>
-                <h1 className="text-4xl font-bold text-gray-900">Order Management</h1>
-              </div>
-              <p className="text-base text-gray-500 ml-16">Manage and track all customer orders</p>
-            </div>
-            
-            {selectedOrders.length > 0 && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-600">{selectedOrders.length} selected</span>
-                <button
-                  onClick={() => setSelectedOrders([])}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all font-medium text-sm"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={() => { setBulkAction(""); setShowBulkActionModal(true); }}
-                  className="px-6 py-2 bg-gradient-to-r from-[#05B171] to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all font-medium text-sm shadow-lg shadow-emerald-200/50"
-                >
-                  Bulk Actions
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 relative max-w-2xl">
-            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-              <FiSearch className="text-gray-400 text-xl" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by order ID or customer name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-14 pr-12 py-4 w-full border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 outline-none transition-all bg-white shadow-sm text-base"
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm("")} className="absolute inset-y-0 right-0 pr-5 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
-                <FiX className="text-xl" />
-              </button>
-            )}
-          </div>
+    <div className="max-w-[1500px] mx-auto">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Orders</h1>
+          <p className="text-sm text-gray-500 mt-1">Review, fulfil and track every customer order.</p>
         </div>
-
-        <div className="mb-8 overflow-x-auto">
-          <div className="flex gap-3 min-w-max pb-2">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => { setActiveTab(tab.id); setSelectedOrders([]); setCurrentPage(1); }}
-                className={`flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all font-medium ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-[#05B171] to-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-200'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50'
-                }`}
-              >
-                <tab.icon className="text-xl" />
-                <div className="text-left">
-                  <p className="text-sm font-semibold">{tab.label}</p>
-                  <p className={`text-xs ${activeTab === tab.id ? 'text-white/80' : 'text-gray-500'}`}>{tab.count} orders</p>
-                </div>
-              </button>
-            ))}
-          </div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full sm:w-auto">
+          {[
+            { label: "To fulfil", value: counts.pending, tone: "text-amber-600" },
+            { label: "Due today", value: counts.today, tone: counts.today ? "text-rose-600" : "text-gray-900" },
+            { label: "Earned this month", value: birr(counts.revenueMonth), tone: "text-emerald-700" },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-xl border border-gray-200 px-3 sm:px-4 py-3 min-w-0">
+              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide truncate">{s.label}</p>
+              <p className={`text-base sm:text-lg font-bold tabular-nums truncate ${s.tone}`}>{s.value}</p>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {isLoading ? (
-          <LoadingState />
-        ) : currentOrders.length === 0 ? (
-          <EmptyState activeTab={activeTab} />
-        ) : (
-          <>
-            {currentOrders.length > 0 && (
-              <div className="bg-white rounded-2xl border-2 border-gray-100 p-4 mb-6 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedOrders.length === currentOrders.length}
-                    onChange={() => toggleSelectAll(currentOrders)}
-                    className="w-5 h-5 rounded border-2 border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Select All ({currentOrders.length} on this page)</span>
-                </div>
-                <span className="text-sm text-gray-500">Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, allOrdersForTab.length)} of {allOrdersForTab.length} orders</span>
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-6 items-start">
+        {/* List */}
+        <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="p-4 border-b border-gray-100 space-y-3">
+            <div className="relative">
+              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                id="order-search"
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search orders, customers or products"
+                className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <FiX />
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1" role="tablist">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  role="tab"
+                  aria-selected={tab === t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium transition ${
+                    tab === t.id ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {t.label}
+                  <span className={`text-xs tabular-nums px-1.5 rounded ${tab === t.id ? "bg-white/20" : "bg-gray-100 text-gray-500"}`}>{t.count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {checked.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-emerald-50 border-b border-emerald-100 text-sm">
+              <span className="font-semibold text-emerald-900">{checked.length} selected</span>
+              <div className="ml-auto flex gap-2">
+                <button disabled={busy} onClick={() => updateStatus(checked, "delivered")} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-50">Mark delivered</button>
+                <button disabled={busy} onClick={() => updateStatus(checked, "cancelled")} className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50">Cancel</button>
+                <button onClick={() => setChecked([])} className="px-2 py-1.5 text-gray-500 hover:text-gray-700">Clear</button>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="bg-white rounded-3xl border-2 border-gray-100 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b-2 border-gray-100">
-                      <th className="px-8 py-5 text-left">
-                        <input
-                          type="checkbox"
-                          checked={selectedOrders.length === currentOrders.length && currentOrders.length > 0}
-                          onChange={() => toggleSelectAll(currentOrders)}
-                          className="w-5 h-5 rounded border-2 border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                        />
-                      </th>
-                      <th className="px-8 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Order</th>
-                      <th className="px-8 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Customer</th>
-                      <th className="px-8 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Date</th>
-                      <th className="px-8 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Delivery</th>
-                      <th className="px-8 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Total</th>
-                      <th className="px-8 py-5 text-left text-xs font-bold text-gray-600 uppercase tracking-widest">Status</th>
-                      <th className="px-8 py-5 text-right text-xs font-bold text-gray-600 uppercase tracking-widest">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentOrders.map((order, index) => (
-                      <OrderRow
-                        key={order._id}
-                        order={order}
-                        index={index}
-                        isSelected={selectedOrders.includes(order._id)}
-                        onToggleSelect={toggleSelectOrder}
-                        onViewDetails={() => { setSelectedOrderForDetails(order); setShowDetailsModal(true); }}
-                        onChangeStatus={() => { setSelectedOrderForStatus(order); setShowStatusModal(true); }}
-                        formatDate={formatDate}
-                        isDeliveryToday={isDeliveryToday}
+          {isLoading ? (
+            <div className="py-24 flex flex-col items-center gap-3 text-gray-500 text-sm">
+              <div className="w-8 h-8 border-[3px] border-gray-200 border-t-emerald-600 rounded-full animate-spin" />
+              Loading orders…
+            </div>
+          ) : pageItems.length === 0 ? (
+            <div className="py-20 px-6 text-center">
+              <FiInbox className="mx-auto text-3xl text-gray-300 mb-3" />
+              <p className="font-semibold text-gray-900">{search ? "No orders match your search" : "Nothing here"}</p>
+              <p className="text-sm text-gray-500 mt-1">{search ? "Try a name, phone number or order ID." : "Orders will show up here as customers place them."}</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {pageItems.map((o) => {
+                const d = describe(o);
+                const active = o._id === selectedId;
+                return (
+                  <li key={o._id}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedId(o._id)}
+                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setSelectedId(o._id))}
+                      className={`group flex items-center gap-3 px-4 py-3.5 cursor-pointer outline-none transition border-l-[3px] ${
+                        active ? "bg-emerald-50/60 border-emerald-500" : "border-transparent hover:bg-gray-50 focus-visible:bg-gray-50"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        aria-label={`Select order ${shortId(o._id)}`}
+                        checked={checked.includes(o._id)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={() => toggleCheck(o._id)}
+                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 shrink-0"
                       />
-                    ))}
-                  </tbody>
-                </table>
+                      <Thumbs items={d.items} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-gray-900 truncate">{o.user?.name || "Deleted customer"}</p>
+                          {d.overdue ? (
+                            <span className="shrink-0 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700">Overdue</span>
+                          ) : d.dueToday ? (
+                            <span className="shrink-0 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700">Due today</span>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-gray-500 truncate mt-0.5">
+                          <span className="font-mono">{shortId(o._id)}</span> · {d.itemCount} {d.itemCount === 1 ? "item" : "items"} · {d.isPickup ? `Pickup, ${d.place}` : "Delivery"}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-semibold text-gray-900 tabular-nums text-sm">{birr(o.total)}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{timeAgo(o.createdAt)}</p>
+                      </div>
+                      <div className="hidden sm:block shrink-0 w-[92px] text-right">
+                        <StatusPill status={o.status} />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {pages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+              <span className="tabular-nums">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, visible.length)} of {visible.length}
+              </span>
+              <div className="flex gap-1">
+                <button aria-label="Previous page" disabled={page === 1} onClick={() => setPage(page - 1)} className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"><FiChevronLeft /></button>
+                <button aria-label="Next page" disabled={page === pages} onClick={() => setPage(page + 1)} className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent"><FiChevronRight /></button>
               </div>
             </div>
+          )}
+        </section>
 
-            {/* Pagination */}
-            {allOrdersForTab.length > 0 && totalPages > 1 && (
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-2xl border-2 border-gray-100 p-5">
-                <div className="text-sm text-gray-600">
-                  Showing <span className="font-semibold text-gray-900">{indexOfFirstItem + 1}</span> to{" "}
-                  <span className="font-semibold text-gray-900">{Math.min(indexOfLastItem, allOrdersForTab.length)}</span> of{" "}
-                  <span className="font-semibold text-gray-900">{allOrdersForTab.length}</span> orders
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => paginate(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl border-2 font-medium transition-all ${
-                      currentPage === 1
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'border-gray-200 text-gray-700 hover:border-emerald-500 hover:bg-emerald-50'
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  
-                  <div className="flex gap-1">
-                    {[...Array(totalPages)].map((_, index) => {
-                      const pageNumber = index + 1;
-                      if (
-                        pageNumber === 1 ||
-                        pageNumber === totalPages ||
-                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
-                      ) {
-                        return (
-                          <button
-                            key={pageNumber}
-                            onClick={() => paginate(pageNumber)}
-                            className={`w-10 h-10 rounded-xl font-medium transition-all ${
-                              currentPage === pageNumber
-                                ? 'bg-gradient-to-r from-[#05B171] to-emerald-600 text-white shadow-lg'
-                                : 'border-2 border-gray-200 text-gray-700 hover:border-emerald-500 hover:bg-emerald-50'
-                            }`}
-                          >
-                            {pageNumber}
-                          </button>
-                        );
-                      } else if (pageNumber === currentPage - 2 || pageNumber === currentPage + 2) {
-                        return <span key={pageNumber} className="px-2 text-gray-400">...</span>;
-                      }
-                      return null;
-                    })}
-                  </div>
-                  
-                  <button
-                    onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-xl border-2 font-medium transition-all ${
-                      currentPage === totalPages
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'border-gray-200 text-gray-700 hover:border-emerald-500 hover:bg-emerald-50'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+        {/* Detail */}
+        {selected ? (
+          <>
+            <div className="xl:hidden fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedId(null)} />
+            <OrderDetail
+              order={selected}
+              busy={busy}
+              confirmCancel={confirmCancel}
+              onConfirmCancel={setConfirmCancel}
+              onStatus={(s) => updateStatus([selected._id], s)}
+              onClose={() => setSelectedId(null)}
+              onCopy={copy}
+            />
           </>
+        ) : (
+          <div className="hidden xl:flex sticky top-0 bg-white rounded-2xl border border-dashed border-gray-200 min-h-[420px] items-center justify-center text-sm text-gray-400">
+            Select an order to see its details
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-const LoadingState = () => (
-  <div className="flex flex-col items-center justify-center h-96 bg-white rounded-3xl border-2 border-gray-100">
-    <div className="relative">
-      <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-100 border-t-emerald-600"></div>
-    </div>
-    <p className="mt-6 text-gray-500 font-medium">Loading orders...</p>
-  </div>
+const Section = ({ icon: Icon, title, children }) => (
+  <section className="px-6 py-5 border-t border-gray-100">
+    <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+      <Icon className="text-gray-400" /> {title}
+    </h3>
+    {children}
+  </section>
 );
 
-const EmptyState = ({ activeTab }) => {
-  const messages = {
-    all: "No orders found",
-    dueToday: "No orders due for delivery today",
-    pending: "No pending orders",
-    delivered: "No delivered orders",
-    cancelled: "No cancelled orders"
-  };
+const OrderDetail = ({ order, busy, confirmCancel, onConfirmCancel, onStatus, onClose, onCopy }) => {
+  const d = describe(order);
+  const u = order.user || {};
+  const finishedAt = order.status !== "pending" ? order.updatedAt : null;
 
   return (
-    <div className="flex flex-col items-center justify-center py-24 px-4 bg-white rounded-3xl border-2 border-gray-100">
-      <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mb-6">
-        <FiShoppingBag className="text-gray-400 text-4xl" />
-      </div>
-      <h3 className="text-2xl font-bold text-gray-900 mb-3">{messages[activeTab]}</h3>
-      <p className="text-gray-500 text-center max-w-md">
-        {activeTab === 'all' ? "Orders will appear here when customers place them." : "Try switching to a different tab."}
-      </p>
-    </div>
-  );
-};
-
-const StatusBadge = ({ status }) => {
-  const config = {
-    pending: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
-    delivered: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' },
-    cancelled: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', dot: 'bg-red-500' }
-  };
-  const style = config[status] || config.pending;
-  
-  return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
-};
-
-const PaymentBadge = ({ status }) => {
-  const lowerStatus = status.toLowerCase();
-  const config = {
-    pending: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-    paid: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' }
-  };
-  const style = config[lowerStatus] || config.pending;
-  
-  return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}>
-      {status}
-    </span>
-  );
-};
-
-const OrderRow = ({ order, index, isSelected, onToggleSelect, onViewDetails, onChangeStatus, formatDate, isDeliveryToday }) => {
-  const isDueToday = isDeliveryToday(order.deliveryDate) && order.status === 'pending';
-
-  return (
-    <tr className="table-row border-b border-gray-100 hover:bg-gray-50/60 transition-all" style={{ animationDelay: `${index * 30}ms` }}>
-      <td className="px-8 py-6">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggleSelect(order._id)}
-          className="w-5 h-5 rounded border-2 border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-        />
-      </td>
-      <td className="px-8 py-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
-            <FiPackage className="text-emerald-600" />
-          </div>
+    <aside className="fixed inset-x-0 bottom-0 top-12 z-50 overflow-y-auto rounded-t-2xl xl:rounded-2xl xl:z-auto xl:sticky xl:top-0 xl:max-h-[calc(100vh-9rem)] bg-white border border-gray-200 shadow-2xl xl:shadow-none">
+      {/* Header */}
+      <div className="px-6 pt-6 pb-5 sticky top-0 bg-white z-10">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="font-semibold text-gray-900">#{order._id.slice(-8).toUpperCase()}</p>
-            <p className="text-xs text-gray-400">{order.items.length} item(s)</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-xl font-bold text-gray-900 font-mono">{shortId(order._id)}</h2>
+              <StatusPill status={order.status} />
+            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Placed {formatDate(order.createdAt, { weekday: "short", month: "short", day: "numeric" })} at {formatTime(order.createdAt)}
+            </p>
+          </div>
+          <button onClick={onClose} aria-label="Close order" className="xl:hidden p-2 -m-2 text-gray-400 hover:text-gray-600"><FiX className="text-xl" /></button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-4">
+          {order.status === "pending" ? (
+            <>
+              <button
+                disabled={busy}
+                onClick={() => onStatus("delivered")}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 shadow-sm"
+              >
+                <FiCheckCircle /> Mark as delivered
+              </button>
+              {confirmCancel ? (
+                <div className="inline-flex items-center gap-2 pl-3 pr-1 py-1 rounded-xl bg-rose-50 text-sm">
+                  <span className="text-rose-800 font-medium">Cancel this order?</span>
+                  <button disabled={busy} onClick={() => onStatus("cancelled")} className="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-700 disabled:opacity-50">Yes, cancel</button>
+                  <button onClick={() => onConfirmCancel(false)} className="px-2 py-1.5 text-rose-700 hover:text-rose-900">Keep</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => onConfirmCancel(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50"
+                >
+                  <FiXCircle /> Cancel order
+                </button>
+              )}
+            </>
+          ) : (
+            <button
+              disabled={busy}
+              onClick={() => onStatus("pending")}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+            >
+              <FiRotateCcw /> Move back to pending
+            </button>
+          )}
+        </div>
+      </div>
+
+      <Section icon={FiPhone} title="Customer">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0">
+            {(u.name || "?").charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900">{u.name || "Deleted customer"}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mt-0.5">
+              {u.phone && (
+                <span className="inline-flex items-center gap-1.5">
+                  <FiPhone className="text-gray-400" />
+                  <a href={`tel:${u.phone}`} className="hover:text-emerald-700 tabular-nums">{u.phone}</a>
+                  <button onClick={() => onCopy(u.phone)} aria-label="Copy phone number" className="text-gray-400 hover:text-gray-600"><FiCopy className="text-xs" /></button>
+                </span>
+              )}
+              {u.email && (
+                <span className="inline-flex items-center gap-1.5 min-w-0">
+                  <FiMail className="text-gray-400 shrink-0" />
+                  <a href={`mailto:${u.email}`} className="hover:text-emerald-700 truncate">{u.email}</a>
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </td>
-      <td className="px-8 py-6">
-        <div>
-          <p className="font-medium text-gray-900">{order.user?.name || 'Unknown'}</p>
-          <p className="text-xs text-gray-400">{order.user?.phone || 'No phone'}</p>
+      </Section>
+
+      <Section icon={d.isPickup ? FiHome : FiTruck} title={d.isPickup ? "Pickup" : "Delivery"}>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="flex gap-2.5">
+            <FiMapPin className="text-gray-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs text-gray-500">{d.isPickup ? "Pickup point" : "Address"}</p>
+              <p className="text-sm font-medium text-gray-900 break-words">{d.place || "—"}</p>
+            </div>
+          </div>
+          <div className="flex gap-2.5">
+            <FiCalendar className="text-gray-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs text-gray-500">{order.status === "delivered" ? "Delivered on" : "Expected by"}</p>
+              <p className="text-sm font-medium text-gray-900">
+                {formatDate(order.deliveryDate, { weekday: "short", month: "short", day: "numeric" })}
+                {d.overdue && <span className="ml-2 text-xs font-semibold text-rose-600">Overdue</span>}
+                {d.dueToday && <span className="ml-2 text-xs font-semibold text-orange-600">Today</span>}
+              </p>
+            </div>
+          </div>
         </div>
-      </td>
-      <td className="px-8 py-6">
-        <p className="text-sm font-medium text-gray-900">{formatDate(order.createdAt)}</p>
-      </td>
-      <td className="px-8 py-6">
-        <div className="flex items-center gap-2">
-          {isDueToday && (
-            <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-semibold">Today</span>
-          )}
-          <p className="text-sm text-gray-600">{formatDate(order.deliveryDate)}</p>
+      </Section>
+
+      <Section icon={FiPackage} title={`Items (${d.itemCount})`}>
+        <ul className="space-y-3">
+          {d.items.map((item, i) => (
+            <li key={i} className="flex items-center gap-3">
+              <img
+                src={imageUrl(item.product?.images?.[0])}
+                alt={item.name}
+                className="w-12 h-12 rounded-lg object-cover bg-gray-100 border border-gray-100 shrink-0"
+                onError={(e) => { e.target.onerror = null; e.target.src = "/default-product.jpg"; }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                <p className="text-xs text-gray-500 tabular-nums">{item.quantity} × {birr(item.price)}</p>
+              </div>
+              <p className="text-sm font-semibold text-gray-900 tabular-nums">{birr(item.price * item.quantity)}</p>
+            </li>
+          ))}
+        </ul>
+        <dl className="mt-4 pt-4 border-t border-dashed border-gray-200 space-y-1.5 text-sm tabular-nums">
+          <div className="flex justify-between"><dt className="text-gray-500">Subtotal</dt><dd className="text-gray-900">{birr(d.subtotal)}</dd></div>
+          <div className="flex justify-between"><dt className="text-gray-500">{d.isPickup ? "Pickup" : "Delivery fee"}</dt><dd className="text-gray-900">{d.deliveryFee ? birr(d.deliveryFee) : "Free"}</dd></div>
+          <div className="flex justify-between pt-1.5 text-base"><dt className="font-semibold text-gray-900">Total</dt><dd className="font-bold text-gray-900">{birr(order.total)}</dd></div>
+        </dl>
+      </Section>
+
+      <Section icon={FiCreditCard} title="Payment">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-900 font-medium">{order.paymentMethod}</span>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${order.paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+            {order.paymentStatus === "Paid" ? "Paid" : "Collect on delivery"}
+          </span>
         </div>
-      </td>
-      <td className="px-8 py-6">
-        <p className="font-bold text-gray-900">{order.total} birr</p>
-      </td>
-      <td className="px-8 py-6">
-        <StatusBadge status={order.status} />
-      </td>
-      <td className="px-8 py-6 text-right">
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={onViewDetails}
-            className="p-2.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-            title="View Details"
-          >
-            <FiEye className="text-lg" />
-          </button>
-          <button
-            onClick={onChangeStatus}
-            className="p-2.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
-            title="Change Status"
-          >
-            <FiEdit3 className="text-lg" />
-          </button>
-        </div>
-      </td>
-    </tr>
+      </Section>
+
+      <Section icon={FiClock} title="Timeline">
+        <ol className="relative ml-1.5 border-l border-gray-200 space-y-4">
+          <li className="pl-5 relative">
+            <span className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <p className="text-sm font-medium text-gray-900">Order placed</p>
+            <p className="text-xs text-gray-500">{formatDate(order.createdAt)} · {formatTime(order.createdAt)}</p>
+          </li>
+          <li className="pl-5 relative">
+            <span className={`absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full ${order.status === "delivered" ? "bg-emerald-500" : order.status === "cancelled" ? "bg-gray-400" : "bg-white border-2 border-amber-400"}`} />
+            <p className="text-sm font-medium text-gray-900">
+              {order.status === "delivered" ? "Delivered and paid" : order.status === "cancelled" ? "Cancelled" : d.isPickup ? "Waiting for pickup" : "Waiting for delivery"}
+            </p>
+            <p className="text-xs text-gray-500">
+              {finishedAt ? `${formatDate(finishedAt)} · ${formatTime(finishedAt)}` : `Expected ${formatDate(order.deliveryDate)}`}
+            </p>
+          </li>
+        </ol>
+      </Section>
+    </aside>
   );
 };
 

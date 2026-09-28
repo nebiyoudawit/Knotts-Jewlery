@@ -12,7 +12,10 @@ export const getAdminOrders = async (req, res) => {
       return res.json(JSON.parse(cached));
     }
 
-    const orders = await Order.find().populate('user', 'name phone');
+    const orders = await Order.find()
+      .sort({ createdAt: -1 })
+      .populate('user', 'name email phone')
+      .populate('items.product', 'name images category');
     await redisClient.setEx(cacheKey, 300, JSON.stringify(orders));
 
     res.json(orders);
@@ -52,7 +55,7 @@ export const updateAdminOrderStatus = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
     .populate('items.product')
-    .populate('user', 'name phone');
+    .populate('user', 'name email phone');
     
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
