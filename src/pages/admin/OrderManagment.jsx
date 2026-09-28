@@ -484,7 +484,7 @@ const OrderDetail = ({ order, busy, confirmCancel, onConfirmCancel, onStatus, on
             <div>
               <p className="text-xs text-gray-500">{order.status === "delivered" ? "Delivered on" : "Expected by"}</p>
               <p className="text-sm font-medium text-gray-900">
-                {formatDate(order.deliveryDate, { weekday: "short", month: "short", day: "numeric" })}
+                {formatDate(order.status === "delivered" ? order.updatedAt : order.deliveryDate, { weekday: "short", month: "short", day: "numeric" })}
                 {d.overdue && <span className="ml-2 text-xs font-semibold text-rose-600">Overdue</span>}
                 {d.dueToday && <span className="ml-2 text-xs font-semibold text-orange-600">Today</span>}
               </p>
