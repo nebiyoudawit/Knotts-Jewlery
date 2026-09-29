@@ -45,7 +45,7 @@ const ProductItem = ({ product }) => {
     >
       {/* Image Container - Made more compact */}
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-        <Link to={productPath(product)} className="block pt-[90%] relative">
+        <Link to={productPath(product)} className="block aspect-square relative">
           {/* Main Image */}
           <img
             src={getImageUrl()}
@@ -141,7 +141,7 @@ const ProductItem = ({ product }) => {
 
           {/* Product Name - More compact */}
           <Link to={productPath(product)}>
-            <h3 className="font-semibold text-gray-900 mb-1.5 line-clamp-2 hover:text-emerald-600 transition-colors duration-200 text-sm leading-tight">
+            <h3 className="font-semibold text-gray-900 mb-1.5 line-clamp-2 min-h-10 hover:text-emerald-600 transition-colors duration-200 text-sm leading-5">
               {product.name}
             </h3>
           </Link>
@@ -165,20 +165,20 @@ const ProductItem = ({ product }) => {
 
         {/* Price Section - More compact layout */}
         <div className="mt-auto">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-lg font-bold text-gray-900">
-                {product.price?.toFixed(2) || "59.99"}birr
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mb-3 min-h-7">
+            <div className="flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-base sm:text-lg font-bold text-gray-900 whitespace-nowrap">
+                {product.price?.toFixed(2) || "59.99"} birr
               </span>
-              {product.originalPrice && (
-                <span className="text-xs text-gray-400 line-through">
-                  {product.originalPrice.toFixed(2)}birr
+              {product.originalPrice > product.price && (
+                <span className="text-xs text-gray-400 line-through whitespace-nowrap">
+                  {product.originalPrice.toFixed(2)} birr
                 </span>
               )}
             </div>
             
             {/* Stock Indicator - Smaller */}
-            {product.stock && product.stock < 10 && (
+            {product.stock > 0 && product.stock < 10 && (
               <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                 Low Stock
               </span>

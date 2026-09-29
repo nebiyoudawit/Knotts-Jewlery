@@ -15,9 +15,15 @@ import {
 import { styled } from "@mui/material/styles";
 import {
   IoCartOutline,
+  IoCart,
   IoMenu,
   IoBagOutline,
+  IoBag,
   IoSearchOutline,
+  IoHomeOutline,
+  IoHome,
+  IoHeartOutline,
+  IoHeart,
 } from "react-icons/io5";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import {
@@ -31,7 +37,7 @@ import {
   FiShield,
   FiChevronRight
 } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from 'framer-motion';
 import Navigation from "./Navigation";
 import Search from "../Search";
@@ -54,6 +60,8 @@ const Header = () => {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [desktopAnchorEl, setDesktopAnchorEl] = useState(null);
   const [mobileAnchorEl, setMobileAnchorEl] = useState(null);
+  const { pathname } = useLocation();
+  const accountActive = ["/profile", "/orders", "/login", "/register"].includes(pathname);
 
   const {
     cartCount = 0,
@@ -457,7 +465,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-md">
+    <header className="sticky top-0 z-50 bg-white shadow-md print:hidden">
       {/* Top strip - hidden on mobile */}
       <div className="top-strip py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hidden md:block">
         <div className="container">
@@ -620,92 +628,72 @@ const Header = () => {
           </div>
 
           {/* Mobile Bottom Navigation Bar */}
-          <div className="fixed bottom-0 left-0 right-0 flex items-center justify-around py-3 bg-white border-t-2 border-emerald-100 z-[1050] md:hidden shadow-2xl">
-            <Link to="/product" className="flex flex-col items-center group">
-              <IconButton 
-                aria-label="Shop"
-                sx={{
-                  "&:hover": { backgroundColor: "#f0fdf4" }
-                }}
-              >
-                <IoBagOutline size={24} className="text-gray-600 group-hover:text-emerald-600" />
-              </IconButton>
-              <span className="text-xs text-gray-600 group-hover:text-emerald-600 font-medium">Shop</span>
-            </Link>
-
-            <Link to="/cart" className="flex flex-col items-center group">
-              <Tooltip title="Cart" arrow placement="top">
-                <IconButton 
-                  aria-label="cart"
-                  sx={{
-                    "&:hover": { backgroundColor: "#f0fdf4" }
-                  }}
+          <div
+            role="navigation"
+            aria-label="Primary"
+            className="fixed bottom-0 inset-x-0 z-[1050] md:hidden bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[env(safe-area-inset-bottom)]"
+          >
+            <ul className="grid grid-cols-5 h-16">
+              {[
+                { to: "/", label: "Home", icon: IoHomeOutline, activeIcon: IoHome, match: (p) => p === "/" },
+                { to: "/products", label: "Shop", icon: IoBagOutline, activeIcon: IoBag, match: (p) => p.startsWith("/product") },
+                { to: "/wishlist", label: "Wishlist", icon: IoHeartOutline, activeIcon: IoHeart, match: (p) => p === "/wishlist", badge: wishlistCount },
+                { to: "/cart", label: "Cart", icon: IoCartOutline, activeIcon: IoCart, match: (p) => p === "/cart" || p === "/checkout", badge: cartCount },
+              ].map(({ to, label, icon: Icon, activeIcon: ActiveIcon, match, badge }) => {
+                const active = match(pathname);
+                const TabIcon = active ? ActiveIcon : Icon;
+                return (
+                  <li key={to}>
+                    <Link
+                      to={to}
+                      aria-current={active ? "page" : undefined}
+                      className="relative h-full flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform"
+                    >
+                      {active && <span className="absolute top-0 h-[3px] w-8 rounded-b-full bg-[#05B171]" />}
+                      <span className="relative">
+                        <TabIcon size={23} className={active ? "text-[#05B171]" : "text-gray-500"} />
+                        {badge > 0 && (
+                          <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#05B171] text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                            {badge > 99 ? "99+" : badge}
+                          </span>
+                        )}
+                      </span>
+                      <span className={`text-[11px] leading-none ${active ? "text-[#05B171] font-semibold" : "text-gray-500 font-medium"}`}>
+                        {label}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+              <li>
+                <button
+                  type="button"
+                  aria-label="Account"
+                  onClick={handleMobileMenuOpen}
+                  className="relative h-full w-full flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform"
                 >
-                  <StyledBadge badgeContent={cartCount}>
-                    <IoCartOutline size={26} className="text-gray-600 group-hover:text-emerald-600" />
-                  </StyledBadge>
-                </IconButton>
-              </Tooltip>
-              <span className="text-xs text-gray-600 group-hover:text-emerald-600 font-medium">Cart</span>
-            </Link>
-
-            <Link to="/wishlist" className="flex flex-col items-center group">
-              <Tooltip title="Wishlist" arrow placement="top">
-                <IconButton 
-                  aria-label="wishlist"
-                  sx={{
-                    "&:hover": { backgroundColor: "#fef2f2" }
-                  }}
-                >
-                  <StyledBadge
-                    badgeContent={wishlistCount}
-                    sx={{
-                      "& .MuiBadge-badge": {
-                        backgroundColor: "#ec4899",
-                      }
-                    }}
-                  >
-                    {wishlist.length > 0 ? (
-                      <FaHeart className="text-pink-500" size={22} />
-                    ) : (
-                      <FaRegHeart size={22} className="text-gray-600 group-hover:text-pink-500" />
-                    )}
-                  </StyledBadge>
-                </IconButton>
-              </Tooltip>
-              <span className="text-xs text-gray-600 group-hover:text-pink-500 font-medium">Wishlist</span>
-            </Link>
-
-            <div className="flex flex-col items-center group">
-              <IconButton 
-                aria-label="account" 
-                onClick={handleMobileMenuOpen}
-                sx={{
-                  "&:hover": { backgroundColor: "#f0fdf4" }
-                }}
-              >
-                {currentUser ? (
-                  <Avatar
-                    sx={{ 
-                      width: 26, 
-                      height: 26,
-                      border: "2px solid #05B171"
-                    }}
-                    src={currentUser.avatar}
-                  >
-                    {currentUser.name.charAt(0)}
-                  </Avatar>
-                ) : (
-                  <FiUser size={22} className="text-gray-600 group-hover:text-emerald-600" />
-                )}
-              </IconButton>
-              <span className="text-xs text-gray-600 group-hover:text-emerald-600 font-medium">Account</span>
-              <AccountMenu
-                anchorEl={mobileAnchorEl}
-                onClose={handleMobileMenuClose}
-                isMobile={true}
-              />
-            </div>
+                  {accountActive && <span className="absolute top-0 h-[3px] w-8 rounded-b-full bg-[#05B171]" />}
+                  {currentUser ? (
+                    <Avatar
+                      sx={{ width: 24, height: 24, fontSize: 12, fontWeight: 600, bgcolor: accountActive ? "#05B171" : "#e5e7eb", color: accountActive ? "#fff" : "#374151" }}
+                      src={currentUser.avatar}
+                    >
+                      {currentUser.name.charAt(0)}
+                    </Avatar>
+                  ) : (
+                    <FiUser size={22} className={accountActive ? "text-[#05B171]" : "text-gray-500"} />
+                  )}
+                  <span className={`text-[11px] leading-none ${accountActive ? "text-[#05B171] font-semibold" : "text-gray-500 font-medium"}`}>
+                    {currentUser ? "Account" : "Sign in"}
+                  </span>
+                </button>
+                <AccountMenu
+                  anchorEl={mobileAnchorEl}
+                  onClose={handleMobileMenuClose}
+                  isMobile={true}
+                />
+              </li>
+            </ul>
           </div>
         </div>
       </div>
