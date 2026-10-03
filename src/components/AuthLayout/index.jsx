@@ -3,7 +3,7 @@ import { FiArrowLeft, FiX } from "react-icons/fi";
 
 // Shared frame for log in and sign up: one white card with a switch between the two.
 // On laptops it sits on the brand green; on phones it fills the screen.
-const AuthLayout = ({ mode, title, subtitle, children }) => {
+const AuthLayout = ({ mode, title, subtitle, wide = false, children }) => {
   const navigate = useNavigate();
   const tab = (to, label, active) => (
     <Link
@@ -24,7 +24,7 @@ const AuthLayout = ({ mode, title, subtitle, children }) => {
         <FiArrowLeft /> Back to store
       </Link>
 
-      <div className="min-h-screen lg:min-h-0 w-full lg:max-w-[460px] bg-white lg:rounded-3xl lg:shadow-[0_40px_80px_-30px_rgba(0,0,0,0.6)] px-5 sm:px-8 lg:px-9 pt-5 pb-8 lg:py-9 flex flex-col">
+      <div className={`min-h-screen lg:min-h-0 w-full ${wide ? "lg:max-w-[760px] lg:px-12" : "lg:max-w-[460px]"} bg-white lg:rounded-3xl lg:shadow-[0_40px_80px_-30px_rgba(0,0,0,0.6)] px-5 sm:px-8 lg:px-9 pt-5 pb-8 lg:py-9 flex flex-col`}>
         <div className="relative flex items-center justify-center lg:mb-1">
           <Link to="/"><img src="/logo.png" alt="Knotts Jewelry" className="h-9" /></Link>
           <button
@@ -42,7 +42,7 @@ const AuthLayout = ({ mode, title, subtitle, children }) => {
           <p className="mt-1.5 text-[15px] text-gray-500">{subtitle}</p>
         </div>
 
-        <nav aria-label="Log in or sign up" className="mt-5 grid grid-cols-2 p-1 rounded-xl bg-[#EEF2F0]">
+        <nav aria-label="Log in or sign up" className={`mt-5 grid grid-cols-2 p-1 rounded-xl bg-[#EEF2F0] ${wide ? "lg:w-[380px] lg:mx-auto" : ""}`}>
           {tab("/login", "Log in", mode === "login")}
           {tab("/register", "Sign up", mode === "signup")}
         </nav>
