@@ -1,56 +1,56 @@
 import { Link, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiX } from "react-icons/fi";
 
-// Shared frame for the log in and sign up pages: a product photo beside the
-// form on laptops, and a photo band with the form sliding over it on phones.
-const AuthLayout = ({ image, imagePosition = "center", mobileImagePosition, dark = false, quote, tag, mobileBand = 240, children }) => {
+// Shared frame for log in and sign up: one white card with a switch between the two.
+// On laptops it sits on the brand green; on phones it fills the screen.
+const AuthLayout = ({ mode, title, subtitle, children }) => {
   const navigate = useNavigate();
-  const logo = dark ? "/logo-light.png" : "/logo.png";
+  const tab = (to, label, active) => (
+    <Link
+      to={to}
+      replace
+      aria-current={active ? "page" : undefined}
+      className={`h-10 rounded-[9px] flex items-center justify-center text-sm font-bold transition ${
+        active ? "bg-white text-gray-900 shadow-[0_1px_3px_rgba(16,32,26,0.12)]" : "text-gray-500 hover:text-gray-800"
+      }`}
+    >
+      {label}
+    </Link>
+  );
 
   return (
-    <main className="min-h-screen bg-white lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(480px,560px)]">
-      {/* Photo panel (laptop) */}
-      <aside className="hidden lg:block relative overflow-hidden bg-emerald-50">
-        <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: imagePosition }} />
-        {dark && <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />}
-        <Link to="/" className="absolute left-10 top-8">
-          <img src={logo} alt="Knotts Jewelry" className="h-10" />
-        </Link>
-        <div className="absolute left-10 right-10 bottom-10 flex items-end justify-between gap-6">
-          <p className={`max-w-md text-3xl font-bold leading-tight tracking-tight ${dark ? "text-white" : "text-gray-900"}`}>{quote}</p>
-          {tag && <span className="shrink-0 text-sm font-semibold px-3.5 py-2 rounded-full bg-white/85 text-gray-900">{tag}</span>}
-        </div>
-      </aside>
+    <main className="relative min-h-screen bg-white lg:bg-[#0F1D18] lg:flex lg:flex-col lg:items-center lg:justify-center lg:px-6 lg:py-10">
+      <Link to="/" className="hidden lg:inline-flex absolute left-8 top-7 items-center gap-2 text-sm font-semibold text-[#A9BCB3] hover:text-white">
+        <FiArrowLeft /> Back to store
+      </Link>
 
-      {/* Form side */}
-      <section className="min-h-screen flex flex-col">
-        {/* Photo band (phone) */}
-        <div className="lg:hidden relative shrink-0 overflow-hidden" style={{ height: mobileBand }}>
-          <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ objectPosition: mobileImagePosition || imagePosition }} />
-          <div className="absolute inset-x-5 top-5 flex items-center justify-between">
-            <Link to="/"><img src={logo} alt="Knotts Jewelry" className="h-8" /></Link>
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              aria-label="Back to store"
-              className="w-9 h-9 rounded-full bg-white/90 text-gray-900 flex items-center justify-center shadow-sm"
-            >
-              <FiX className="w-[18px] h-[18px]" />
-            </button>
-          </div>
+      <div className="min-h-screen lg:min-h-0 w-full lg:max-w-[460px] bg-white lg:rounded-3xl lg:shadow-[0_40px_80px_-30px_rgba(0,0,0,0.6)] px-5 sm:px-8 lg:px-9 pt-5 pb-8 lg:py-9 flex flex-col">
+        <div className="relative flex items-center justify-center lg:mb-1">
+          <Link to="/"><img src="/logo.png" alt="Knotts Jewelry" className="h-9" /></Link>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            aria-label="Back to store"
+            className="lg:hidden absolute right-0 w-9 h-9 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center"
+          >
+            <FiX className="w-[18px] h-[18px]" />
+          </button>
         </div>
 
-        <div className="flex-1 flex flex-col -mt-7 lg:mt-0 rounded-t-[28px] lg:rounded-none bg-white relative px-5 sm:px-8 lg:px-16 pt-7 pb-8 lg:py-8">
-          <div className="hidden lg:flex justify-end">
-            <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900">
-              <FiArrowLeft /> Back to store
-            </Link>
-          </div>
-          <div className="flex-1 flex flex-col lg:justify-center w-full max-w-[420px] mx-auto">
-            {children}
-          </div>
+        <div className="mt-6 lg:mt-5 text-center">
+          <h1 className="text-[26px] lg:text-[28px] font-extrabold tracking-tight text-gray-900">{title}</h1>
+          <p className="mt-1.5 text-[15px] text-gray-500">{subtitle}</p>
         </div>
-      </section>
+
+        <nav aria-label="Log in or sign up" className="mt-5 grid grid-cols-2 p-1 rounded-xl bg-[#EEF2F0]">
+          {tab("/login", "Log in", mode === "login")}
+          {tab("/register", "Sign up", mode === "signup")}
+        </nav>
+
+        <div className="mt-5 flex-1 flex flex-col">{children}</div>
+
+        <p className="mt-6 text-center text-xs font-medium text-gray-400">Free pickup at Figa and Megenagna · Pay on delivery</p>
+      </div>
     </main>
   );
 };
@@ -76,5 +76,15 @@ export const Field = ({ id, label, action, icon: Icon, prefix, end, error, hint,
 );
 
 export const inputClass = "flex-1 min-w-0 h-full bg-transparent outline-none text-base lg:text-[15px] text-gray-900 placeholder:text-gray-400";
+
+export const SubmitButton = ({ loading, children }) => (
+  <button
+    type="submit"
+    disabled={loading}
+    className="h-[54px] lg:h-[50px] rounded-xl bg-[#05B171] hover:bg-[#04965F] text-white font-bold flex items-center justify-center gap-2 shadow-[0_8px_18px_-8px_rgba(5,177,113,0.7)] transition disabled:opacity-60"
+  >
+    {loading ? <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : children}
+  </button>
+);
 
 export default AuthLayout;
