@@ -1,4 +1,5 @@
 import User from '../../models/users.js';
+import Order from '../../models/order.js';
 import redisClient from '../../utils/redisClient.js';
 import { invalidateDashboardCache, invalidateAdminUserList, invalidateAdminOrderList } from '../../utils/cacheUtils.js';
 
@@ -11,7 +12,28 @@ export const getUsers = async (req, res) => {
       return res.json(JSON.parse(cached));
     }
 
-    const users = await User.find().select('-password');
+    const [users, stats] = await Promise.all([
+      User.find().select('-password -cart -wishlist -reviews').sort({ createdAt: -1 }).lean(),
+      Order.aggregate([
+        {
+          $group: {
+            _id: '$user',
+            orderCount: { $sum: { $cond: [{ $ne: ['$status', 'cancelled'] }, 1, 0] } },
+            totalSpent: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, '$total', 0] } },
+            lastOrderAt: { $max: '$createdAt' },
+          },
+        },
+      ]),
+    ]);
+
+    // Orders placed (not counting cancelled), money from delivered orders, and the latest order date
+    const byUser = new Map(stats.map((s) => [String(s._id), s]));
+    for (const user of users) {
+      const s = byUser.get(String(user._id));
+      user.orderCount = s?.orderCount || 0;
+      user.totalSpent = s?.totalSpent || 0;
+      user.lastOrderAt = s?.lastOrderAt || null;
+    }
     await redisClient.setEx(cacheKey, 300, JSON.stringify(users));
 
     res.json(users);

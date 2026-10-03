@@ -39,7 +39,8 @@ export const invalidateAdminUserList = async () => {
 
 export const invalidateAdminOrderList = async () => {
   try {
-    await redisClient.del('admin:orders');
+    // The user list carries order counts and totals, so it goes stale with the orders
+    await redisClient.del(['admin:orders', 'admin:users']);
   } catch (err) {
     console.error('Failed to invalidate order list cache:', err);
   }
