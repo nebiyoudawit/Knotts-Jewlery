@@ -27,7 +27,7 @@ const Login = () => {
 
   return (
     <AuthLayout mode="login" title="Welcome back" subtitle="Log in to see your orders and saved pieces.">
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-[18px]">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-[18px] short:gap-3">
         <Field id="email" label="Email" icon={FiMail}>
           <input
             id="email"
@@ -63,7 +63,7 @@ const Login = () => {
           />
         </Field>
 
-        <div className="mt-auto lg:mt-1 flex flex-col">
+        <div className="mt-2 lg:mt-1 flex flex-col">
           <SubmitButton loading={isLoading}>Log in <FiArrowRight /></SubmitButton>
         </div>
       </form>

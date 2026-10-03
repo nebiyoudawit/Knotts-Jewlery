@@ -121,7 +121,7 @@ const Register = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} noValidate className="flex-1 flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:items-start">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3.5 lg:gap-4 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:items-start short:gap-y-3">
           <Field id="name" label="Full name" icon={FiUser} error={errors.name}>
             <input id="name" autoComplete="name" value={form.name} onChange={set("name")} placeholder="Hanna Girma" className={inputClass} />
           </Field>
@@ -173,7 +173,7 @@ const Register = () => {
             label="Delivery address"
             icon={FiHome}
             error={errors.address}
-            hint={<p className="text-xs text-gray-500">Optional. You can change it at checkout.</p>}
+            hint={<p className="text-xs text-gray-500 short:hidden">Optional. You can change it at checkout.</p>}
             end={
               <button
                 type="button"
@@ -194,7 +194,7 @@ const Register = () => {
           </Field>
         </div>
 
-        <div className="mt-auto lg:mt-1 pt-2 flex flex-col lg:col-span-2">
+        <div className="mt-2 lg:mt-1 flex flex-col lg:col-span-2">
           <SubmitButton loading={loading}>Create account <FiArrowRight /></SubmitButton>
         </div>
       </form>

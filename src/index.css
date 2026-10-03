@@ -1,4 +1,7 @@
 @import "tailwindcss";
+
+/* Laptop screens with little height (browser bars take space): used to keep forms on one screen */
+@custom-variant short (@media (min-width: 64rem) and (max-height: 820px));
 html, body {
   margin: 0;
   padding: 0;
