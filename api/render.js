@@ -14,8 +14,7 @@ import {
   CATEGORIES,
   DELIVERY_AREAS,
   EMAIL,
-  PHONE,
-  PHONE_DISPLAY,
+  PHONES,
   SOCIAL_PROFILES,
   absoluteUrl,
   categorySlug,
@@ -71,6 +70,8 @@ const escapeHtml = (value) =>
 
 // JSON inside <script> must not be able to close the tag.
 const safeJson = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
+
+const phoneLinks = PHONES.map((p) => `<a href="tel:${p.tel}">${p.display}</a>`).join(" / ");
 
 const formatPrice = (price) => `${Number(price).toLocaleString("en-US")} Birr`;
 
@@ -163,7 +164,7 @@ ${main}
   </main>
   <footer>
     <p><strong>${SITE_NAME}</strong> – handcrafted jewelry in Addis Ababa. Delivery to ${DELIVERY_AREAS.join(", ")}.</p>
-    <p>Phone: <a href="tel:${PHONE}">${PHONE_DISPLAY}</a> · Email: <a href="mailto:${EMAIL}">${EMAIL}</a></p>
+    <p>Phone: ${phoneLinks} · Email: <a href="mailto:${EMAIL}">${EMAIL}</a></p>
     <p>${SOCIAL_PROFILES.map((url) => `<a href="${url}" rel="me">${escapeHtml(new URL(url).hostname.replace("www.", ""))}</a>`).join(" · ")}</p>
   </footer>
 </div>`;
@@ -298,7 +299,7 @@ const resolvePage = async (path, params) => {
       status: 200,
       seo: contactSeo(),
       body: textBody("Contact Knotts Jewelry", [
-        `Phone: <a href="tel:${PHONE}">${PHONE_DISPLAY}</a>`,
+        `Phone: ${phoneLinks}`,
         `Email: <a href="mailto:${EMAIL}">${EMAIL}</a>`,
         `We deliver to ${DELIVERY_AREAS.join(", ")} in Addis Ababa.`,
       ]),

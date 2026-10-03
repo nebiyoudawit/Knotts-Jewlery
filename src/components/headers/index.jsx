@@ -43,6 +43,7 @@ import Navigation from "./Navigation";
 import Search from "../Search";
 import { useShop } from "../../context/ShopContext";
 import { Truck } from "lucide-react";
+import { PHONES } from "../../seo/site";
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
   "& .MuiBadge-badge": {
@@ -476,10 +477,14 @@ const Header = () => {
                 Free delivery at Summit, 4 Kilo, Megenagna, Figa
               </p>
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <a href="tel:0961599628" className="hover:text-emerald-100 transition-colors">
-                📞 0961599628
-              </a>
+            <div className="flex items-center gap-2 text-sm">
+              <span aria-hidden="true">📞</span>
+              {PHONES.map((p, i) => (
+                <span key={p.tel} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-emerald-300">/</span>}
+                  <a href={`tel:${p.tel}`} className="hover:text-emerald-100 transition-colors">{p.display}</a>
+                </span>
+              ))}
             </div>
           </div>
         </div>

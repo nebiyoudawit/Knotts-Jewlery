@@ -15,6 +15,7 @@ import {
 import useSeo from '../../hooks/useSeo';
 import { privateSeo } from '../../seo/pages';
 import { useShop } from '../../context/ShopContext';
+import { PHONES } from '../../seo/site';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const BASE_URL = (apiUrl || '').replace('/api', '');
@@ -298,7 +299,13 @@ const OrderConfirmation = () => {
             </div>
 
             <p className="px-6 pb-6 text-center text-xs text-gray-400">
-              Questions about your order? Call <a href="tel:0961599628" className="text-gray-600 font-medium">0961599628</a>
+              Questions about your order? Call{' '}
+              {PHONES.map((p, i) => (
+                <span key={p.tel}>
+                  {i > 0 && ' or '}
+                  <a href={`tel:${p.tel}`} className="text-gray-600 font-medium">{p.display}</a>
+                </span>
+              ))}
             </p>
           </div>
           <div className="h-4 w-full rotate-180" style={zigzag} />

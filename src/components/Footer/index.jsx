@@ -3,6 +3,7 @@ import { FaInstagram, FaTelegram, FaTiktok } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Phone, Mail, MapPin, Heart } from 'lucide-react';
+import { PHONES } from '../../seo/site';
 
 const Footer = () => {
   const quickLinks = [
@@ -187,7 +188,9 @@ const Footer = () => {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Call us</p>
-                  <p className="font-medium text-gray-900">0961599628</p>
+                  {PHONES.map((p) => (
+                    <a key={p.tel} href={`tel:${p.tel}`} className="block font-medium text-gray-900 hover:text-emerald-600 transition-colors">{p.display}</a>
+                  ))}
                 </div>
               </div>
               

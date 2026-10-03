@@ -18,8 +18,13 @@ export const DEFAULT_DESCRIPTION =
   "Knotts Jewelry: handcrafted rings, necklaces, bracelets, earrings and charms in Addis Ababa. Shop online and pay on delivery.";
 export const DEFAULT_IMAGE = `${SITE_URL}/hero-img1.jpg`;
 
-export const PHONE = "+251961599628";
-export const PHONE_DISPLAY = "0961599628";
+// Shop phone lines, main line first
+export const PHONES = [
+  { tel: "+251965111066", display: "0965111066" },
+  { tel: "+251961599628", display: "0961599628" },
+];
+export const PHONE = PHONES[0].tel;
+export const PHONE_DISPLAY = PHONES.map((p) => p.display).join(" / ");
 export const EMAIL = "knottsjewelry@gmail.com";
 export const DELIVERY_AREAS = ["Summit", "4 Kilo", "Megenagna", "Figa"];
 export const SOCIAL_PROFILES = [

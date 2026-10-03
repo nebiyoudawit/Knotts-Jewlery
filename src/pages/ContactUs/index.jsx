@@ -10,6 +10,7 @@ import {
 import Footer from "../../components/Footer";
 import useSeo from "../../hooks/useSeo";
 import { contactSeo } from "../../seo/pages";
+import { PHONES } from "../../seo/site";
 
 
 const ContactUs = () => {
@@ -56,7 +57,15 @@ const ContactUs = () => {
                   <Typography variant="body1">
                     Email: knottsjewlery@gmail.com
                   </Typography>
-                  <Typography variant="body1">Phone: 0961599628</Typography>
+                  <Typography variant="body1">
+                    Phone:{" "}
+                    {PHONES.map((p, i) => (
+                      <span key={p.tel}>
+                        {i > 0 && " / "}
+                        <a href={`tel:${p.tel}`}>{p.display}</a>
+                      </span>
+                    ))}
+                  </Typography>
                   <Typography variant="body1">
                     Hours: Monday - Friday, 08am - 9pm
                   </Typography>
