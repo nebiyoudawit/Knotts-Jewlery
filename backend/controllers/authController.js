@@ -2,6 +2,7 @@ import User from '../models/users.js';
 import RegisterDTO from '../Dtos/registerDto.js';
 import LoginDTO from '../Dtos/loginDto.js';
 import jwt from 'jsonwebtoken';
+import { normalizePhone, phoneFilter } from '../utils/phone.js';
 import { invalidateDashboardCache, invalidateAdminUserList} from '../utils/cacheUtils.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
@@ -9,26 +10,28 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 // Register user and auto-login
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, address, phone } = req.body;
+    const { name, email, password, address } = req.body;
+    const phone = normalizePhone(req.body.phone);
 
-    if (!name || !email || !password) {
+    if (!name || !password || !phone) {
       return res.status(400).json({
-        message: 'Registration failed',
-        error: 'Name, email, and password are required',
+        message: !phone && req.body.phone ? 'Enter a valid Ethiopian phone number' : 'Name, phone number and password are required',
       });
     }
 
     const userDTO = new RegisterDTO(
       name.trim(),
-      email.trim().toLowerCase(),
+      email?.trim() ? email.trim().toLowerCase() : undefined,
       password,
       address,
       phone
     );
 
-    const existingUser = await User.findOne({ email: userDTO.email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+    if (await User.exists(phoneFilter(phone))) {
+      return res.status(400).json({ message: 'An account with this phone number already exists. Log in instead.' });
+    }
+    if (userDTO.email && (await User.exists({ email: userDTO.email }))) {
+      return res.status(400).json({ message: 'An account with this email already exists. Log in instead.' });
     }
 
     const user = new User({
@@ -70,28 +73,34 @@ export const registerUser = async (req, res) => {
 };
 
 // Login user
+// Log in with a phone number (or, for older accounts, an email) and password
 export const loginUser = async (req, res) => {
   try {
-    if (!req.body || !req.body.email || !req.body.password) {
-      return res.status(400).json({
-        message: 'Login failed',
-        error: 'Email and password are required',
-      });
+    const { phone, email, password } = req.body || {};
+    if ((!phone && !email) || !password) {
+      return res.status(400).json({ message: 'Enter your phone number and password' });
     }
 
-    const email = req.body.email.trim().toLowerCase();
-    const password = req.body.password;
-    const loginDTO = new LoginDTO(email, password);
+    let candidates = [];
+    if (phone) {
+      const filter = phoneFilter(phone);
+      if (!filter) return res.status(400).json({ message: 'Enter a valid phone number, like 0912345678' });
+      candidates = await User.find(filter).select('+password');
+    } else {
+      const loginDTO = new LoginDTO(email.trim(), password);
+      candidates = await User.find({ email: loginDTO.email }).select('+password');
+    }
 
-    const user = await User.findOne({ email: loginDTO.email }).select('+password');
+    // Older data can have the same number on more than one account: use the one the password opens
+    let user = null;
+    for (const candidate of candidates) {
+      if (await candidate.comparePassword(password)) {
+        user = candidate;
+        break;
+      }
+    }
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Use comparePassword method from the schema (optional)
-    const isMatch = await user.comparePassword(loginDTO.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: phone ? 'Wrong phone number or password' : 'Wrong email or password' });
     }
 
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });

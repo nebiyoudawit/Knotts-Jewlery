@@ -152,7 +152,7 @@ const Profile = () => {
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <h3 className="font-bold text-lg text-white mb-1 text-center">{user.name}</h3>
-                  <p className="text-sm text-emerald-50 text-center">{user.email}</p>
+                  <p className="text-sm text-emerald-50 text-center">{user.email || user.phone}</p>
                 </div>
               </div>
 
@@ -332,10 +332,10 @@ const Profile = () => {
                               value={user.email}
                               onChange={handleInputChange}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition-all outline-none font-medium text-gray-900"
-                              placeholder="Enter your email"
+                              placeholder="Optional"
                             />
                           ) : (
-                            <p className="font-semibold text-gray-900 text-base truncate">{user.email}</p>
+                            <p className={`font-semibold text-base truncate ${user.email ? "text-gray-900" : "text-gray-400"}`}>{user.email || "Not added"}</p>
                           )}
                         </div>
                       </div>

@@ -262,7 +262,7 @@ const UserManagement = () => {
                           {u.role === "admin" && <span className="shrink-0 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700">Admin</span>}
                         </p>
                         <p className="text-xs text-gray-500 truncate">
-                          <span className="hidden sm:inline">{u.email}</span>
+                          <span className="hidden sm:inline">{u.email || u.phone}</span>
                           <span className="sm:hidden">{u.phone || u.email}</span>
                         </p>
                       </div>
@@ -316,10 +316,12 @@ const UserManagement = () => {
                     <button onClick={() => copy(selected.phone)} aria-label="Copy phone number" className="text-gray-400 hover:text-gray-600"><FiCopy className="text-xs" /></button>
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5 min-w-0">
-                  <FiMail className="text-gray-400 shrink-0" />
-                  <a href={`mailto:${selected.email}`} className="hover:text-emerald-700 truncate">{selected.email}</a>
-                </span>
+                {selected.email && (
+                  <span className="inline-flex items-center gap-1.5 min-w-0">
+                    <FiMail className="text-gray-400 shrink-0" />
+                    <a href={`mailto:${selected.email}`} className="hover:text-emerald-700 truncate">{selected.email}</a>
+                  </span>
+                )}
                 {selected.address && (
                   <span className="inline-flex items-center gap-1.5 min-w-0">
                     <FiMapPin className="text-gray-400 shrink-0" />

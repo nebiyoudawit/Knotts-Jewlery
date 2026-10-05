@@ -28,6 +28,7 @@ const UserFormModal = ({ user, onClose, onSave, saving }) => {
   const submit = (e) => {
     e.preventDefault();
     const data = { ...form, name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim(), address: form.address.trim() || undefined };
+    if (!editing && !data.email) delete data.email;
     if (editing) delete data.password;
     onSave(data);
   };
@@ -49,8 +50,8 @@ const UserFormModal = ({ user, onClose, onSave, saving }) => {
               <input id="u-name" required minLength={2} value={form.name} onChange={set("name")} className={inputCls} />
             </Row>
           </div>
-          <Row id="u-email" label="Email">
-            <input id="u-email" type="email" required value={form.email} onChange={set("email")} className={inputCls} />
+          <Row id="u-email" label="Email" hint="Optional">
+            <input id="u-email" type="email" value={form.email} onChange={set("email")} className={inputCls} />
           </Row>
           <Row id="u-phone" label="Phone">
             <input id="u-phone" type="tel" required value={form.phone} onChange={set("phone")} placeholder="09XXXXXXXX" className={inputCls} />

@@ -13,15 +13,14 @@ const userSchema = new Schema(
       maxlength: [100, 'Name cannot exceed 100 characters'],
       trim: true,
     },
+    // Optional: most customers sign up with just a phone number.
+    // sparse keeps it unique only among accounts that have one.
     email: {
       type: String,
-      required: [true, 'Email is required'],
       unique: true,
-      match: [
-        /^[^@]+@[^@]+\.com$/,
-        'Please provide a valid email address',
-      ],
-      trim: true,
+      sparse: true,
+      set: (v) => (typeof v === 'string' && v.trim() ? v.trim().toLowerCase() : undefined),
+      match: [/^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'Please provide a valid email address'],
     },
     password: {
       type: String,

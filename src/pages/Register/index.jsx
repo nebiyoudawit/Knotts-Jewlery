@@ -6,20 +6,9 @@ import Lottie from "lottie-react";
 import successAnimation from "../../success-animation.json";
 import { useShop } from "../../context/ShopContext";
 import AuthLayout, { Field, inputClass, SubmitButton } from "../../components/AuthLayout";
+import { normalizePhone, formatPhoneInput } from "../../utils/phone";
 import useSeo from "../../hooks/useSeo";
 import { privateSeo } from "../../seo/pages";
-
-// Ethiopian mobile numbers are 9 digits after +251 (or 10 starting with 0).
-// Saved as 09XXXXXXXX, the same format as existing accounts.
-const normalizePhone = (value) => {
-  const digits = value.replace(/\D/g, "").replace(/^251/, "").replace(/^0/, "");
-  return /^[79]\d{8}$/.test(digits) ? `0${digits}` : null;
-};
-
-const formatPhoneInput = (value) => {
-  const digits = value.replace(/\D/g, "").replace(/^251/, "").replace(/^0/, "").slice(0, 9);
-  return [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6)].filter(Boolean).join(" ");
-};
 
 const passwordStrength = (pw) => {
   if (!pw) return { score: 0, label: "" };
@@ -87,7 +76,7 @@ const Register = () => {
     const next = {};
     if (form.name.trim().length < 2) next.name = "Enter your full name.";
     if (!phone) next.phone = "Enter a 9-digit number, like 912 345 678.";
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) next.email = "Enter your email address, like you@gmail.com.";
+    if (form.email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) next.email = "Check your email address, like you@gmail.com.";
     if (form.password.length < 6) next.password = "Use at least 6 characters.";
     if (form.address.trim() && form.address.trim().length < 5) next.address = "Add a little more detail to your address.";
     setErrors(next);
@@ -97,7 +86,7 @@ const Register = () => {
     // register() shows its own error message if the account can't be created
     const success = await register({
       name: form.name.trim(),
-      email: form.email.trim(),
+      email: form.email.trim() || undefined,
       password: form.password,
       phone,
       address: form.address.trim() || undefined,
@@ -129,8 +118,8 @@ const Register = () => {
             <input id="phone" type="tel" inputMode="numeric" autoComplete="tel-national" value={form.phone} onChange={set("phone")} placeholder="912 345 678" className={inputClass} />
           </Field>
 
-        <Field id="email" label="Email" icon={FiMail} error={errors.email}>
-          <input id="email" type="email" autoComplete="email" required value={form.email} onChange={set("email")} placeholder="you@gmail.com" className={inputClass} />
+        <Field id="email" label="Email" icon={FiMail} error={errors.email} action={<span className="text-xs font-medium text-gray-400">Optional</span>}>
+          <input id="email" type="email" autoComplete="email" value={form.email} onChange={set("email")} placeholder="you@gmail.com" className={inputClass} />
         </Field>
 
         <Field

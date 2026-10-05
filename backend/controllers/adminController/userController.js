@@ -1,5 +1,6 @@
 import User from '../../models/users.js';
 import Order from '../../models/order.js';
+import { normalizePhone, phoneFilter } from '../../utils/phone.js';
 import redisClient from '../../utils/redisClient.js';
 import { invalidateDashboardCache, invalidateAdminUserList, invalidateAdminOrderList } from '../../utils/cacheUtils.js';
 
@@ -50,10 +51,16 @@ export const getUsers = async (req, res) => {
 // ADD NEW USER
 export const addUser = async (req, res) => {
   try {
-    const { name, email, password, role, address, phone } = req.body;
+    const { name, email, password, role, address } = req.body;
+    const phone = normalizePhone(req.body.phone);
+    if (!phone) return res.status(400).json({ success: false, message: 'Enter a valid Ethiopian phone number' });
 
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ success: false, message: 'User already exists' });
+    if (await User.exists(phoneFilter(phone))) {
+      return res.status(400).json({ success: false, message: 'Someone already has this phone number' });
+    }
+    if (email?.trim() && (await User.exists({ email: email.trim().toLowerCase() }))) {
+      return res.status(400).json({ success: false, message: 'Someone already has this email' });
+    }
 
     const newUser = await User.create({ name, email, password, role, address, phone });
 
@@ -103,10 +110,10 @@ export const updateUser = async (req, res) => {
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     user.name = name;
-    user.email = email;
+    user.email = email; // empty clears it; the model stores it as missing
     user.role = role;
     user.address = address;
-    user.phone = phone;
+    user.phone = normalizePhone(phone) || phone;
     await user.save();
     
     await invalidateAdminUserList();

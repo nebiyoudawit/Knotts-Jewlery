@@ -132,12 +132,13 @@ export const ShopProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  // identifier is a phone number, or an email for older accounts
+  const login = async (identifier, password) => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await makeRequest(`${apiUrl}/auth/login`, "POST", {
-        email,
+        ...(identifier.includes("@") ? { email: identifier } : { phone: identifier }),
         password,
       });
 
